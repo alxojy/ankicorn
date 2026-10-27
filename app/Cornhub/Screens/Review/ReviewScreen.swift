@@ -44,6 +44,15 @@ struct ReviewScreen: View {
                     Text("Swipe right for Good, left for Again")
                         .font(.footnote).foregroundStyle(Theme.muted)
                 }
+                if model.hasTypeField, !model.revealed {
+                    TextField("Type the answer", text: $model.typedAnswer)
+                        .textFieldStyle(.plain).padding(12).frame(minHeight: Theme.minTarget)
+                        .background(Theme.control, in: RoundedRectangle(cornerRadius: Theme.Radius.photo))
+                        .foregroundStyle(Theme.text)
+                        .autocorrectionDisabled().textInputAutocapitalization(.never)
+                        .submitLabel(.done).onSubmit { withAnimation(.snappy) { model.reveal() } }
+                        .accessibilityIdentifier("review-type-answer")
+                }
                 gradeBar
             }
         }
@@ -129,6 +138,15 @@ struct ReviewScreen: View {
             CardWebView(
                 html: model.revealed ? model.answerHTML : model.questionHTML, css: model.rendered?.css ?? "")
                 .padding(16)
+            if !model.currentItems.isEmpty {
+                Button { model.replay() } label: {
+                    Image(systemName: "speaker.wave.2.fill").frame(width: Theme.minTarget, height: Theme.minTarget)
+                }
+                .foregroundStyle(Theme.accent)
+                .accessibilityLabel("Replay audio")
+                .accessibilityIdentifier("review-replay")
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+            }
             RoundedRectangle(cornerRadius: Theme.Radius.reviewCard)
                 .strokeBorder(tint, lineWidth: 3)
                 .shadow(color: tint.opacity(0.8), radius: 16)

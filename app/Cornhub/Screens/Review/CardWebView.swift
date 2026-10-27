@@ -7,7 +7,9 @@ struct CardWebView: UIViewRepresentable {
     let css: String
 
     func makeUIView(context: Context) -> WKWebView {
-        let view = WKWebView(frame: .zero)
+        let configuration = WKWebViewConfiguration()
+        configuration.setURLSchemeHandler(MediaSchemeHandler(), forURLScheme: MediaSchemeHandler.scheme)
+        let view = WKWebView(frame: .zero, configuration: configuration)
         view.isOpaque = false
         view.backgroundColor = .clear
         view.scrollView.backgroundColor = .clear
@@ -21,7 +23,7 @@ struct CardWebView: UIViewRepresentable {
         let document = Self.document(body: html, css: css)
         guard context.coordinator.last != document else { return }
         context.coordinator.last = document
-        view.loadHTMLString(document, baseURL: nil)
+        view.loadHTMLString(document, baseURL: URL(string: "cornhub://media/"))
     }
 
     func makeCoordinator() -> Coordinator { Coordinator() }
@@ -33,9 +35,16 @@ struct CardWebView: UIViewRepresentable {
     static func document(body: String, css: String) -> String {
         """
         <!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1">
-        <style>\(baseCSS)\n\(css)</style></head><body><div class="card">\(body)</div></body></html>
+        <style>\(baseCSS)\n\(css)</style>\(mathScript)</head><body><div class="card">\(body)</div></body></html>
         """
     }
+
+    /// MathJax 3 (bundled) typesets Anki's `\\(..\\)` and `\\[..\\]` math.
+    static let mathScript = """
+        <script>window.MathJax = { tex: { inlineMath: [['\\\\(', '\\\\)']], displayMath: [['\\\\[', '\\\\]']] },
+          svg: { fontCache: 'none' } };</script>
+        <script src="cornhub://app/mathjax.js" async></script>
+        """
 
     /// Ink look for card bodies; colours are resolved from the theme tokens.
     static var baseCSS: String {
@@ -46,6 +55,9 @@ struct CardWebView: UIViewRepresentable {
         .card { width: 100%; padding: 8px; box-sizing: border-box; color: \(hex(Theme.text)); }
         hr { border: 0; border-top: 1px solid \(hex(Theme.muted)); opacity: 0.4; margin: 16px 0; }
         b, strong { color: \(hex(Theme.accent)); }
+        .typeGood { color: \(hex(Theme.accent)); } .typeBad { color: \(hex(Theme.again)); }
+        .typeMissed { color: \(hex(Theme.muted)); } code#typeans { font-size: 20px; }
+        #typeans { font-family: monospace; }
         img { max-width: 100%; border-radius: 20px; }
         """
     }

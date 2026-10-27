@@ -27,6 +27,14 @@ final class ReviewModel {
     private(set) var undoLabel = ""
     private(set) var redoLabel = ""
     private(set) var congrats: Anki_Scheduler_CongratsInfoResponse?
+    /// Sounds and TTS for each side, and the typed-answer state, filled by `prepareMedia`.
+    private(set) var questionItems: [AVItem] = []
+    private(set) var answerItems: [AVItem] = []
+    private(set) var questionBody = ""
+    private(set) var answerBody = ""
+    private(set) var typeExpected: String?
+    var typedAnswer = ""
+    @ObservationIgnored let audio = CardAudio()
 
     private let backend: Backend
     private let deckID: Int64?
@@ -46,8 +54,10 @@ final class ReviewModel {
         return max(0, min(1, 1 - Double(counts.total) / Double(startTotal)))
     }
 
-    var answerHTML: String { rendered?.answer ?? "" }
-    var questionHTML: String { rendered?.question ?? "" }
+    var answerHTML: String { answerBody }
+    var questionHTML: String { questionBody }
+    var hasTypeField: Bool { typeExpected != nil }
+    var currentItems: [AVItem] { revealed ? answerItems : questionItems }
 
     func start() async {
         do {
@@ -62,7 +72,10 @@ final class ReviewModel {
     func reveal() {
         guard phase == .card else { return }
         revealed = true
+        Task { await prepareAnswer() }
     }
+
+    func replay() { audio.play(currentItems) }
 
     func answer(_ rating: Anki_Scheduler_CardAnswer.Rating) async {
         guard let queued, revealed else { return }
@@ -106,6 +119,8 @@ final class ReviewModel {
         undoLabel = status.undo
         redoLabel = status.redo
         revealed = false
+        typedAnswer = ""
+        audio.stop()
         guard let next = result.cards.first else {
             queued = nil
             rendered = nil
@@ -116,6 +131,7 @@ final class ReviewModel {
         queued = next
         isMarked = ((try? await backend.getNote(id: next.card.noteID))?.tags ?? []).contains { $0.lowercased() == "marked" }
         rendered = try await backend.renderExistingCard(id: next.card.id)
+        await prepareMedia(note: next.card)
         let labels = try await backend.describeNextStates(next.states)
         intervals = labels.count == 4 ? labels : ["", "", "", ""]
         shownAt = Date()
@@ -167,7 +183,10 @@ extension ReviewModel {
 
     func save(note: Anki_Notes_Note) async {
         await perform(reload: false) { try await self.backend.updateNote(note) }
-        if let queued, let fresh = try? await backend.renderExistingCard(id: queued.card.id) { rendered = fresh }
+        if let queued, let fresh = try? await backend.renderExistingCard(id: queued.card.id) {
+            rendered = fresh
+            await prepareMedia(note: queued.card)
+        }
     }
 
     private func perform(reload: Bool, _ work: () async throws -> Void) async {
@@ -183,5 +202,66 @@ extension ReviewModel {
 extension ReviewModel {
     fileprivate func refreshQueuedFlag(_ flag: UInt32) {
         queued?.card.flags = (queued?.card.flags ?? 0) & ~7 | flag
+    }
+}
+
+// MARK: - Media, audio and typed answers
+
+extension ReviewModel {
+    private static let typePattern = try! NSRegularExpression(pattern: #"\[\[type:([^\]]+)\]\]"#)
+
+    /// Splits audio out of both sides with the engine and works out the expected typed answer.
+    fileprivate func prepareMedia(note card: Anki_Cards_Card) async {
+        guard let rendered else { return }
+        let question = (try? await backend.extractAvTags(text: rendered.question, question: true))
+            ?? (rendered.question, [])
+        let answer = (try? await backend.extractAvTags(text: rendered.answer, question: false))
+            ?? (rendered.answer, [])
+        questionItems = question.1
+        answerItems = answer.1
+        questionBody = question.0
+        answerBody = answer.0
+        typeExpected = nil
+        if let name = Self.typeFieldName(in: question.0) {
+            typeExpected = await expectedAnswer(field: name, card: card)
+            questionBody = Self.replaceType(in: question.0, with: "")
+        }
+        audio.play(questionItems)
+    }
+
+    /// Swaps the answer's type placeholder for the engine's diff once the card is revealed.
+    fileprivate func prepareAnswer() async {
+        if let expected = typeExpected {
+            let diff = (try? await backend.compareAnswer(expected: expected, provided: typedAnswer)) ?? ""
+            answerBody = Self.replaceType(in: answerBody, with: "<div id=\"typeans\">\(diff)</div>")
+        }
+        audio.play(answerItems)
+    }
+
+    private static func typeFieldName(in html: String) -> String? {
+        let range = NSRange(html.startIndex..., in: html)
+        guard let match = typePattern.firstMatch(in: html, range: range),
+            let found = Range(match.range(at: 1), in: html)
+        else { return nil }
+        return String(html[found])
+    }
+
+    private static func replaceType(in html: String, with replacement: String) -> String {
+        let range = NSRange(html.startIndex..., in: html)
+        return typePattern.stringByReplacingMatches(
+            in: html, range: range, withTemplate: NSRegularExpression.escapedTemplate(for: replacement))
+    }
+
+    private func expectedAnswer(field spec: String, card: Anki_Cards_Card) async -> String? {
+        let parts = spec.split(separator: ":").map(String.init)
+        guard let name = parts.last, let note = try? await backend.getNote(id: card.noteID),
+            let names = try? await backend.fieldNames(notetypeID: note.notetypeID),
+            let index = names.firstIndex(of: name), note.fields.indices.contains(index)
+        else { return nil }
+        let value = note.fields[index]
+        if parts.contains("cloze") {
+            return try? await backend.extractClozeForTyping(text: value, ordinal: card.templateIdx + 1)
+        }
+        return value.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
     }
 }
