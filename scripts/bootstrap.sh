@@ -22,6 +22,9 @@ scripts/gen-swift-protos.sh
 step "service index"
 node scripts/gen-service-index.mjs
 
+step "Anki web pages (set SKIP_WEB=1 to skip)"
+scripts/build-web.sh
+
 step "Xcode project"
 xcodegen generate --spec app/project.yml --project app
 echo "done: open app/Cornhub.xcodeproj or run npm run verify"

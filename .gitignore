@@ -29,3 +29,6 @@ collection.media/
 /core
 /core.*
 *.core
+
+# Anki web pages built by scripts/build-web.sh
+app/Cornhub/Resources/AnkiWeb/
