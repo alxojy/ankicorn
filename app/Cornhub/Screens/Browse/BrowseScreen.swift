@@ -26,6 +26,7 @@ private struct BrowseContent: View {
     @State private var previewing: IdentifiedID?
     @State private var activeSheet: BrowseActionSheet.Kind?
     @State private var confirmDelete = false
+    @State private var showReplace = false
 
     var body: some View {
         NavigationStack {
@@ -43,6 +44,7 @@ private struct BrowseContent: View {
             .toolbar { toolbar }
             .task { await model.load() }
             .sheet(isPresented: $showFilters) { BrowseFilterSheet(model: model) }
+            .sheet(isPresented: $showReplace) { FindReplaceSheet(model: model) }
             .sheet(item: $activeSheet) { kind in BrowseActionSheet(kind: kind, model: model) }
             .sheet(item: $previewing) { item in CardPreviewSheet(backend: model.backend, cardID: item.id) }
             .fullScreenCover(item: $editing) { item in
@@ -240,6 +242,7 @@ private struct BrowseContent: View {
                 Button("Forget (reset to new)", systemImage: "arrow.counterclockwise") {
                     Task { await model.perform(.forget) }
                 }
+                Button("Find and replace", systemImage: "magnifyingglass") { showReplace = true }
                 Button("Suspend", systemImage: "pause.circle") { Task { await model.perform(.suspend(true)) } }
                 Button("Unsuspend", systemImage: "play.circle") { Task { await model.perform(.suspend(false)) } }
             } label: {

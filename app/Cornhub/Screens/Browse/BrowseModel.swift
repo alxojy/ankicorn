@@ -114,6 +114,8 @@ final class BrowseModel {
 
     private var selectedOrdered: [Int64] { ids.filter { selection.contains($0) } }
 
+    func selectedNoteIDs() async throws -> [Int64] { try await noteIDs(selectedOrdered) }
+
     func cardIDs(_ chosen: [Int64]) async throws -> [Int64] {
         notesMode ? try await backend.cardIDs(ofNotes: chosen) : chosen
     }
