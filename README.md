@@ -31,7 +31,17 @@ Details, the desktop parity table, the design standard and the phases are in [`P
 
 ## Status
 
-Setting up. The agent workflow, gate and OpenSpec are in place, and the `rslib-bridge` crate builds an XCFramework for device and simulator. Phase 0 (print the deck tree from a sample collection in the simulator) needs the Xcode project and Swift `Backend`, which come next.
+Phase 0: the bridge builds, and the Xcode project, typed Swift `Backend` and a diagnostic screen that lists the deck tree returned by rslib are in place. Next is Phase 1 (Ink theme, real Decks and Review screens).
+
+## Build and test
+
+```sh
+scripts/bootstrap.sh        # engine, XCFramework if missing, Swift protobufs, service index, Xcode project
+xcodebuild test -project app/Cornhub.xcodeproj -scheme Cornhub \
+  -destination 'platform=iOS Simulator,name=iPhone 17' -jobs 2 -parallel-testing-enabled NO
+```
+
+`app/project.yml` (XcodeGen) is the source of the committed `app/Cornhub.xcodeproj`; edit it and re-run `xcodegen generate --spec app/project.yml --project app`. `node scripts/gen-service-index.mjs --check` fails if the committed service table drifts from rslib's generated dispatch (pass the path to `backend.rs`, or set `BACKEND_RS`).
 
 ## Working in this repo
 
