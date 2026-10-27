@@ -2,6 +2,10 @@
 
 A personal iOS app called **Cornhub** (SwiftUI, iOS 26) on top of Anki's Rust engine (`rslib`, pinned to git tag `26.09.3`), syncing with desktop Anki through AnkiWeb. `PLAN.md` is the product plan, the parity table, the phases and the design standard ("Ink" look). Read the part you are working on before you start.
 
+## DEMO MODE (in force now; overrides the test rules below)
+
+This build is a demo. **Do not write or run tests, and do not review screenshots.** `npm run gate` only checks the protected files, the ledger, the specs, `cargo fmt` and that the app compiles (`xcodebuild build`). The orchestrator runs the full sweep (`ANKICORN_FULL=1 npm run gate`) after all the changes have landed, and fixes what breaks. Everything else below still applies: ledger, OpenSpec, commit and push, no protected-file edits, and self-merge with `npm run gate`. Iterate with `xcodebuild build` only.
+
 ## How work is accepted: the gate, not review
 
 There is **no human or orchestrator code review**. Work is accepted only by mechanical proof:

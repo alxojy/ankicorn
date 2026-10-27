@@ -23,6 +23,8 @@ Load `ankicorn-agent-workflow` first. The product plan, parity table and design 
 
 ## Proof checklist (all required)
 
+**DEMO MODE (in force now):** skip this checklist. No tests and no screenshot review: the code just has to compile (`xcodebuild build`) and `npm run gate` has to pass. The orchestrator runs the full sweep at the end.
+
 - Rust: `#[test]` or `crates/*/tests/` for each bridge behaviour; run with `cargo test -p rslib-bridge -j2`.
 - Swift unit tests (`app/CornhubTests/`): Backend wrapper round trips against the bundled sample collection (never a real collection), view-model logic.
 - Swift UI tests (`app/CornhubUITests/`): drive the screen on the simulator, assert the visible result, and attach a screenshot per state (`XCTAttachment`, lifetime `.keepAlways`) including empty, error and large Dynamic Type.

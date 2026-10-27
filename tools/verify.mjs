@@ -38,6 +38,18 @@ if (quick) {
   console.log(ran.length ? `verify --quick ok (${ran.join(', ')})` : 'verify --quick ok (nothing to check)');
   process.exit(0);
 }
+// Demo mode (default): no tests, just prove the app compiles. ANKICORN_FULL=1 runs everything.
+if (!process.env.ANKICORN_FULL) {
+  if (project) {
+    run(
+      'xcode build',
+      `xcodebuild build -project app/${project} -scheme ${scheme} -destination 'platform=iOS Simulator,name=${sim}' -jobs 2 -quiet`,
+    );
+    ran.push('xcode-build');
+  }
+  console.log(`verify ok, demo mode (${ran.join(', ') || 'nothing'}); ANKICORN_FULL=1 for tests`);
+  process.exit(0);
+}
 if (hasRust) {
   run('clippy', 'cargo clippy --workspace --all-targets -j 2 -- -D warnings');
   run('rust tests', 'cargo test --workspace -j 2');

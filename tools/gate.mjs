@@ -79,6 +79,7 @@ const isTestFile = (f) => /^app\/[^/]*Tests\//.test(f) || /^crates\/[^/]+\/tests
 const SKIPPED = /XCTSkip|XCTExpectFailure|#\[ignore\]|\.disabled\(|\.enabled\(if: false/;
 
 function checkTestsRequired() {
+  if (!process.env.ANKICORN_FULL) return 'skip'; // demo mode: tests deferred to the final sweep
   const files = changedFiles();
   const read = (f) => (fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : '');
 
