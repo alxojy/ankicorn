@@ -20,3 +20,15 @@ extension Backend {
         return try call(service: ServiceIndex.Decks.service, method: ServiceIndex.Decks.deckTree, request)
     }
 }
+
+extension Backend {
+    /// `set_deck_collapsed`: stores the collapsed state of a deck in the given scope.
+    func setDeckCollapsed(deckID: Int64, collapsed: Bool, browser: Bool = false) throws {
+        var request = Anki_Decks_SetDeckCollapsedRequest()
+        request.deckID = deckID
+        request.collapsed = collapsed
+        request.scope = browser ? .browser : .reviewer
+        let _: Anki_Collection_OpChanges = try call(
+            service: ServiceIndex.Decks.service, method: ServiceIndex.Decks.setDeckCollapsed, request)
+    }
+}

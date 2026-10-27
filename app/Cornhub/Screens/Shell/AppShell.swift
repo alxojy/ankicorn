@@ -4,11 +4,11 @@ import SwiftUI
 struct AppShell: View {
     let launch: LaunchOptions
     @State private var selection: AppTab = .decks
-    @State private var deckModel: DeckTreeModel
+    @State private var deckModel: DeckHomeModel
 
     init(launch: LaunchOptions) {
         self.launch = launch
-        _deckModel = State(initialValue: DeckTreeModel(launch: launch))
+        _deckModel = State(initialValue: DeckHomeModel(launch: launch))
     }
 
     var body: some View {
@@ -24,7 +24,7 @@ struct AppShell: View {
     @ViewBuilder private var screen: some View {
         switch selection {
         case .decks:
-            DeckTreeScreen(model: deckModel)
+            DeckHomeScreen(model: deckModel)
         case .browse:
             PlaceholderScreen(title: "Browse", symbol: "magnifyingglass", message: "Search and edit your cards. Coming soon.")
         case .stats:
