@@ -12,20 +12,32 @@ enum ChineseNotetype {
         static let examplePinyin = 5, exampleEnglish = 6, audio = 7
     }
 
-    private static let answer = """
-        {{#Picture}}<div class="pic">{{Picture}}</div>{{/Picture}}
-        <div class="head"><span class="hanzi">{{Hanzi}}</span><span class="pinyin">{{Pinyin}}</span></div>
-        {{Audio}}
-        <hr class="rule">
-        <div class="english">{{English}}</div>
-        {{#Example}}<div class="example">{{Example}}</div>
-        <div class="muted">{{Example pinyin}}</div><div class="muted">{{Example English}}</div>{{/Example}}
+    private static let picture = "{{#Picture}}<div class=\"pic\">{{Picture}}</div><br>{{/Picture}}"
+
+    private static let pinyinLine = "<div class=\"pinyin\">{{Pinyin}}</div><br>\n{{Audio}}"
+
+    private static let englishLine = "<div class=\"english\">{{English}}</div>"
+
+    private static let exampleBlock = """
+        {{#Example}}<br><div class="example">{{Example}}</div><br>
+        <div class="muted">{{Example pinyin}}</div><br><div class="muted">{{Example English}}</div>{{/Example}}
         """
 
-    /// (name, question, answer) for the two cards. The answer replaces the question, so no FrontSide.
+    /// The engine's browser `answer` column drops the question by stripping the rendered question from the start of
+    /// the rendered answer, so every answer template starts with `{{FrontSide}}`. `<hr id="answer">` is the marker
+    /// the review screen and desktop Anki split on.
+    private static let front = "{{FrontSide}}\n<hr id=\"answer\" class=\"rule\">\n"
+
+    /// (name, question, answer) for the two cards.
     static let templates: [(String, String, String)] = [
-        ("Hanzi to English", "<div class=\"big hanzi\">{{Hanzi}}</div>", answer),
-        ("English to Hanzi", "<div class=\"big english\">{{English}}</div>", answer)
+        (
+            "Hanzi to English", "<div class=\"big hanzi\">{{Hanzi}}</div>",
+            front + pinyinLine + "\n" + picture + englishLine + exampleBlock
+        ),
+        (
+            "English to Hanzi", "<div class=\"big english\">{{English}}</div>",
+            front + picture + "<div class=\"hanzi\">{{Hanzi}}</div>\n" + pinyinLine + exampleBlock
+        )
     ]
 
     /// Card styling in the Ink look; colours come from the theme tokens (resolved for dark mode).

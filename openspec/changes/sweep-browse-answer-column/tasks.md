@@ -1,5 +1,5 @@
 ## 1. Template
-- [ ] 1.1 Both Chinese vocab answer templates use `<hr id="answer" class="rule">`, with the question side above it and the answer side below
+- [ ] 1.1 Both Chinese vocab answer templates start with `{{FrontSide}}` then `<hr id="answer" class="rule">` (the engine strips the question as a literal prefix of the answer), with the answer side below the rule
 - [ ] 1.2 Block elements are separated so the engine's answer column keeps separators between sentence, pinyin and English
 
 ## 2. Proof

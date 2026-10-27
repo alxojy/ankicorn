@@ -53,3 +53,39 @@ final class DeckWrapperTests: XCTestCase {
         try await backend.closeCollection()
     }
 }
+
+final class ChineseNotetypeAnswerColumnTests: XCTestCase {
+    func testBrowserAnswerColumnDropsQuestionAndKeepsSeparators() async throws {
+        let directory = try makeTempDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let backend = try Backend()
+        try await backend.openCollection(path: directory.appending(path: "collection.anki2"))
+        let deck = try await backend.addDeck(name: "Test")
+        let notetype = try await backend.ensureChineseNotetype()
+        var fields = Array(repeating: "", count: ChineseNotetype.fields.count)
+        fields[ChineseNotetype.Field.hanzi] = "明天再见！"
+        fields[ChineseNotetype.Field.pinyin] = "Míngtiān zàijiàn!"
+        fields[ChineseNotetype.Field.english] = "See you tomorrow"
+        fields[ChineseNotetype.Field.example] = "明天见。"
+        fields[ChineseNotetype.Field.examplePinyin] = "Míngtiān jiàn."
+        fields[ChineseNotetype.Field.exampleEnglish] = "See you."
+        try await backend.addNote(notetypeID: notetype, deckID: deck, fields: fields)
+        try await backend.setBrowserNotesMode(false)
+        try await backend.setActiveBrowserColumns(["question", "answer"])
+        let ids = try await backend.browserSearch("deck:Test", notes: false)
+        XCTAssertEqual(ids.count, 2)
+        var answers: [String] = []
+        for id in ids {
+            let row = try await backend.browserRow(id: id)
+            let question = row.cells[0].text, answer = row.cells[1].text
+            answers.append(answer)
+            XCTAssertFalse(answer.hasPrefix(question), "answer repeats question: \(answer)")
+            XCTAssertFalse(answer.contains("Míngtiān zàijiàn!See"), answer)
+            XCTAssertFalse(answer.contains("明天见。Míngtiān"), answer)
+            XCTAssertFalse(answer.contains("jiàn.See"), answer)
+        }
+        XCTAssertTrue(answers.contains { $0.hasPrefix("Míngtiān zàijiàn!") && $0.contains("See you tomorrow") })
+        XCTAssertTrue(answers.contains { $0.hasPrefix("明天再见！") })
+        try await backend.closeCollection()
+    }
+}
