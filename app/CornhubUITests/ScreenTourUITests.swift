@@ -134,7 +134,12 @@ final class ScreenTourUITests: XCTestCase {
         if field.waitForExistence(timeout: 5) {
             field.tap()
             field.typeText("学")
+            app.buttons["Bold"].firstMatch.tap()
+            field.typeText("粗")
             shot("21-add-card-typing")
+            let shown = (field.value as? String) ?? ""
+            XCTAssertFalse(shown.contains("<b>"), "bold shows as styling, not a literal tag: \(shown)")
+            XCTAssertTrue(shown.contains("粗"), "typed text is in the field")
         }
         let chip = app.descendants(matching: .any)["editor-notetype-chip"]
         XCTAssertTrue(chip.exists, "notetype chip exists")

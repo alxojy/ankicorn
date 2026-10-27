@@ -8,6 +8,8 @@ struct NoteEditorScreen: View {
     @Environment(\.dismiss) private var dismiss
     @FocusState private var focused: Int?
     @State private var selections: [Int: TextSelection] = [:]
+    @State private var richText: [Int: AttributedString] = [:]
+    @State private var richSelections: [Int: AttributedTextSelection] = [:]
     @State private var recorder = AudioRecorder()
     @State private var photoItem: PhotosPickerItem?
     @State private var showPhotoPicker = false
@@ -170,7 +172,7 @@ struct NoteEditorScreen: View {
                     .accessibilityValue(model.isSticky(index) ? "On" : "Off")
                 }
             }
-            TextField(name, text: fieldBinding(index), selection: selectionBinding(index), axis: .vertical)
+            fieldEditor(index, name: name, large: large, accent: accent)
                 .font(large ? .display(DisplaySize.hanziField, relativeTo: .largeTitle) : .body)
                 .foregroundStyle(accent ? Theme.accent : Theme.text)
                 .focused($focused, equals: index)
@@ -184,6 +186,47 @@ struct NoteEditorScreen: View {
                 .accessibilityLabel(name)
                 .accessibilityIdentifier("editor-field-\(index)")
         }
+    }
+
+    private func html(_ index: Int) -> String { model.fields.indices.contains(index) ? model.fields[index] : "" }
+
+    /// Fields the converter understands are edited as styled text; any other markup stays plain-text HTML.
+    private func isRich(_ index: Int) -> Bool {
+        richText[index] != nil || FieldHTML.attributed(from: html(index)) != nil
+    }
+
+    @ViewBuilder private func fieldEditor(_ index: Int, name: String, large: Bool, accent: Bool) -> some View {
+        if isRich(index) {
+            TextEditor(text: richBinding(index), selection: richSelectionBinding(index))
+                .scrollContentBackground(.hidden)
+                .scrollDisabled(true)
+                .frame(height: richHeight(index, large: large))
+        } else {
+            TextField(name, text: fieldBinding(index), selection: selectionBinding(index), axis: .vertical)
+        }
+    }
+
+    /// A scroll-disabled TextEditor does not size itself to its text, so give it room for every line.
+    private func richHeight(_ index: Int, large: Bool) -> CGFloat {
+        let lines = html(index).components(separatedBy: "<br>").count
+        return CGFloat(max(1, lines)) * (large ? 64 : 28) + 16
+    }
+
+    private func richBinding(_ index: Int) -> Binding<AttributedString> {
+        Binding(
+            get: {
+                let current = html(index)
+                if let text = richText[index], FieldHTML.html(from: text) == current { return text }
+                return FieldHTML.attributed(from: current) ?? AttributedString(current)
+            },
+            set: { newValue in
+                richText[index] = newValue
+                if model.fields.indices.contains(index) { model.fields[index] = FieldHTML.html(from: newValue) }
+            })
+    }
+
+    private func richSelectionBinding(_ index: Int) -> Binding<AttributedTextSelection> {
+        Binding(get: { richSelections[index] ?? AttributedTextSelection() }, set: { richSelections[index] = $0 })
     }
 
     private func fieldBinding(_ index: Int) -> Binding<String> {
@@ -321,10 +364,45 @@ struct NoteEditorScreen: View {
 
     private func format(_ style: FieldFormatting.Style) {
         guard let index = focused, model.fields.indices.contains(index) else { return }
+        if isRich(index) {
+            formatRich(style, index)
+            return
+        }
         var text = model.fields[index]
         FieldFormatting.apply(style, to: &text, selection: selections[index])
         model.fields[index] = text
         selections[index] = nil
+    }
+
+    /// Toggles bold, italic or underline on the selected text; cloze inserts `{{cN::…}}` around it.
+    private func formatRich(_ style: FieldFormatting.Style, _ index: Int) {
+        var text = richBinding(index).wrappedValue
+        var selection = richSelections[index] ?? AttributedTextSelection()
+        switch style {
+        case .bold: toggle(.stronglyEmphasized, in: &text, selection: &selection)
+        case .italic: toggle(.emphasized, in: &text, selection: &selection)
+        case .underline:
+            let on = selection.attributes(in: text)[\.underlineStyle].allSatisfy { $0 != nil }
+            text.transformAttributes(in: &selection) { $0.underlineStyle = on ? nil : .single }
+        case .cloze:
+            let (open, close) = style.markers
+            var selected = ""
+            if case .ranges(let ranges) = selection.indices(in: text) {
+                selected = ranges.ranges.map { String(text[$0].characters) }.joined()
+            }
+            text.replaceSelection(&selection, withCharacters: open + selected + close)
+        }
+        richBinding(index).wrappedValue = text
+        richSelections[index] = selection
+    }
+
+    private func toggle(_ intent: InlinePresentationIntent, in text: inout AttributedString, selection: inout AttributedTextSelection) {
+        let on = selection.attributes(in: text)[\.inlinePresentationIntent].allSatisfy { $0?.contains(intent) == true }
+        text.transformAttributes(in: &selection) {
+            var current = $0.inlinePresentationIntent ?? []
+            if on { current.remove(intent) } else { current.insert(intent) }
+            $0.inlinePresentationIntent = current.isEmpty ? nil : current
+        }
     }
 
     private func insertPhoto(from item: PhotosPickerItem) async {
