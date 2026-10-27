@@ -39,7 +39,7 @@ struct AppShell: View {
         case .browse:
             PlaceholderScreen(title: "Browse", symbol: "magnifyingglass", message: "Search and edit your cards. Coming soon.")
         case .stats:
-            PlaceholderScreen(title: "Stats", symbol: "chart.bar", message: "Your reviews and retention will show up here.")
+            StatsScreen(backend: deckModel.backend)
         case .settings:
             SettingsScreen(sync: sync, backend: deckModel.backend)
         }

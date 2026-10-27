@@ -36,7 +36,7 @@ final class ReviewModel {
     var typedAnswer = ""
     @ObservationIgnored let audio = CardAudio()
 
-    private let backend: Backend
+    let backend: Backend
     private let deckID: Int64?
     private(set) var isMarked = false
     fileprivate(set) var queued: Anki_Scheduler_QueuedCards.QueuedCard?

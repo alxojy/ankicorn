@@ -44,6 +44,22 @@ actor Backend {
         try perform(service: service, method: method, request)
     }
 
+    /// Calls an engine method with already-serialised protobuf bytes (the web pages' bodies) and returns the raw
+    /// response. Not serialised behind other calls, so `latestProgress` can be read during an optimisation.
+    nonisolated func callRaw(service: UInt32, method: UInt32, input: Data) throws -> Data {
+        let pointer = handle.pointer
+        var out = ByteBuf(ptr: nil, len: 0, cap: 0)
+        let ok = withUnsafeMutablePointer(to: &out) { outPointer in
+            input.withUnsafeBytes {
+                run_method(pointer, service, method, $0.bindMemory(to: UInt8.self).baseAddress, input.count, outPointer)
+            }
+        }
+        let output = out.ptr.map { Data(bytes: $0, count: out.len) } ?? Data()
+        free_bytes(out)
+        guard ok else { throw BackendError.decode(output) }
+        return output
+    }
+
     private nonisolated func perform<Request: SwiftProtobuf.Message, Response: SwiftProtobuf.Message>(
         service: UInt32, method: UInt32, _ request: Request
     ) throws -> Response {

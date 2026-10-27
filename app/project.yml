@@ -20,6 +20,12 @@ targets:
     platform: iOS
     sources:
       - path: Cornhub
+        excludes:
+          - Resources/AnkiWeb
+      # Anki's built web pages (scripts/build-web.sh), bundled as a folder; absent until built.
+      - path: Cornhub/Resources/AnkiWeb
+        type: folder
+        optional: true
     info:
       path: Cornhub/Info.plist
       properties:

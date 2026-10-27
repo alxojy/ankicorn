@@ -81,7 +81,14 @@ for (const svc of services) {
   for (const m of svc.methods) out += `        static let ${camel(m.name)}: UInt32 = ${m.number}\n`;
   out += '    }\n';
 }
-out += '}\n';
+out += `
+    /// Every backend method by its camelCase name, as Anki's web pages call it (\`POST /_anki/<name>\`).
+    static let methods: [String: (service: UInt32, method: UInt32)] = [
+`;
+for (const svc of services) {
+  for (const m of svc.methods) out += `        "${camel(m.name)}": (${svc.number}, ${m.number}),\n`;
+}
+out += '    ]\n}\n';
 
 if (check) {
   const current = fs.existsSync(outFile) ? fs.readFileSync(outFile, 'utf8') : '';

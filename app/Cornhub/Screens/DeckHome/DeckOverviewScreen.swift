@@ -7,6 +7,7 @@ struct DeckOverviewScreen: View {
     @State private var counts: (new: Int, review: Int)?
     @State private var reviewTarget: ReviewTarget?
     @State private var showCustomStudy = false
+    @State private var optionsPage: AnkiWebPage?
 
     var body: some View {
         ScrollView {
@@ -51,6 +52,13 @@ struct DeckOverviewScreen: View {
                 }
                 .buttonStyle(.bordered)
                 .tint(Theme.text2)
+                Button { optionsPage = .deckOptions(deckID: deck.id) } label: {
+                    Label("Deck options", systemImage: "gearshape")
+                        .frame(maxWidth: .infinity, minHeight: Theme.minTarget)
+                }
+                .buttonStyle(.bordered)
+                .tint(Theme.text2)
+                .accessibilityIdentifier("deck-options-button")
                 if !deck.children.isEmpty { subdecks }
             }
             .padding(.horizontal, 16)
@@ -70,6 +78,9 @@ struct DeckOverviewScreen: View {
                     }
                 }
             }
+        }
+        .sheet(item: $optionsPage, onDismiss: { Task { counts = await model.counts(for: deck.id); await model.refresh() } }) { page in
+            if let backend = model.backend { AnkiWebSheet(page: page, backend: backend) }
         }
         .task { counts = await model.counts(for: deck.id) }
     }

@@ -8,7 +8,7 @@ struct ReviewScreen: View {
     @State private var drag: CGFloat = 0
     @State private var pastThreshold = false
     @State private var editingNote: Anki_Notes_Note?
-    @State private var showInfo = false
+    @State private var infoPage: AnkiWebPage?
 
     private static let threshold: CGFloat = 110
     private static let flagNames = ["Red", "Orange", "Green", "Blue", "Pink", "Turquoise", "Purple"]
@@ -63,10 +63,8 @@ struct ReviewScreen: View {
         .sheet(item: Binding(get: { editingNote.map(IdentifiedNote.init) }, set: { editingNote = $0?.note })) { item in
             NoteEditorSheet(note: item.note) { saved in Task { await model.save(note: saved) } }
         }
-        .alert("Card info", isPresented: $showInfo) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text("Card info arrives with the web bridge in a later phase.")
+        .sheet(item: $infoPage) { page in
+            AnkiWebSheet(page: page, backend: model.backend)
         }
     }
 
@@ -102,7 +100,9 @@ struct ReviewScreen: View {
                         Button("Edit note", systemImage: "pencil") {
                             Task { editingNote = await model.loadNote() }
                         }
-                        Button("Card info", systemImage: "info.circle") { showInfo = true }
+                        Button("Card info", systemImage: "info.circle") {
+                            if let card = model.queued?.card.id { infoPage = .cardInfo(cardID: card) }
+                        }
                     }
                     Button("Redo", systemImage: "arrow.uturn.forward") { Task { await model.redo() } }
                         .disabled(model.redoLabel.isEmpty)
