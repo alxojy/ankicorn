@@ -37,7 +37,7 @@ struct AppShell: View {
         case .decks:
             DeckHomeScreen(model: deckModel, sync: sync)
         case .browse:
-            PlaceholderScreen(title: "Browse", symbol: "magnifyingglass", message: "Search and edit your cards. Coming soon.")
+            BrowseScreen(backend: deckModel.backend)
         case .stats:
             StatsScreen(backend: deckModel.backend)
         case .settings:
