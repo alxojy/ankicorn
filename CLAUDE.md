@@ -78,6 +78,8 @@ Not all of this exists yet; Phase 0 creates the bridge crate and the Xcode proje
 
 ## Commands
 
+- `scripts/bootstrap.sh`: engine, XCFramework (if missing), `gen-swift-protos.sh`, `gen-service-index.mjs`, XcodeGen. `app/project.yml` is the project source; regenerate `app/Cornhub.xcodeproj` after editing it
+- `xcodebuild test -project app/Cornhub.xcodeproj -scheme Cornhub -destination 'platform=iOS Simulator,name=iPhone 17' -jobs 2 -parallel-testing-enabled NO [-only-testing:…]`: Xcode tests, serial
 - `npm run gate`: the acceptance check (run before any push to `main`)
 - `npm run verify`: fmt, clippy, Rust tests, SwiftLint, Xcode tests (only the parts that exist)
 - `node tools/ledger.mjs …`: append to the ledger; `node tools/check-ledger.mjs [base] [--final]`

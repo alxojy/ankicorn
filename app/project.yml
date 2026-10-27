@@ -1,0 +1,71 @@
+name: Cornhub
+options:
+  bundleIdPrefix: com.alxojy
+  deploymentTarget:
+    iOS: "26.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+    TARGETED_DEVICE_FAMILY: "1"
+packages:
+  SwiftProtobuf:
+    url: https://github.com/apple/swift-protobuf
+    from: 1.39.0
+targets:
+  Cornhub:
+    type: application
+    platform: iOS
+    sources:
+      - path: Cornhub
+    dependencies:
+      - framework: ../build/RslibBridge.xcframework
+        embed: false
+      - package: SwiftProtobuf
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.alxojy.cornhub
+        PRODUCT_NAME: Cornhub
+        INFOPLIST_KEY_CFBundleDisplayName: Cornhub
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIUserInterfaceStyle: Dark
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
+        GENERATE_INFOPLIST_FILE: YES
+        OTHER_LDFLAGS: "-lc++ -lresolv"
+        ENABLE_USER_SCRIPT_SANDBOXING: YES
+  CornhubTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: CornhubTests
+    dependencies:
+      - target: Cornhub
+      - package: SwiftProtobuf
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.alxojy.cornhub.tests
+        GENERATE_INFOPLIST_FILE: YES
+  CornhubUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: CornhubUITests
+    dependencies:
+      - target: Cornhub
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.alxojy.cornhub.uitests
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  Cornhub:
+    build:
+      targets:
+        Cornhub: all
+        CornhubTests: [test]
+        CornhubUITests: [test]
+    test:
+      targets:
+        - CornhubTests
+        - CornhubUITests
