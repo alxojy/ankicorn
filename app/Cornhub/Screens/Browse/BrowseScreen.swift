@@ -178,6 +178,7 @@ private struct BrowseContent: View {
         html.replacingOccurrences(of: "(<br\\s*/?>|</div>|</p>|\u{1f})+", with: " · ", options: .regularExpression)
             .replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
             .replacingOccurrences(of: "&nbsp;", with: " ")
+            .replacingOccurrences(of: "\\s{2,}", with: " · ", options: .regularExpression)
             .replacingOccurrences(of: "\\s*·\\s*(·\\s*)*", with: " · ", options: .regularExpression)
             .trimmingCharacters(in: CharacterSet(charactersIn: " ·\n\t"))
     }

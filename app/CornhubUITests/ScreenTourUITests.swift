@@ -45,7 +45,8 @@ final class ScreenTourUITests: XCTestCase {
         sleep(2)
         shot("03-deck-overview")
         if tileLabel.hasPrefix("HSK 1") {
-            XCTAssertTrue(app.descendants(matching: .any)["New: 45"].waitForExistence(timeout: 5), "overview shows 45 new")
+            XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "New: 20")).firstMatch.waitForExistence(timeout: 5), "overview shows 20 new (daily limit of the 45 cards)")
+            XCTAssertTrue(app.staticTexts["45 cards"].exists, "overview shows 45 cards")
         }
         let options = app.descendants(matching: .any)["deck-options-button"]
         if options.waitForExistence(timeout: 5) {
