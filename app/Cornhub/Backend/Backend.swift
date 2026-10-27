@@ -34,6 +34,19 @@ actor Backend {
     func call<Request: SwiftProtobuf.Message, Response: SwiftProtobuf.Message>(
         service: UInt32, method: UInt32, _ request: Request
     ) throws -> Response {
+        try perform(service: service, method: method, request)
+    }
+
+    /// Like `call` but not serialised behind other calls, so progress can be read while a long call (sync) runs.
+    nonisolated func callConcurrently<Request: SwiftProtobuf.Message, Response: SwiftProtobuf.Message>(
+        service: UInt32, method: UInt32, _ request: Request
+    ) throws -> Response {
+        try perform(service: service, method: method, request)
+    }
+
+    private nonisolated func perform<Request: SwiftProtobuf.Message, Response: SwiftProtobuf.Message>(
+        service: UInt32, method: UInt32, _ request: Request
+    ) throws -> Response {
         let input = try request.serializedData()
         let pointer = handle.pointer
         var out = ByteBuf(ptr: nil, len: 0, cap: 0)

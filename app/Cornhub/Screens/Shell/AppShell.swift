@@ -5,6 +5,7 @@ struct AppShell: View {
     let launch: LaunchOptions
     @State private var selection: AppTab = .decks
     @State private var deckModel: DeckHomeModel
+    @State private var sync = SyncModel()
 
     init(launch: LaunchOptions) {
         self.launch = launch
@@ -19,19 +20,28 @@ struct AppShell: View {
             FloatingTabBar(selection: $selection)
         }
         .tint(Theme.accent)
+        .task {
+            sync.reopenCollection = { try await deckModel.reopen() }
+            sync.didFinish = { await deckModel.refresh() }
+            await deckModel.load()
+            if let backend = deckModel.backend {
+                await sync.backupIfDue(backend)
+                if sync.syncOnOpen { await sync.sync(backend: backend) }
+            }
+        }
         .onOpenURL { url in Task { await deckModel.importPackage(url) } }
     }
 
     @ViewBuilder private var screen: some View {
         switch selection {
         case .decks:
-            DeckHomeScreen(model: deckModel)
+            DeckHomeScreen(model: deckModel, sync: sync)
         case .browse:
             PlaceholderScreen(title: "Browse", symbol: "magnifyingglass", message: "Search and edit your cards. Coming soon.")
         case .stats:
             PlaceholderScreen(title: "Stats", symbol: "chart.bar", message: "Your reviews and retention will show up here.")
         case .settings:
-            PlaceholderScreen(title: "Settings", symbol: "gearshape", message: "Sync and preferences. Coming soon.")
+            SettingsScreen(sync: sync, backend: deckModel.backend)
         }
     }
 }

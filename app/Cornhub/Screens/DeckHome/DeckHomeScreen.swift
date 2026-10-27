@@ -4,9 +4,11 @@ import UniformTypeIdentifiers
 /// The Decks tab: date and sync line, due-count hero, stacked bar, Start review and the deck tile grid.
 struct DeckHomeScreen: View {
     let model: DeckHomeModel
+    let sync: SyncModel
     @State private var showNote: String?
     @State private var reviewTarget: ReviewTarget?
     @State private var pickingFile = false
+    @State private var showLogin = false
 
     var body: some View {
         NavigationStack {
@@ -15,7 +17,6 @@ struct DeckHomeScreen: View {
                 .navigationDestination(for: DeckTile.self) { DeckOverviewScreen(deck: $0, model: model) }
                 .toolbar(.hidden, for: .navigationBar)
         }
-        .task { await model.load() }
         .fullScreenCover(item: $reviewTarget, onDismiss: { Task { await model.refresh() } }) { target in
             if let backend = model.backend { ReviewScreen(backend: backend, deckID: target.deckID) }
         }
@@ -24,6 +25,22 @@ struct DeckHomeScreen: View {
         }
         .sheet(isPresented: Binding(get: { model.importState != .idle }, set: { if !$0 { model.dismissImport() } })) {
             ImportSheet(state: model.importState, dismiss: model.dismissImport)
+        }
+        .sheet(isPresented: $showLogin) { LoginSheet(sync: sync, backend: model.backend) }
+        .confirmationDialog(
+            "Your collection and AnkiWeb differ", isPresented: Binding(
+                get: { sync.fullSyncChoice != nil }, set: { if !$0 { sync.cancelFullSync() } }),
+            titleVisibility: .visible
+        ) {
+            if sync.fullSyncChoice?.canUpload == true {
+                Button("Upload to AnkiWeb (replaces AnkiWeb)", role: .destructive) { resolve(upload: true) }
+            }
+            if sync.fullSyncChoice?.canDownload == true {
+                Button("Download from AnkiWeb (replaces this device)", role: .destructive) { resolve(upload: false) }
+            }
+            Button("Cancel", role: .cancel) { sync.cancelFullSync() }
+        } message: {
+            Text("One side has to overwrite the other. A backup of this collection is made first.")
         }
         .alert(showNote ?? "", isPresented: Binding(get: { showNote != nil }, set: { if !$0 { showNote = nil } })) {
             Button("OK", role: .cancel) {}
@@ -72,7 +89,7 @@ struct DeckHomeScreen: View {
                 }
                 .padding(.horizontal, 16)
             }
-            .refreshable { await model.refresh() }
+            .refreshable { await runSync() }
         }
     }
 
@@ -82,15 +99,31 @@ struct DeckHomeScreen: View {
                 Text(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide)))
                     .font(.headline).foregroundStyle(Theme.text)
                 HStack(spacing: 6) {
-                    Circle().fill(Theme.synced).frame(width: 8, height: 8).accessibilityHidden(true)
-                    Text(model.syncStatus).font(.footnote).foregroundStyle(Theme.muted)
+                    Circle().fill(sync.hasFailed ? Theme.again : sync.isSignedIn ? Theme.synced : Theme.muted).frame(width: 8, height: 8).accessibilityHidden(true)
+                    Text(sync.statusText).font(.footnote)
+                        .foregroundStyle(sync.hasFailed ? Theme.again : Theme.muted)
+                        .accessibilityIdentifier("sync-status")
                 }
             }
             Spacer()
-            roundButton("arrow.triangle.2.circlepath", "Sync") { showNote = "Sync arrives in a later phase." }
+            roundButton("arrow.triangle.2.circlepath", "Sync") { Task { await runSync() } }
             roundButton("square.and.arrow.down", "Import deck") { pickingFile = true }
             roundButton("plus", "Add") { showNote = "Adding cards is coming soon." }
         }
+    }
+
+    private func runSync() async {
+        guard sync.isSignedIn else {
+            showLogin = true
+            return
+        }
+        guard let backend = model.backend else { return }
+        await sync.sync(backend: backend)
+    }
+
+    private func resolve(upload: Bool) {
+        guard let backend = model.backend else { return }
+        Task { await sync.resolveFullSync(upload: upload, backend: backend) }
     }
 
     private func roundButton(_ symbol: String, _ label: String, action: @escaping () -> Void) -> some View {

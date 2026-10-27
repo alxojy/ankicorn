@@ -21,7 +21,6 @@ final class DeckHomeModel {
     private(set) var state = State.loading
     private(set) var decks: [DeckTile] = []
     private(set) var studiedToday = ""
-    private(set) var syncStatus = "Not synced yet"
     private(set) var importState = ImportState.idle
 
     private let launch: LaunchOptions
@@ -60,7 +59,15 @@ final class DeckHomeModel {
         }
     }
 
-    /// Pull to refresh. Sync arrives in Phase 2, so this reloads the counts.
+    /// Reopens the collection after a full sync transfer closed it.
+    func reopen() async throws {
+        guard let backend else { return }
+        try await backend.openCollection(path: collectionURL)
+        try await fetch(backend)
+        state = .loaded
+    }
+
+    /// Reloads the counts (a sync calls this when it finishes).
     func refresh() async {
         guard let backend else { return await load() }
         do {
