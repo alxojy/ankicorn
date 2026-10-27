@@ -6,6 +6,7 @@ struct DeckHomeScreen: View {
     let model: DeckHomeModel
     let sync: SyncModel
     @State private var showNote: String?
+    @State private var addingCard = false
     @State private var reviewTarget: ReviewTarget?
     @State private var pickingFile = false
     @State private var showLogin = false
@@ -19,6 +20,9 @@ struct DeckHomeScreen: View {
         }
         .fullScreenCover(item: $reviewTarget, onDismiss: { Task { await model.refresh() } }) { target in
             if let backend = model.backend { ReviewScreen(backend: backend, deckID: target.deckID) }
+        }
+        .fullScreenCover(isPresented: $addingCard, onDismiss: { Task { await model.refresh() } }) {
+            if let backend = model.backend { NoteEditorScreen(backend: backend, mode: .add) }
         }
         .fileImporter(isPresented: $pickingFile, allowedContentTypes: UTType.ankiPackages) { result in
             if case .success(let url) = result { Task { await model.importPackage(url) } }
@@ -108,7 +112,7 @@ struct DeckHomeScreen: View {
             Spacer()
             roundButton("arrow.triangle.2.circlepath", "Sync") { Task { await runSync() } }
             roundButton("square.and.arrow.down", "Import deck") { pickingFile = true }
-            roundButton("plus", "Add") { showNote = "Adding cards is coming soon." }
+            roundButton("plus", "Add") { addingCard = true }
         }
     }
 

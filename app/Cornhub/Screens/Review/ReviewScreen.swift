@@ -60,8 +60,10 @@ struct ReviewScreen: View {
         .background(Theme.bg.ignoresSafeArea())
         .task { await model.start() }
         .sensoryFeedback(.impact, trigger: pastThreshold)
-        .sheet(item: Binding(get: { editingNote.map(IdentifiedNote.init) }, set: { editingNote = $0?.note })) { item in
-            NoteEditorSheet(note: item.note) { saved in Task { await model.save(note: saved) } }
+        .fullScreenCover(item: Binding(get: { editingNote.map(IdentifiedNote.init) }, set: { editingNote = $0?.note })) { item in
+            NoteEditorScreen(backend: model.backend, mode: .edit(item.note)) { saved in
+                Task { await model.save(note: saved) }
+            }
         }
         .sheet(item: $infoPage) { page in
             AnkiWebSheet(page: page, backend: model.backend)

@@ -59,6 +59,8 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.alxojy.cornhub
         PRODUCT_NAME: Cornhub
         INFOPLIST_KEY_CFBundleDisplayName: Cornhub
+        INFOPLIST_KEY_NSCameraUsageDescription: Cornhub uses the camera to add pictures to your cards.
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: Cornhub records audio for your cards.
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UIUserInterfaceStyle: Dark
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
