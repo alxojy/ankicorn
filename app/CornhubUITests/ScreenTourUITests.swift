@@ -24,8 +24,23 @@ final class ScreenTourUITests: XCTestCase {
         button.tap()
     }
 
-    private func dismissSheet() {
-        app.swipeDown(velocity: .fast)
+    /// Closes the open sheet with its own button (web sheets: Done, native sheets: Cancel or Done).
+    private func dismissSheet(file: StaticString = #filePath, line: UInt = #line) {
+        for button in [app.buttons["web-done"], app.buttons["Done"], app.buttons["Cancel"]] where button.exists {
+            button.tap()
+            return
+        }
+        XCTFail("no Done or Cancel button to close the sheet", file: file, line: line)
+    }
+
+    /// Scrolls a lazy list until the element is on screen.
+    private func scrollTo(_ element: XCUIElement) {
+        var tries = 0
+        let tabTop = app.descendants(matching: .any)["tab-settings"].frame.minY
+        while !element.exists || !element.isHittable || element.frame.maxY > tabTop, tries < 8 {
+            app.collectionViews.firstMatch.swipeUp(velocity: .fast)
+            tries += 1
+        }
     }
 
     func testHomeAndDeckOverview() {
@@ -41,13 +56,14 @@ final class ScreenTourUITests: XCTestCase {
         let tile = app.descendants(matching: .any).matching(identifier: "deck-tile").firstMatch
         XCTAssertTrue(tile.waitForExistence(timeout: 10), "deck tiles show")
         let tileLabel = tile.label
+        XCTAssertTrue(tileLabel.hasPrefix("HSK 1"), "first tile is HSK 1, got \(tileLabel)")
+        // The home tile and the overview use the same engine counts: the 45 cards are capped by the daily new limit.
+        XCTAssertTrue(tileLabel.contains("20 new"), "home tile shows 20 new, got \(tileLabel)")
         tile.tap()
         sleep(2)
         shot("03-deck-overview")
-        if tileLabel.hasPrefix("HSK 1") {
-            XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "New: 20")).firstMatch.waitForExistence(timeout: 5), "overview shows 20 new (daily limit of the 45 cards)")
-            XCTAssertTrue(app.staticTexts["45 cards"].exists, "overview shows 45 cards")
-        }
+        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "New: 20")).firstMatch.waitForExistence(timeout: 5), "overview shows 20 new (daily limit of the 45 cards)")
+        XCTAssertTrue(app.staticTexts["45 cards"].exists, "overview shows 45 cards")
         let options = app.descendants(matching: .any)["deck-options-button"]
         if options.waitForExistence(timeout: 5) {
             options.tap()
@@ -121,7 +137,16 @@ final class ScreenTourUITests: XCTestCase {
             shot("21-add-card-typing")
         }
         let chip = app.descendants(matching: .any)["editor-notetype-chip"]
-        if chip.exists { chip.tap(); sleep(1); shot("22-notetype-picker"); dismissSheet() }
+        XCTAssertTrue(chip.exists, "notetype chip exists")
+        chip.tap()
+        sleep(1)
+        shot("22-notetype-picker")
+        let basic = app.buttons["Basic"].firstMatch
+        XCTAssertTrue(basic.waitForExistence(timeout: 5), "picker lists Basic")
+        basic.tap()
+        sleep(1)
+        shot("23-notetype-basic")
+        XCTAssertTrue(app.descendants(matching: .any)["editor-field-1"].waitForExistence(timeout: 5), "Basic has a Back field")
     }
 
     func testBrowse() {
@@ -131,8 +156,12 @@ final class ScreenTourUITests: XCTestCase {
         shot("30-browse")
         let filter = app.descendants(matching: .any)["browse-filter"]
         if filter.waitForExistence(timeout: 5) { filter.tap(); sleep(1); shot("31-browse-filter"); dismissSheet() }
-        let row = app.cells.firstMatch
-        if row.waitForExistence(timeout: 5) { row.tap(); sleep(2); shot("32-browse-edit-note") }
+        let row = app.buttons.matching(identifier: "browse-row").firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 5), "browse lists rows")
+        row.tap()
+        sleep(2)
+        shot("32-browse-edit-note")
+        XCTAssertTrue(app.descendants(matching: .any)["editor-field-0"].waitForExistence(timeout: 5), "row opens the note editor")
     }
 
     func testStats() {
@@ -153,21 +182,30 @@ final class ScreenTourUITests: XCTestCase {
         shot("50-settings")
         app.swipeUp()
         shot("51-settings-scrolled")
+        for _ in 0..<6 { app.collectionViews.firstMatch.swipeUp(velocity: .fast) }
+        shot("51b-settings-bottom")
+        let tabTop = app.descendants(matching: .any)["tab-settings"].frame.minY
+        XCTAssertLessThanOrEqual(
+            app.descendants(matching: .any)["settings-tools"].frame.maxY, tabTop, "last Settings row clears the tab bar")
         for (id, name) in [("settings-manage", "52-manage"), ("settings-tools", "53-tools"),
                            ("settings-import-export", "54-import-export")] {
             let item = app.descendants(matching: .any)[id]
-            if item.waitForExistence(timeout: 5) {
-                item.tap()
-                sleep(2)
-                shot(name)
-                app.navigationBars.buttons.element(boundBy: 0).tap()
-                sleep(1)
-            } else {
-                XCTFail("\(id) not found")
-            }
+            scrollTo(item)
+            guard item.exists else { XCTFail("\(id) not found"); continue }
+            item.tap()
+            sleep(2)
+            shot(name)
+            app.navigationBars.buttons.element(boundBy: 0).tap()
+            XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 5), "back on Settings after \(id)")
         }
+        for _ in 0..<6 { app.collectionViews.firstMatch.swipeDown(velocity: .fast) }
         let login = app.descendants(matching: .any)["settings-login"]
-        if login.waitForExistence(timeout: 5) { login.tap(); sleep(1); shot("55-login") }
+        scrollTo(login)
+        XCTAssertTrue(login.exists, "login row exists")
+        login.tap()
+        sleep(1)
+        shot("55-login")
+        XCTAssertTrue(app.textFields.firstMatch.waitForExistence(timeout: 5) || app.secureTextFields.firstMatch.exists, "login sheet shows fields")
     }
 
     func testLargestTextSize() {

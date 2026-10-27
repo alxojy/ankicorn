@@ -32,6 +32,8 @@ enum Theme {
 
     /// Minimum touch target.
     static let minTarget: CGFloat = 44
+    /// Bottom scroll margin that keeps the last row clear of the floating tab bar.
+    static let tabBarClearance: CGFloat = 96
 }
 
 /// Pt sizes at default Dynamic Type from PLAN.md. They are base sizes that scale; never used as fixed sizes.

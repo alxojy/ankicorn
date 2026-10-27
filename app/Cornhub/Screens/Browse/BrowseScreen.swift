@@ -121,6 +121,7 @@ private struct BrowseContent: View {
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
+            .contentMargins(.bottom, Theme.tabBarClearance, for: .scrollContent)
         }
     }
 
@@ -172,6 +173,7 @@ private struct BrowseContent: View {
             }.tint(Theme.accent)
         }
         .accessibilityLabel("\(title). \(subtitle)\(selected ? ". Selected" : "")")
+        .accessibilityIdentifier("browse-row")
     }
 
     static func plain(_ html: String) -> String {

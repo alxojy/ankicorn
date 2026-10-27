@@ -18,6 +18,8 @@ final class DeckHomeModel {
         case failed(String)
     }
 
+    static let sampleDecks = ["HSK 1", "HSK 2", "HSK 2::Verbs"]
+
     private(set) var state = State.loading
     private(set) var decks: [DeckTile] = []
     private(set) var doneToday = 0
@@ -51,7 +53,7 @@ final class DeckHomeModel {
             try await backend.ensureChineseNotetype()
             if launch.seedSample {
                 try await seedSampleDecks(backend)
-                try await backend.seedSampleNotes(deckNames: DeckTreeModel.sampleDecks)
+                try await backend.seedSampleNotes(deckNames: DeckHomeModel.sampleDecks)
             }
             try await fetch(backend)
             state = .loaded
@@ -143,7 +145,7 @@ final class DeckHomeModel {
 
     private func seedSampleDecks(_ backend: Backend) async throws {
         let existing = Set(DeckRow.rows(from: try await backend.deckTree()).map(\.fullName))
-        for name in DeckTreeModel.sampleDecks where !existing.contains(name) {
+        for name in DeckHomeModel.sampleDecks where !existing.contains(name) {
             try await backend.addDeck(name: name)
         }
     }
