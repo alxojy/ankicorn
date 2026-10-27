@@ -26,7 +26,6 @@
 		864331708DBCCD952857D94A /* anki_import_export.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0267591B68056B5388CDCB39 /* anki_import_export.pb.swift */; };
 		8EBA77D0C9FF6C28E729E345 /* anki_generic.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DABF0AA446B19CB7BD8219C /* anki_generic.pb.swift */; };
 		913B989525E0721349489884 /* anki_frontend.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA76BD9FD462F4E06848A53B /* anki_frontend.pb.swift */; };
-		9ABEB7EC3BB5ECB2A485C882 /* TestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B520DEAFC8531A0060776AA /* TestSupport.swift */; };
 		9C83E547CB0F4D8FACADBF64 /* Backend+Decks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86B6197F7289026210B6BC2C /* Backend+Decks.swift */; };
 		9F6C0E385D3DBF302FB250B4 /* anki_decks.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63688E8FA2BF721FB1720927 /* anki_decks.pb.swift */; };
 		9FE0FBD3E751055E8F0833E3 /* anki_scheduler.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A835AA425B39A048E58DF11 /* anki_scheduler.pb.swift */; };
@@ -82,7 +81,6 @@
 		3A98BCE610B2E2C8D4BD4968 /* Backend+Collection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Backend+Collection.swift"; sourceTree = "<group>"; };
 		45682C7D3642E127D1836490 /* ProtobufTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProtobufTests.swift; sourceTree = "<group>"; };
 		4B6D1300E695557297337EBA /* anki_i18n.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = anki_i18n.pb.swift; sourceTree = "<group>"; };
-		5B520DEAFC8531A0060776AA /* TestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestSupport.swift; sourceTree = "<group>"; };
 		5FE695072E2AD56D73CFDF36 /* anki_card_rendering.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = anki_card_rendering.pb.swift; sourceTree = "<group>"; };
 		60929A6FE3547718739BDC2F /* anki_notetypes.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = anki_notetypes.pb.swift; sourceTree = "<group>"; };
 		63688E8FA2BF721FB1720927 /* anki_decks.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = anki_decks.pb.swift; sourceTree = "<group>"; };
@@ -257,7 +255,6 @@
 				7031B3FAEA9214C97767F32B /* DeckTreeModelTests.swift */,
 				0AC1A3E30F1FD4A8252D3476 /* DeckWrapperTests.swift */,
 				45682C7D3642E127D1836490 /* ProtobufTests.swift */,
-				5B520DEAFC8531A0060776AA /* TestSupport.swift */,
 			);
 			path = CornhubTests;
 			sourceTree = "<group>";
@@ -377,7 +374,6 @@
 				2C02EBD437FFB6DB6FA03272 /* DeckTreeModelTests.swift in Sources */,
 				3054E5BC33A7D8D1660016AB /* DeckWrapperTests.swift in Sources */,
 				CBDD637589D23F8F4B6B8F03 /* ProtobufTests.swift in Sources */,
-				9ABEB7EC3BB5ECB2A485C882 /* TestSupport.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

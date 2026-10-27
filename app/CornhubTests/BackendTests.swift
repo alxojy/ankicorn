@@ -1,6 +1,13 @@
 import XCTest
 @testable import Cornhub
 
+/// A unique temporary folder; callers remove it in tearDown.
+func makeTempDirectory() throws -> URL {
+    let url = FileManager.default.temporaryDirectory.appending(path: "cornhub-test-\(UUID().uuidString)")
+    try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+    return url
+}
+
 final class BackendTests: XCTestCase {
     private var directory: URL!
 
