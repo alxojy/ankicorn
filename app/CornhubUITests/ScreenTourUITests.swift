@@ -31,15 +31,22 @@ final class ScreenTourUITests: XCTestCase {
     func testHomeAndDeckOverview() {
         app.launch()
         XCTAssertTrue(app.descendants(matching: .any)["due-total"].waitForExistence(timeout: 30), "due hero shows")
+        XCTAssertTrue(
+            app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'done today'")).firstMatch
+                .waitForExistence(timeout: 10), "hero line reads 'N done today'")
         shot("01-home")
         app.swipeUp()
         shot("02-home-scrolled")
         app.swipeDown()
         let tile = app.descendants(matching: .any).matching(identifier: "deck-tile").firstMatch
         XCTAssertTrue(tile.waitForExistence(timeout: 10), "deck tiles show")
+        let tileLabel = tile.label
         tile.tap()
         sleep(2)
         shot("03-deck-overview")
+        if tileLabel.hasPrefix("HSK 1") {
+            XCTAssertTrue(app.descendants(matching: .any)["New: 45"].waitForExistence(timeout: 5), "overview shows 45 new")
+        }
         let options = app.descendants(matching: .any)["deck-options-button"]
         if options.waitForExistence(timeout: 5) {
             options.tap()

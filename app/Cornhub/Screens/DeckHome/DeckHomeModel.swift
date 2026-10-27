@@ -20,7 +20,7 @@ final class DeckHomeModel {
 
     private(set) var state = State.loading
     private(set) var decks: [DeckTile] = []
-    private(set) var studiedToday = ""
+    private(set) var doneToday = 0
     private(set) var importState = ImportState.idle
 
     private let launch: LaunchOptions
@@ -108,9 +108,16 @@ final class DeckHomeModel {
 
     func dismissImport() { importState = .idle }
 
-    func counts(for deckID: Int64) async -> (new: Int, review: Int)? {
-        guard let backend, let counts = try? await backend.countsForDeckToday(deckID: deckID) else { return nil }
-        return (Int(counts.new), Int(counts.review))
+    /// The deck's tile from the latest `deck_tree`, so the overview matches the home tiles.
+    func tile(for deckID: Int64) -> DeckTile? {
+        func find(_ tiles: [DeckTile]) -> DeckTile? {
+            for tile in tiles {
+                if tile.id == deckID { return tile }
+                if let hit = find(tile.children) { return hit }
+            }
+            return nil
+        }
+        return find(decks)
     }
 
     func setCollapsed(_ deckID: Int64, _ collapsed: Bool) async {
@@ -122,7 +129,7 @@ final class DeckHomeModel {
     private func fetch(_ backend: Backend) async throws {
         let tree = try await backend.deckTree(now: Int64(Date().timeIntervalSince1970))
         decks = DeckTile.tiles(from: tree)
-        studiedToday = (try? await backend.studiedToday()) ?? ""
+        doneToday = Int((try? await backend.graphs(search: "rated:1", days: 1).today.answerCount) ?? 0)
     }
 
     private func seedSampleDecks(_ backend: Backend) async throws {

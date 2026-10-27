@@ -154,8 +154,7 @@ struct DeckHomeScreen: View {
     }
 
     private var heroLine: String {
-        let done = model.studiedToday.isEmpty ? "Nothing studied yet" : model.studiedToday
-        return "≈ \(model.estimatedMinutes) min · \(done) · Streak —"
+        "≈ \(model.estimatedMinutes) min · \(model.doneToday) done today · streak —"
     }
 }
 

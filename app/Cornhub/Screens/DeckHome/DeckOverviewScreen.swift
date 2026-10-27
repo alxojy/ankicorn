@@ -4,10 +4,11 @@ import SwiftUI
 struct DeckOverviewScreen: View {
     let deck: DeckTile
     let model: DeckHomeModel
-    @State private var counts: (new: Int, review: Int)?
     @State private var reviewTarget: ReviewTarget?
     @State private var showCustomStudy = false
     @State private var optionsPage: AnkiWebPage?
+
+    private var current: DeckTile { model.tile(for: deck.id) ?? deck }
 
     var body: some View {
         ScrollView {
@@ -19,9 +20,9 @@ struct DeckOverviewScreen: View {
                     Text("\(deck.totalCards) cards").foregroundStyle(Theme.muted)
                 }
                 HStack(spacing: 12) {
-                    stat("New", counts?.new ?? deck.newCount, Theme.new)
-                    stat("Learning", deck.learningCount, Theme.learning)
-                    stat("Review", counts?.review ?? deck.reviewCount, Theme.accent)
+                    stat("New", current.newCount, Theme.new)
+                    stat("Learning", current.learningCount, Theme.learning)
+                    stat("Review", current.reviewCount, Theme.accent)
                 }
                 Button {
                     reviewTarget = ReviewTarget(deckID: deck.id)
@@ -41,7 +42,6 @@ struct DeckOverviewScreen: View {
                     Button {
                         Task {
                             try? await model.backend?.unburyDeck(id: deck.id)
-                            counts = await model.counts(for: deck.id)
                             await model.refresh()
                         }
                     } label: {
@@ -73,16 +73,14 @@ struct DeckOverviewScreen: View {
             if let backend = model.backend {
                 CustomStudySheet(backend: backend, deckID: deck.id) {
                     Task {
-                        counts = await model.counts(for: deck.id)
                         await model.refresh()
                     }
                 }
             }
         }
-        .sheet(item: $optionsPage, onDismiss: { Task { counts = await model.counts(for: deck.id); await model.refresh() } }) { page in
+        .sheet(item: $optionsPage, onDismiss: { Task { await model.refresh() } }) { page in
             if let backend = model.backend { AnkiWebSheet(page: page, backend: backend) }
         }
-        .task { counts = await model.counts(for: deck.id) }
     }
 
     @ViewBuilder private var subdecks: some View {

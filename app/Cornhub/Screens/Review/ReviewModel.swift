@@ -42,6 +42,8 @@ final class ReviewModel {
     fileprivate(set) var queued: Anki_Scheduler_QueuedCards.QueuedCard?
     private var shownAt = Date()
     private var startTotal = 0
+    /// Decks already studied this session when no deck was chosen.
+    private var visitedDecks: Set<Int64> = []
 
     init(backend: Backend, deckID: Int64?) {
         self.backend = backend
@@ -61,7 +63,11 @@ final class ReviewModel {
 
     func start() async {
         do {
-            if let deckID { try await backend.setCurrentDeck(deckID) }
+            if let deckID {
+                try await backend.setCurrentDeck(deckID)
+            } else {
+                _ = try await moveToNextDueDeck()
+            }
             try await loadNext()
             startTotal = counts.total
         } catch {
@@ -106,6 +112,19 @@ final class ReviewModel {
         }
     }
 
+    /// With no chosen deck, makes the next top-level deck that `deck_tree` says has due cards current.
+    private func moveToNextDueDeck() async throws -> Bool {
+        let tree = try await backend.deckTree(now: Int64(Date().timeIntervalSince1970))
+        guard
+            let next = tree.children.first(where: {
+                !visitedDecks.contains($0.deckID) && $0.newCount + $0.learnCount + $0.reviewCount > 0
+            })
+        else { return false }
+        visitedDecks.insert(next.deckID)
+        try await backend.setCurrentDeck(next.deckID)
+        return true
+    }
+
     /// Label for the interval under a grade button, e.g. "3d".
     func interval(_ rating: Anki_Scheduler_CardAnswer.Rating) -> String {
         let index = rating.rawValue
@@ -122,6 +141,7 @@ final class ReviewModel {
         typedAnswer = ""
         audio.stop()
         guard let next = result.cards.first else {
+            if deckID == nil, try await moveToNextDueDeck() { return try await loadNext() }
             queued = nil
             rendered = nil
             congrats = try await backend.congratsInfo()
