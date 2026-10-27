@@ -49,13 +49,14 @@ If the fast-forward is rejected, rebase and repeat. **Never wait for CI** (`gh r
 
 ```
 PLAN.md                     product plan, parity table, phases, design standard
-crates/rslib-bridge/        Rust C-ABI bridge over rslib (git dependency at tag 26.09.3)
+crates/rslib-bridge/        Rust C-ABI bridge over rslib (path dependency on the third_party/anki submodule, tag 26.09.3)
+third_party/anki/           Anki submodule (shallow, tag 26.09.3); run scripts/setup-engine.sh to check it out
 app/Cornhub.xcodeproj      Xcode project
 app/Cornhub/               SwiftUI app: Backend/ (typed protobuf wrappers), Theme/, Screens/, Web/ (WKWebView + scheme handler)
 app/CornhubTests/          unit tests
 app/CornhubUITests/        simulator UI tests (attach screenshots)
 web/                        build glue for Anki's SvelteKit pages (Phase 3)
-scripts/                    build-xcframework.sh and other helpers
+scripts/                    setup-engine.sh (submodules), build-xcframework.sh (-> build/RslibBridge.xcframework)
 docs/CONVENTIONS.md         code conventions
 openspec/                   specs and changes
 ledger/LEDGER.jsonl         append-only task log

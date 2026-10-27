@@ -1,0 +1,10 @@
+[workspace]
+resolver = "2"
+members = ["crates/rslib-bridge"]
+exclude = ["third_party"]
+
+# Keeps the iOS static library small and the link step light on an 8 GB machine.
+[profile.release]
+opt-level = "s"
+lto = "thin"
+strip = "debuginfo"

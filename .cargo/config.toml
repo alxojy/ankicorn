@@ -1,0 +1,4 @@
+# rslib's build scripts need protoc and may not see it on PATH in non-login shells. An existing
+# PROTOC in the environment wins (force is false by default).
+[env]
+PROTOC = "/opt/homebrew/bin/protoc"

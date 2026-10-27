@@ -1,0 +1,4 @@
+[submodule "third_party/anki"]
+	path = third_party/anki
+	url = https://github.com/ankitects/anki.git
+	shallow = true

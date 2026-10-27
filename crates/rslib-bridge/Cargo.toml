@@ -1,0 +1,16 @@
+[package]
+name = "rslib-bridge"
+version = "0.1.0"
+edition = "2021"
+license = "AGPL-3.0-or-later"
+description = "C ABI over Anki's rslib for the Cornhub iOS app"
+
+[lib]
+crate-type = ["staticlib", "lib"]
+
+[dependencies]
+anki = { path = "../../third_party/anki/rslib" }
+anki_proto = { path = "../../third_party/anki/rslib/proto" }
+# rslib relies on another Anki workspace member to enable this feature; alone it fails to compile.
+tokio = { version = "1", features = ["io-util"] }
+prost = "0.13"

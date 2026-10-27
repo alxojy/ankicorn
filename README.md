@@ -31,7 +31,7 @@ Details, the desktop parity table, the design standard and the phases are in [`P
 
 ## Status
 
-Setting up. The agent workflow, gate and OpenSpec are in place. Phase 0 (build `rslib` for iOS and print the deck tree from a sample collection in the simulator) is next.
+Setting up. The agent workflow, gate and OpenSpec are in place, and the `rslib-bridge` crate builds an XCFramework for device and simulator. Phase 0 (print the deck tree from a sample collection in the simulator) needs the Xcode project and Swift `Backend`, which come next.
 
 ## Working in this repo
 
@@ -41,6 +41,17 @@ Work is done by AI agents under a mechanical gate instead of code review. Read [
 npm ci            # installs tooling and the git hooks
 npm run gate      # the acceptance check; must pass before pushing to main
 ```
+
+## Building the engine
+
+```sh
+git clone --recurse-submodules --depth 1 <repo>   # or, in an existing clone:
+scripts/setup-engine.sh                           # Anki at tag 26.09.3 + its ftl submodules, shallow
+scripts/build-xcframework.sh                      # build/RslibBridge.xcframework (git-ignored)
+cargo test -p rslib-bridge -j2                    # bridge tests; always -j2 on an 8 GB machine
+```
+
+`CARGO_JOBS=1 scripts/build-xcframework.sh` retries with one job if the linker runs out of memory.
 
 ## Requirements
 
