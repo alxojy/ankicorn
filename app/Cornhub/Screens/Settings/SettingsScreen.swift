@@ -16,6 +16,7 @@ struct SettingsScreen: View {
                 backupSection
                 schedulingSection
                 reviewSection
+                SpeechAndAISection(backend: backend)
             }
             .scrollContentBackground(.hidden)
             .background(Theme.bg)

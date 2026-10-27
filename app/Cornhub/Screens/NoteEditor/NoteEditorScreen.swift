@@ -212,16 +212,16 @@ struct NoteEditorScreen: View {
     }
 
     private var autoFill: some View {
-        Button {} label: {
-            Label("Auto-fill example, audio and picture", systemImage: "sparkles")
+        Button { Task { await model.autoFill() } } label: {
+            Label(model.isAutoFilling ? "Filling…" : "Auto-fill example, audio and picture", systemImage: "sparkles")
                 .font(.subheadline.weight(.semibold))
                 .frame(maxWidth: .infinity, minHeight: Theme.minTarget)
         }
         .buttonStyle(.bordered)
         .buttonBorderShape(.capsule)
         .tint(Theme.accent)
-        .disabled(true)
-        .accessibilityHint("Available in a later update")
+        .disabled(model.isAutoFilling || !model.canSubmit)
+        .accessibilityHint("Fills empty example and audio fields from the first field")
         .accessibilityIdentifier("editor-autofill")
     }
 
