@@ -9,7 +9,7 @@ struct CardWebView: UIViewRepresentable {
     func makeUIView(context: Context) -> WKWebView {
         let configuration = WKWebViewConfiguration()
         configuration.setURLSchemeHandler(MediaSchemeHandler(), forURLScheme: MediaSchemeHandler.scheme)
-        let view = WKWebView(frame: .zero, configuration: configuration)
+        let view = WKWebView(frame: CGRect(x: 0, y: 0, width: 320, height: 480), configuration: configuration)
         view.isOpaque = false
         view.backgroundColor = .clear
         view.scrollView.backgroundColor = .clear
