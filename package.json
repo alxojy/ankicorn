@@ -1,0 +1,17 @@
+{
+  "name": "ankicorn",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "prepare": "git config core.hooksPath .githooks",
+    "gate": "node tools/gate.mjs",
+    "check:spec": "node tools/check-spec.mjs",
+    "check:ledger": "node tools/check-ledger.mjs",
+    "verify": "node tools/verify.mjs",
+    "precommit:code": "node tools/verify.mjs --quick"
+  },
+  "devDependencies": {
+    "@fission-ai/openspec": "^1.15.0"
+  }
+}

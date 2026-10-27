@@ -1,0 +1,9 @@
+#!/bin/sh
+# Nothing reaches main without the gate passing on the exact commit being pushed.
+while read local_ref local_sha remote_ref remote_sha; do
+  if [ "$remote_ref" = "refs/heads/main" ]; then
+    echo "pre-push: running gate before updating main"
+    git fetch -q origin main || true
+    node tools/gate.mjs --base origin/main --final || exit 1
+  fi
+done

@@ -1,0 +1,31 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.DS_Store
+
+# Xcode / SwiftPM
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+.swiftpm/
+.build/
+
+# Rust
+target/
+
+# build outputs (rebuilt by scripts/)
+*.xcframework/
+test-results/
+
+# the user's real collection and secrets must never be committed
+*.anki2
+*.colpkg
+*.apkg
+collection.media/
+
+# crash dumps
+/core
+/core.*
+*.core

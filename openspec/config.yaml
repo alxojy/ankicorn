@@ -1,0 +1,34 @@
+schema: spec-driven
+
+context: |
+  ankicorn is a personal iOS app (SwiftUI) on top of Anki's open-source Rust engine (rslib, pinned to git tag 26.09.3),
+  syncing with desktop Anki through AnkiWeb. PLAN.md is the product plan and design standard.
+  openspec/specs/ holds the current behaviour per capability (deck list, review, sync, add card, browser, stats, ...).
+  Every piece of work is a change in openspec/changes/<change-id>/.
+  Scheduling, storage and sync always come from rslib; specs describe app behaviour on top of the engine, never a
+  re-implementation of it. Where behaviour must match desktop Anki, say which rslib method defines it.
+  Design specs use the Ink tokens from PLAN.md ("Design standards"); never raw hex values.
+
+rules:
+  proposal:
+    - Name the PLAN.md phase and the parity-table rows touched
+    - State what is out of scope
+  specs:
+    - Every requirement uses SHALL and has at least one WHEN/THEN scenario
+    - Name the rslib service and method behind each data-changing behaviour
+    - UI specs name the screen, the Ink tokens used and the VoiceOver label
+    - Mark anything not verified against the pinned rslib or a simulator run as UNVERIFIED with the reason
+  tasks:
+    - Every task is a checkbox and is small enough for one agent session
+    - Each feature task includes unit tests (Rust or Swift), a UI test on the simulator, and a screenshot check against PLAN.md
+    - The last task group is always Verification (fmt, lint, unit, UI tests, ledger, push)
+
+operations:
+  apply:
+    guidance:
+      - Log start and finish to ledger/LEDGER.jsonl (append-only)
+      - Prove the work before ticking a box - npm run gate passes, and code also needs tests for every changed behaviour
+      - Commit and push after each ticked task group
+  archive:
+    guidance:
+      - Archive only when every box in tasks.md is ticked and the gate and CI on main are green
