@@ -29,6 +29,7 @@
 		2C629CC2E63B3B4D20FDEF89 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = F64BDFD6137DE122AA8BE6EA /* Theme.swift */; };
 		2F38DE0607DCE61E01E3A2DC /* FieldFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B682781DDF7906ACAC6304 /* FieldFormatting.swift */; };
 		3054E5BC33A7D8D1660016AB /* DeckWrapperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AC1A3E30F1FD4A8252D3476 /* DeckWrapperTests.swift */; };
+		36CA81F18B4BF4AD18335003 /* Backend+Stats.swift in Sources */ = {isa = PBXBuildFile; fileRef = B30038DD6430EF41C36E3989 /* Backend+Stats.swift */; };
 		3C150BAB2A6DF1686D732AEB /* Backend+Manage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E60BF4E50A60CFE1718C62B /* Backend+Manage.swift */; };
 		3F0AD29748545A7B22B9693F /* SampleNotes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9ED73DCD435B2252D9C2AFD /* SampleNotes.swift */; };
 		4040063FEC3959045F083C92 /* OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = B19647FC9B3D64D83BB3EECE /* OFL.txt */; };
@@ -94,6 +95,7 @@
 		C088A06F571045E239DAED59 /* RslibBridge.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 72061DF379B676AD66400AE7 /* RslibBridge.xcframework */; };
 		C1E0253DC66AA9A51139A26E /* NoteEditorScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F2D7EB07B06DAF424F78110 /* NoteEditorScreen.swift */; };
 		C57EC24EF946433A2A8E9801 /* anki_card_rendering.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FE695072E2AD56D73CFDF36 /* anki_card_rendering.pb.swift */; };
+		C60E861CA54B9B7149F5CB67 /* StatsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5C72B03A14512A45631F26E /* StatsModel.swift */; };
 		CBDD637589D23F8F4B6B8F03 /* ProtobufTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45682C7D3642E127D1836490 /* ProtobufTests.swift */; };
 		CBF83AC84B50BB288C3249DF /* anki_ankihub.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEA91B267F6FB40AE5CFF839 /* anki_ankihub.pb.swift */; };
 		D323EA5995F0AF070E850C60 /* ImportSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D57FB31D1B83AEF3EA9BE0C /* ImportSheet.swift */; };
@@ -219,6 +221,7 @@
 		AEA91B267F6FB40AE5CFF839 /* anki_ankihub.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = anki_ankihub.pb.swift; sourceTree = "<group>"; };
 		B19647FC9B3D64D83BB3EECE /* OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = OFL.txt; sourceTree = "<group>"; };
 		B24BA3FC930E34490CC4E7F8 /* DeckTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckTile.swift; sourceTree = "<group>"; };
+		B30038DD6430EF41C36E3989 /* Backend+Stats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Backend+Stats.swift"; sourceTree = "<group>"; };
 		B5D83EE21CBB3C4E2AB8F866 /* anki_ankidroid.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = anki_ankidroid.pb.swift; sourceTree = "<group>"; };
 		B7E863D0EE1310F2E838E2F2 /* BackendTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackendTests.swift; sourceTree = "<group>"; };
 		BA76BD9FD462F4E06848A53B /* anki_frontend.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = anki_frontend.pb.swift; sourceTree = "<group>"; };
@@ -249,6 +252,7 @@
 		EE19D615C0289AB6CA199203 /* TextGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextGenerator.swift; sourceTree = "<group>"; };
 		F18F0F11FA2077F791915F2E /* anki_links.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = anki_links.pb.swift; sourceTree = "<group>"; };
 		F205D8E7E310CDE43B0B71F3 /* DeckHomeScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckHomeScreen.swift; sourceTree = "<group>"; };
+		F5C72B03A14512A45631F26E /* StatsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsModel.swift; sourceTree = "<group>"; };
 		F64BDFD6137DE122AA8BE6EA /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		F9ED73DCD435B2252D9C2AFD /* SampleNotes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleNotes.swift; sourceTree = "<group>"; };
 		FB659C5074B52401AD96595D /* FilteredDecksScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilteredDecksScreen.swift; sourceTree = "<group>"; };
@@ -410,6 +414,7 @@
 				7581712A24A70C0BC172AFC1 /* Backend+Notetypes.swift */,
 				9A8A07EB0FACF19F7C671E3C /* Backend+Review.swift */,
 				D3D6F429CF624CDFD569FFC0 /* Backend+Scheduler.swift */,
+				B30038DD6430EF41C36E3989 /* Backend+Stats.swift */,
 				6ED297D489B393F03E410F65 /* Backend+Sync.swift */,
 				72FF94692A3EDB50C30F3FD6 /* Backend+Tools.swift */,
 				E043227E68D6749CF8FB475E /* BackendError.swift */,
@@ -481,6 +486,7 @@
 		D522CC32348418A8EA500673 /* Stats */ = {
 			isa = PBXGroup;
 			children = (
+				F5C72B03A14512A45631F26E /* StatsModel.swift */,
 				3B533216E7CF6CEBBB111521 /* StatsScreen.swift */,
 			);
 			path = Stats;
@@ -751,6 +757,7 @@
 				E0DCA87FCE1471B109DE88E5 /* Backend+Notetypes.swift in Sources */,
 				5A0DBE8E8BC6C2E9EB9F883C /* Backend+Review.swift in Sources */,
 				15A0813F7A24DC2C771D9249 /* Backend+Scheduler.swift in Sources */,
+				36CA81F18B4BF4AD18335003 /* Backend+Stats.swift in Sources */,
 				1B2E9A660CB46534CB157024 /* Backend+Sync.swift in Sources */,
 				F49125226E08BA068483653A /* Backend+Tools.swift in Sources */,
 				F342A25DA9850BB6EA035DBE /* Backend.swift in Sources */,
@@ -801,6 +808,7 @@
 				8CAE1AE6F7F89388D046B28E /* SettingsScreen.swift in Sources */,
 				4F2C2447F88C11DD7BE24417 /* SpeechAndAISection.swift in Sources */,
 				8E592D6ECC7578E5A997A89A /* SpeechSettings.swift in Sources */,
+				C60E861CA54B9B7149F5CB67 /* StatsModel.swift in Sources */,
 				AB30A664AF4CF2EDC872E49B /* StatsScreen.swift in Sources */,
 				9B25B1226179F76EA505DC0D /* StrokeOrderView.swift in Sources */,
 				24D160FBD7FEB6C6BDD54CD4 /* SyncModel.swift in Sources */,
