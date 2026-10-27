@@ -16,6 +16,7 @@ struct LoginSheet: View {
                 Text("Sign in to AnkiWeb").font(.inkAnswer).foregroundStyle(Theme.text)
                 Text("Use the account you sync desktop Anki with. Only a sync key is kept on this device.")
                     .font(.footnote).foregroundStyle(Theme.muted)
+                    .fixedSize(horizontal: false, vertical: true)
                 field("Email") {
                     TextField("", text: $username)
                         .textContentType(.username).keyboardType(.emailAddress)

@@ -124,6 +124,8 @@ struct ReviewScreen: View {
                 .accessibilityLabel("More")
             }
             .foregroundStyle(Theme.text)
+            .font(.body)
+            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             if model.phase == .card {
                 ProgressView(value: model.progress).tint(Theme.accent)
                     .accessibilityLabel("Progress")
@@ -132,6 +134,7 @@ struct ReviewScreen: View {
                     count(model.counts.learning, Theme.learning, "learning")
                     count(model.counts.review, Theme.accent, "to review")
                 }
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             }
         }
     }
@@ -172,7 +175,8 @@ struct ReviewScreen: View {
                     .rotationEffect(.degrees(progress >= 0 ? -12 : 12))
             }
         }
-        .frame(maxHeight: .infinity)
+        .frame(minHeight: 160, maxHeight: .infinity)
+        .layoutPriority(1)
         .background(alignment: .bottom) {
             // The next card peeking out behind the current one.
             RoundedRectangle(cornerRadius: Theme.Radius.reviewCard)
@@ -225,6 +229,7 @@ struct ReviewScreen: View {
             grade("Good", .good, Theme.accent, filled: true)
             grade("Easy", .easy, Theme.easy, filled: false)
         }
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .padding(8)
         .background(.ultraThinMaterial, in: Capsule())
         .background(Theme.bg.opacity(0.6), in: Capsule())
@@ -242,8 +247,8 @@ struct ReviewScreen: View {
             Task { await model.answer(rating) }
         } label: {
             VStack(spacing: 2) {
-                Text(title).font(.headline)
-                Text(model.interval(rating)).font(.caption)
+                Text(title).font(.headline).lineLimit(1).minimumScaleFactor(0.7)
+                Text(model.interval(rating)).font(.caption).lineLimit(1).minimumScaleFactor(0.7)
             }
             .frame(maxWidth: .infinity, minHeight: 56)
             .foregroundStyle(filled ? Theme.onAccent : color)

@@ -188,7 +188,7 @@ struct StackedBar: View {
                 .clipShape(Capsule())
             }
             .frame(height: 10)
-            HStack(spacing: 16) {
+            FlowLayout(spacing: 16) {
                 legend("New", new, Theme.new)
                 legend("Learning", learning, Theme.learning)
                 legend("Review", review, Theme.accent)
@@ -205,7 +205,7 @@ struct StackedBar: View {
     private func legend(_ label: String, _ value: Int, _ color: Color) -> some View {
         HStack(spacing: 6) {
             Circle().fill(color).frame(width: 8, height: 8)
-            Text("\(label) \(value)").font(.caption).foregroundStyle(Theme.text2)
+            Text("\(label) \(value)").font(.caption).foregroundStyle(Theme.text2).fixedSize(horizontal: true, vertical: false)
         }
     }
 }

@@ -61,7 +61,7 @@ struct CustomStudySheet: View {
 
     private var unitLabel: String {
         switch option {
-        case .newLimit, .reviewLimit, .cram: "\(amount) cards"
+        case .newLimit, .reviewLimit, .cram: String(localized: "^[\(amount) card](inflect: true)")
         case .forgot, .ahead, .preview: "\(amount) days"
         }
     }

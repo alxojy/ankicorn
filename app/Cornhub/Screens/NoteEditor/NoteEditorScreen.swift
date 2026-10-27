@@ -35,6 +35,7 @@ struct NoteEditorScreen: View {
                     .padding(.horizontal, 16)
                     .padding(.bottom, 16)
                 }
+                .scrollBounceBehavior(.basedOnSize)
                 .scrollDismissesKeyboard(.interactively)
                 if !model.isEditing {
                     autoFill.padding(.horizontal, 16).padding(.top, 8)
