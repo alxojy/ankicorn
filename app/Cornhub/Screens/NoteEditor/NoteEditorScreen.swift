@@ -279,6 +279,8 @@ struct NoteEditorScreen: View {
         .disabled(!model.canSubmit)
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
+        // The floating keyboard accessory sits over the bottom of the content; keep the button clear of it.
+        .padding(.bottom, focused == nil ? 0 : 56)
         .accessibilityIdentifier("editor-submit")
     }
 

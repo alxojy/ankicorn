@@ -10,6 +10,7 @@ struct DeckHomeScreen: View {
     @State private var reviewTarget: ReviewTarget?
     @State private var pickingFile = false
     @State private var showLogin = false
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         NavigationStack {
@@ -98,10 +99,14 @@ struct DeckHomeScreen: View {
     }
 
     private var header: some View {
-        HStack {
+        let layout = typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
+            : AnyLayout(HStackLayout(spacing: 8))
+        return layout {
             VStack(alignment: .leading, spacing: 4) {
                 Text(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide)))
                     .font(.headline).foregroundStyle(Theme.text)
+                    .fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: 6) {
                     Circle().fill(sync.hasFailed ? Theme.again : sync.isSignedIn ? Theme.synced : Theme.muted).frame(width: 8, height: 8).accessibilityHidden(true)
                     Text(sync.statusText).font(.footnote)
@@ -109,10 +114,12 @@ struct DeckHomeScreen: View {
                         .accessibilityIdentifier("sync-status")
                 }
             }
-            Spacer()
-            roundButton("arrow.triangle.2.circlepath", "Sync") { Task { await runSync() } }
-            roundButton("square.and.arrow.down", "Import deck") { pickingFile = true }
-            roundButton("plus", "Add") { addingCard = true }
+            if !typeSize.isAccessibilitySize { Spacer() }
+            HStack(spacing: 8) {
+                roundButton("arrow.triangle.2.circlepath", "Sync") { Task { await runSync() } }
+                roundButton("square.and.arrow.down", "Import deck") { pickingFile = true }
+                roundButton("plus", "Add") { addingCard = true }
+            }
         }
     }
 
@@ -133,10 +140,14 @@ struct DeckHomeScreen: View {
     private func roundButton(_ symbol: String, _ label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: symbol)
+                .dynamicTypeSize(...DynamicTypeSize.xLarge)
                 .foregroundStyle(Theme.text)
                 .frame(width: Theme.minTarget, height: Theme.minTarget)
                 .background(Theme.control, in: Circle())
+                .contentShape(Circle())
         }
+        .buttonStyle(.plain)
+        .fixedSize()
         .accessibilityLabel(label)
     }
 
