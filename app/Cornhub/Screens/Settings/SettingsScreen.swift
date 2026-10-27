@@ -28,6 +28,24 @@ struct SettingsScreen: View {
                 } header: {
                     Text("Manage")
                 }
+                Section {
+                    NavigationLink {
+                        ImportExportScreen(backend: backend)
+                    } label: {
+                        Label("Import and export", systemImage: "square.and.arrow.up.on.square")
+                    }
+                    .frame(minHeight: Theme.minTarget).listRowBackground(Theme.surface)
+                    .accessibilityIdentifier("settings-import-export")
+                    NavigationLink {
+                        ToolsScreen(backend: backend)
+                    } label: {
+                        Label("Check database, media, empty cards", systemImage: "wrench.and.screwdriver")
+                    }
+                    .frame(minHeight: Theme.minTarget).listRowBackground(Theme.surface)
+                    .accessibilityIdentifier("settings-tools")
+                } header: {
+                    Text("Data")
+                }
             }
             .scrollContentBackground(.hidden)
             .background(Theme.bg)
@@ -119,6 +137,23 @@ struct SettingsScreen: View {
                     .listRowBackground(Theme.surface)
                 Toggle("Interrupt audio when answering", isOn: prefs.toggleBinding(backend, \.interruptAudioWhenAnswering))
                     .listRowBackground(Theme.surface)
+                Stepper(
+                    prefs.timeLimitMinutes == 0 ? "Study time limit: off" : "Study time limit: \(prefs.timeLimitMinutes) min",
+                    value: prefs.timeLimitBinding(backend), in: 0...120, step: 5
+                )
+                .frame(minHeight: Theme.minTarget).listRowBackground(Theme.surface)
+            }
+            Section("Editing and search") {
+                Toggle("Add to the current deck", isOn: prefs.editingBinding(backend, \.addingDefaultsToCurrentDeck))
+                    .listRowBackground(Theme.surface)
+                Toggle("Paste without formatting", isOn: prefs.editingBinding(backend, \.pasteStripsFormatting))
+                    .listRowBackground(Theme.surface)
+                Toggle("Paste images as PNG", isOn: prefs.editingBinding(backend, \.pasteImagesAsPng))
+                    .listRowBackground(Theme.surface)
+                Toggle("Ignore accents in search", isOn: prefs.editingBinding(backend, \.ignoreAccentsInSearch))
+                    .listRowBackground(Theme.surface)
+                Toggle("Render LaTeX", isOn: prefs.editingBinding(backend, \.renderLatex))
+                    .listRowBackground(Theme.surface)
             }
         } else if backend != nil {
             ProgressView().listRowBackground(Theme.bg)
@@ -135,6 +170,22 @@ final class PreferencesModel {
 
     var learnAheadMinutes: Int { Int(value.scheduling.learnAheadSecs / 60) }
     var rolloverHour: Int { Int(value.scheduling.rollover) }
+
+    var timeLimitMinutes: Int { Int(value.reviewing.timeLimitSecs / 60) }
+
+    func timeLimitBinding(_ backend: Backend?) -> Binding<Int> {
+        Binding(get: { self.timeLimitMinutes }, set: { minutes in
+            self.update(backend) { $0.reviewing.timeLimitSecs = UInt32(minutes * 60) }
+        })
+    }
+
+    func editingBinding(_ backend: Backend?, _ keyPath: WritableKeyPath<Anki_Config_Preferences.Editing, Bool>)
+        -> Binding<Bool>
+    {
+        Binding(get: { self.value.editing[keyPath: keyPath] }, set: { isOn in
+            self.update(backend) { $0.editing[keyPath: keyPath] = isOn }
+        })
+    }
 
     func load(_ backend: Backend) async {
         if let loadedValue = try? await backend.getPreferences() {
