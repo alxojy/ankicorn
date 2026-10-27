@@ -29,3 +29,10 @@ The same editor SHALL edit an existing note and save it with `update_notes`.
 #### Scenario: Edit from review
 - **WHEN** the user chooses Edit note in the review menu
 - **THEN** the editor opens with the note's fields and tags and saving updates the note
+
+### Requirement: Keyboard layout
+With the keyboard up, the formatting toolbar and the Add card button SHALL NOT overlap each other or the fields.
+
+#### Scenario: Typing in the first field
+- **WHEN** the user types in the first field
+- **THEN** the formatting toolbar sits above the keyboard, and the Add card button stays fully visible or reachable without overlap
