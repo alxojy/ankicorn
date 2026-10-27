@@ -47,6 +47,7 @@ final class DeckHomeModel {
             let backend = try backend ?? Backend()
             self.backend = backend
             try await backend.openCollection(path: collectionURL)
+            await repairDeckConfigsOnce(backend)
             try await backend.ensureChineseNotetype()
             if launch.seedSample {
                 try await seedSampleDecks(backend)
@@ -57,6 +58,14 @@ final class DeckHomeModel {
         } catch {
             state = .failed(error.localizedDescription)
         }
+    }
+
+    /// Decks added by earlier builds point at a deck config that does not exist. The engine's database check
+    /// repairs them; run it once per install of this fix.
+    private func repairDeckConfigsOnce(_ backend: Backend) async {
+        let key = "deckConfigRepair.v1"
+        guard !UserDefaults.standard.bool(forKey: key) else { return }
+        if (try? await backend.checkDatabase()) != nil { UserDefaults.standard.set(true, forKey: key) }
     }
 
     /// Reopens the collection after a full sync transfer closed it.

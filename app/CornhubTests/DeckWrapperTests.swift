@@ -38,4 +38,18 @@ final class DeckWrapperTests: XCTestCase {
         XCTAssertTrue(rows.contains { $0.fullName == "HSK 2" && $0.level == 1 })
         try await backend.closeCollection()
     }
+
+    func testAddedDeckPointsAtARealDeckConfig() async throws {
+        let backend = try Backend()
+        try await backend.openCollection(path: directory.appending(path: "collection.anki2"))
+        let id = try await backend.addDeck(name: "HSK 3")
+        var request = Anki_Decks_DeckId()
+        request.did = id
+        let deck: Anki_Decks_Deck = try await backend.call(
+            service: ServiceIndex.Decks.service, method: ServiceIndex.Decks.getDeck, request)
+        XCTAssertNotEqual(deck.normal.configID, 0)
+        let config = try await backend.getDeckConfig(id: deck.normal.configID)
+        XCTAssertEqual(config.id, deck.normal.configID)
+        try await backend.closeCollection()
+    }
 }

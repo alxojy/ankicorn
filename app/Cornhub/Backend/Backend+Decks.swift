@@ -1,12 +1,24 @@
 import Foundation
 
 extension Backend {
+    /// `new_deck`: the engine's template for a normal deck (carries a real `config_id`).
+    func newDeck() throws -> Anki_Decks_Deck {
+        try call(service: ServiceIndex.Decks.service, method: ServiceIndex.Decks.newDeck, Anki_Generic_Empty())
+    }
+
+    /// `get_deck_config`: the options preset with the given id; throws when it does not exist.
+    func getDeckConfig(id: Int64) throws -> Anki_DeckConfig_DeckConfig {
+        var request = Anki_DeckConfig_DeckConfigId()
+        request.dcid = id
+        return try call(
+            service: ServiceIndex.DeckConfig.service, method: ServiceIndex.DeckConfig.getDeckConfig, request)
+    }
+
     /// `add_deck`: adds a normal deck named `name` ("Parent::Child" creates the parents). Returns its id.
     @discardableResult
     func addDeck(name: String) throws -> Int64 {
-        var deck = Anki_Decks_Deck()
+        var deck = try newDeck()
         deck.name = name
-        deck.normal = Anki_Decks_Deck.Normal()
         let result: Anki_Collection_OpChangesWithId = try call(
             service: ServiceIndex.Decks.service, method: ServiceIndex.Decks.addDeck, deck)
         return result.id
