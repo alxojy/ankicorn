@@ -7,8 +7,16 @@ struct ReviewScreen: View {
     @AppStorage("swipeGradeCount") private var swipeCount = 0
     @State private var drag: CGFloat = 0
     @State private var pastThreshold = false
+    @State private var editingNote: Anki_Notes_Note?
+    @State private var showInfo = false
 
     private static let threshold: CGFloat = 110
+    private static let flagNames = ["Red", "Orange", "Green", "Blue", "Pink", "Turquoise", "Purple"]
+
+    private struct IdentifiedNote: Identifiable {
+        let note: Anki_Notes_Note
+        var id: Int64 { note.id }
+    }
 
     init(backend: Backend, deckID: Int64?) {
         _model = State(initialValue: ReviewModel(backend: backend, deckID: deckID))
@@ -43,6 +51,14 @@ struct ReviewScreen: View {
         .background(Theme.bg.ignoresSafeArea())
         .task { await model.start() }
         .sensoryFeedback(.impact, trigger: pastThreshold)
+        .sheet(item: Binding(get: { editingNote.map(IdentifiedNote.init) }, set: { editingNote = $0?.note })) { item in
+            NoteEditorSheet(note: item.note) { saved in Task { await model.save(note: saved) } }
+        }
+        .alert("Card info", isPresented: $showInfo) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Card info arrives with the web bridge in a later phase.")
+        }
     }
 
     private var header: some View {
@@ -61,9 +77,26 @@ struct ReviewScreen: View {
                 .accessibilityLabel(model.undoLabel.isEmpty ? "Undo" : model.undoLabel)
                 .accessibilityIdentifier("review-undo")
                 Menu {
+                    if model.phase == .card {
+                        Menu("Flag", systemImage: model.currentFlag == 0 ? "flag" : "flag.fill") {
+                            ForEach(1...7, id: \.self) { flag in
+                                Button(Self.flagNames[flag - 1], systemImage: model.currentFlag == UInt32(flag) ? "checkmark" : "flag") {
+                                    Task { await model.setFlag(UInt32(flag)) }
+                                }
+                            }
+                        }
+                        Button(model.isMarked ? "Unmark" : "Mark", systemImage: model.isMarked ? "star.fill" : "star") {
+                            Task { await model.toggleMark() }
+                        }
+                        Button("Bury", systemImage: "eye.slash") { Task { await model.bury() } }
+                        Button("Suspend", systemImage: "pause.circle") { Task { await model.suspend() } }
+                        Button("Edit note", systemImage: "pencil") {
+                            Task { editingNote = await model.loadNote() }
+                        }
+                        Button("Card info", systemImage: "info.circle") { showInfo = true }
+                    }
                     Button("Redo", systemImage: "arrow.uturn.forward") { Task { await model.redo() } }
                         .disabled(model.redoLabel.isEmpty)
-                    Text("Flag, mark, bury and more are coming soon")
                 } label: {
                     Image(systemName: "ellipsis").frame(width: Theme.minTarget, height: Theme.minTarget)
                 }

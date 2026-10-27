@@ -6,6 +6,7 @@ struct DeckOverviewScreen: View {
     let model: DeckHomeModel
     @State private var counts: (new: Int, review: Int)?
     @State private var reviewTarget: ReviewTarget?
+    @State private var showCustomStudy = false
 
     var body: some View {
         ScrollView {
@@ -30,6 +31,26 @@ struct DeckOverviewScreen: View {
                 .tint(Theme.accent)
                 .foregroundStyle(Theme.onAccent)
                 .accessibilityIdentifier("study-button")
+                HStack(spacing: 12) {
+                    Button { showCustomStudy = true } label: {
+                        Label("Custom study", systemImage: "slider.horizontal.3")
+                            .frame(maxWidth: .infinity, minHeight: Theme.minTarget)
+                    }
+                    .accessibilityIdentifier("custom-study-button")
+                    Button {
+                        Task {
+                            try? await model.backend?.unburyDeck(id: deck.id)
+                            counts = await model.counts(for: deck.id)
+                            await model.refresh()
+                        }
+                    } label: {
+                        Label("Unbury", systemImage: "tray.and.arrow.up")
+                            .frame(maxWidth: .infinity, minHeight: Theme.minTarget)
+                    }
+                    .accessibilityIdentifier("unbury-button")
+                }
+                .buttonStyle(.bordered)
+                .tint(Theme.text2)
                 if !deck.children.isEmpty { subdecks }
             }
             .padding(.horizontal, 16)
@@ -39,6 +60,16 @@ struct DeckOverviewScreen: View {
         .navigationBarTitleDisplayMode(.inline)
         .fullScreenCover(item: $reviewTarget, onDismiss: { Task { await model.refresh() } }) { target in
             if let backend = model.backend { ReviewScreen(backend: backend, deckID: target.deckID) }
+        }
+        .sheet(isPresented: $showCustomStudy) {
+            if let backend = model.backend {
+                CustomStudySheet(backend: backend, deckID: deck.id) {
+                    Task {
+                        counts = await model.counts(for: deck.id)
+                        await model.refresh()
+                    }
+                }
+            }
         }
         .task { counts = await model.counts(for: deck.id) }
     }
