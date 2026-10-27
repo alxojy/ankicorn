@@ -44,3 +44,10 @@ The Swift layer SHALL address engine methods through a generated table of servic
 #### Scenario: Create and read decks
 - **WHEN** a collection is opened at a new temporary path and decks "HSK 1" and "HSK 2" are added
 - **THEN** `deckTree` returns a tree whose children include "HSK 1" and "HSK 2"
+
+### Requirement: New decks use the engine template
+The app SHALL create decks from the engine's `new_deck` template, so every new deck references an existing options preset.
+
+#### Scenario: Seeded sample deck
+- **WHEN** the sample collection is seeded and the user opens Card info for an HSK 1 card
+- **THEN** the card's statistics are shown, with no inconsistent-database error
