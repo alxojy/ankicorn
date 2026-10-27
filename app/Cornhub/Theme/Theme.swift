@@ -47,7 +47,9 @@ enum DisplaySize {
 extension Font {
     /// Space Grotesk 600, scaled with Dynamic Type relative to `style`.
     static func display(_ size: CGFloat, relativeTo style: Font.TextStyle = .largeTitle) -> Font {
-        .custom("SpaceGrotesk-SemiBold", size: size, relativeTo: style)
+        // Static SemiBold instance cut from the variable Space Grotesk (the variable file's default
+        // instance is Light and has no SemiBold PostScript name, so it silently fell back to SF Pro).
+        .custom(FontRegistration.displayFontName, size: size, relativeTo: style)
     }
 
     static var inkTitle: Font { display(DisplaySize.title, relativeTo: .largeTitle) }

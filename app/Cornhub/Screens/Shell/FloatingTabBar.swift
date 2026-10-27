@@ -16,6 +16,8 @@ struct FloatingTabBar: View {
                             .font(.body)
                         Text(tab.title)
                             .font(.caption2.weight(.medium))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
                     }
                     .foregroundStyle(selected ? Theme.accent : Theme.text2)
                     .frame(maxWidth: .infinity, minHeight: Theme.minTarget)
@@ -29,11 +31,15 @@ struct FloatingTabBar: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(tab.title)
+                .accessibilityShowsLargeContentViewer {
+                    Label(tab.title, systemImage: tab.symbol)
+                }
                 .accessibilityAddTraits(selected ? [.isSelected] : [])
                 .accessibilityIdentifier("tab-\(tab.rawValue)")
             }
         }
         .padding(6)
+        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
         .glassEffect(.regular.tint(Theme.bg.opacity(0.6)), in: Capsule())
         .overlay(Capsule().strokeBorder(Theme.hairline, lineWidth: 1))
         .shadow(color: .black.opacity(0.5), radius: 24, y: 10)

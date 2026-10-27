@@ -26,6 +26,7 @@
 		2A460F1D9FE3DB79B31B7CFC /* ScreenTourUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9D9A8B49C1DF7DA8DAC493D /* ScreenTourUITests.swift */; };
 		2A5450DC328ACCF00A5FA301 /* anki_ankiweb.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E865C789DE38261BBC7FE644 /* anki_ankiweb.pb.swift */; };
 		2AF67509A9E1A34179BEDD30 /* MediaCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A53FF95B5B0E833D093BA15 /* MediaCapture.swift */; };
+		2B9B75EA6937160A9A188F51 /* FontTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A31C0AF21B4465F9B466EED3 /* FontTests.swift */; };
 		2C02EBD437FFB6DB6FA03272 /* DeckTreeModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7031B3FAEA9214C97767F32B /* DeckTreeModelTests.swift */; };
 		2C629CC2E63B3B4D20FDEF89 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = F64BDFD6137DE122AA8BE6EA /* Theme.swift */; };
 		2F38DE0607DCE61E01E3A2DC /* FieldFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B682781DDF7906ACAC6304 /* FieldFormatting.swift */; };
@@ -45,13 +46,13 @@
 		5A0DBE8E8BC6C2E9EB9F883C /* Backend+Review.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A8A07EB0FACF19F7C671E3C /* Backend+Review.swift */; };
 		5AF41C448D6B00EF3E2D2443 /* CardText.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2165B9D4569AF6F9DC07EF3 /* CardText.swift */; };
 		601916C26C0B21DBB8B3A0A6 /* ManageScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5E171B97FC5C58F7D5586D4 /* ManageScreen.swift */; };
+		61623BAB2063D52BAED3673F /* SpaceGrotesk-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 370F70FBC4409FCA056F3707 /* SpaceGrotesk-SemiBold.ttf */; };
 		62623F38B6B090385B9B4E15 /* BackendTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7E863D0EE1310F2E838E2F2 /* BackendTests.swift */; };
 		6685A7B0FC3B5AF62EFDD3A2 /* FontRegistration.swift in Sources */ = {isa = PBXBuildFile; fileRef = D21DFFB1C2B7E349E4F71A8D /* FontRegistration.swift */; };
 		69857AE5F50A0A8805947FED /* anki_search.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5DF20CDA3D9CECD4E408E53 /* anki_search.pb.swift */; };
 		6ECF969B61F5FB33859B9E86 /* AppTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECC61461470440E946436A41 /* AppTab.swift */; };
 		70A2EE0B69B9BFC27FA2C8CE /* anki_sync.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 881F0DBCB83EE88C356552D4 /* anki_sync.pb.swift */; };
 		70C362DCEE4327FE90A40EB9 /* DeckRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 383EF0533F1DE9ADFCB18E2F /* DeckRow.swift */; };
-		7139F8B46D4EB61B2690BE1E /* SpaceGrotesk.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 08EDEE80E52E59D0927CEC7D /* SpaceGrotesk.ttf */; };
 		716FB2586FA7062FF0F0D139 /* LoginSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 956284626F44EF7FBEC50FC2 /* LoginSheet.swift */; };
 		720CFCEF3309798AA532C628 /* LaunchOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0089ECA89C3A87E17E5E8E1 /* LaunchOptions.swift */; };
 		77F56A9A749F66849ED494C4 /* CongratsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A383C1B52B40F46B4BDB873B /* CongratsScreen.swift */; };
@@ -144,7 +145,6 @@
 /* Begin PBXFileReference section */
 		0267591B68056B5388CDCB39 /* anki_import_export.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = anki_import_export.pb.swift; sourceTree = "<group>"; };
 		083577F706765FA2C7B2AFDF /* CardAudio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardAudio.swift; sourceTree = "<group>"; };
-		08EDEE80E52E59D0927CEC7D /* SpaceGrotesk.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = SpaceGrotesk.ttf; sourceTree = "<group>"; };
 		0AC1A3E30F1FD4A8252D3476 /* DeckWrapperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckWrapperTests.swift; sourceTree = "<group>"; };
 		0E60BF4E50A60CFE1718C62B /* Backend+Manage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Backend+Manage.swift"; sourceTree = "<group>"; };
 		0EB0223318734756CF60109E /* ClaudeKeychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeKeychain.swift; sourceTree = "<group>"; };
@@ -164,6 +164,7 @@
 		23A467C14E77ED5C9B569CA7 /* ReviewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewModel.swift; sourceTree = "<group>"; };
 		2CE83DD044631565F8AD7DE9 /* anki_deck_config.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = anki_deck_config.pb.swift; sourceTree = "<group>"; };
 		340BABD4CB1155D2C6A9BBDE /* anki_tags.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = anki_tags.pb.swift; sourceTree = "<group>"; };
+		370F70FBC4409FCA056F3707 /* SpaceGrotesk-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SpaceGrotesk-SemiBold.ttf"; sourceTree = "<group>"; };
 		383EF0533F1DE9ADFCB18E2F /* DeckRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckRow.swift; sourceTree = "<group>"; };
 		38ECA7D67E702B95B59A28D1 /* BrowseModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowseModel.swift; sourceTree = "<group>"; };
 		3A98BCE610B2E2C8D4BD4968 /* Backend+Collection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Backend+Collection.swift"; sourceTree = "<group>"; };
@@ -216,6 +217,7 @@
 		9A8A07EB0FACF19F7C671E3C /* Backend+Review.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Backend+Review.swift"; sourceTree = "<group>"; };
 		9EE82DE4A3FB2047BA70F4C9 /* anki_notes.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = anki_notes.pb.swift; sourceTree = "<group>"; };
 		A26F82FBDB7A441372070C90 /* AnkiWebScheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnkiWebScheme.swift; sourceTree = "<group>"; };
+		A31C0AF21B4465F9B466EED3 /* FontTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontTests.swift; sourceTree = "<group>"; };
 		A383C1B52B40F46B4BDB873B /* CongratsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CongratsScreen.swift; sourceTree = "<group>"; };
 		A390E5B118ED80ABB809F7CD /* SpeechAndAISection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechAndAISection.swift; sourceTree = "<group>"; };
 		A977131BD511C8232939B2D8 /* CornhubTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = CornhubTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -397,7 +399,7 @@
 			isa = PBXGroup;
 			children = (
 				B19647FC9B3D64D83BB3EECE /* OFL.txt */,
-				08EDEE80E52E59D0927CEC7D /* SpaceGrotesk.ttf */,
+				370F70FBC4409FCA056F3707 /* SpaceGrotesk-SemiBold.ttf */,
 			);
 			path = Fonts;
 			sourceTree = "<group>";
@@ -589,6 +591,7 @@
 				B7E863D0EE1310F2E838E2F2 /* BackendTests.swift */,
 				7031B3FAEA9214C97767F32B /* DeckTreeModelTests.swift */,
 				0AC1A3E30F1FD4A8252D3476 /* DeckWrapperTests.swift */,
+				A31C0AF21B4465F9B466EED3 /* FontTests.swift */,
 				45682C7D3642E127D1836490 /* ProtobufTests.swift */,
 			);
 			path = CornhubTests;
@@ -712,7 +715,7 @@
 				A1E730DC9449E890E5923049 /* AnkiWeb in Resources */,
 				059F59699AFF77B2DD8B9BB4 /* Assets.xcassets in Resources */,
 				4040063FEC3959045F083C92 /* OFL.txt in Resources */,
-				7139F8B46D4EB61B2690BE1E /* SpaceGrotesk.ttf in Resources */,
+				61623BAB2063D52BAED3673F /* SpaceGrotesk-SemiBold.ttf in Resources */,
 				4769AEDD42F99549BAA7F372 /* mathjax.js in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -736,6 +739,7 @@
 				62623F38B6B090385B9B4E15 /* BackendTests.swift in Sources */,
 				2C02EBD437FFB6DB6FA03272 /* DeckTreeModelTests.swift in Sources */,
 				3054E5BC33A7D8D1660016AB /* DeckWrapperTests.swift in Sources */,
+				2B9B75EA6937160A9A188F51 /* FontTests.swift in Sources */,
 				CBDD637589D23F8F4B6B8F03 /* ProtobufTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
