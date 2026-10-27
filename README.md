@@ -27,7 +27,7 @@ Rust bridge crate (rslib-bridge)  →  XCFramework (device + simulator)
   └─ rslib @ Anki tag 26.09.3
 ```
 
-Details, the desktop parity table, the design standard and the phases are in [`PLAN.md`](PLAN.md).
+Details, the desktop parity table, the design standard and the phases are in [`PLAN.md`](PLAN.md). How the code is put together, with diagrams, is in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## Status
 
