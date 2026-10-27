@@ -1,0 +1,1 @@
+Rows are fetched lazily per visible id with `browser_row_for_id`; the first two active columns are shown as title and subtitle. Sort uses `SortOrder.builtin` with the column key. Sidebar filters build search text (`deck:"x"`, `tag:x`, `note:"x"`, `flag:n`) joined with the typed query. All mutations call engine methods; Swift only gathers ids.
