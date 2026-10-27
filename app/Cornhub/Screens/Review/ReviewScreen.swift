@@ -4,6 +4,7 @@ import SwiftUI
 struct ReviewScreen: View {
     @State private var model: ReviewModel
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var typeSize
     @AppStorage("swipeGradeCount") private var swipeCount = 0
     @State private var drag: CGFloat = 0
     @State private var pastThreshold = false
@@ -41,7 +42,7 @@ struct ReviewScreen: View {
                 CongratsScreen(info: model.congrats) { dismiss() }
             case .card:
                 cardPanel
-                if swipeCount < 5, model.revealed {
+                if swipeCount < 5, model.revealed, !typeSize.isAccessibilitySize {
                     Text("Swipe right for Good, left for Again")
                         .font(.footnote).foregroundStyle(Theme.muted)
                 }
@@ -54,7 +55,7 @@ struct ReviewScreen: View {
                         .submitLabel(.done).onSubmit { withAnimation(.snappy) { model.reveal() } }
                         .accessibilityIdentifier("review-type-answer")
                 }
-                if model.revealed { ExtrasChips(extras: extras) }
+                if model.revealed { ExtrasChips(extras: extras).dynamicTypeSize(...DynamicTypeSize.xxxLarge) }
                 gradeBar
             }
         }

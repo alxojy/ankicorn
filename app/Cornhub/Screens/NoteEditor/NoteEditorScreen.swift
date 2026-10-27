@@ -31,15 +31,12 @@ struct NoteEditorScreen: View {
                         if !model.isEditing { chips }
                         fieldBlocks
                         tagsRow
+                        if !model.isEditing { autoFill }
                     }
                     .padding(.horizontal, 16)
                     .padding(.bottom, 16)
                 }
-                .scrollBounceBehavior(.basedOnSize)
                 .scrollDismissesKeyboard(.interactively)
-                if !model.isEditing {
-                    autoFill.padding(.horizontal, 16).padding(.top, 8)
-                }
                 submitButton
             } else if let message = model.errorMessage {
                 ContentUnavailableView("Could not open the editor", systemImage: "exclamationmark.triangle", description: Text(message))
@@ -436,7 +433,7 @@ struct NoteEditorScreen: View {
 }
 
 /// Wraps chips onto as many lines as needed.
-private struct FlowLayout: Layout {
+struct FlowLayout: Layout {
     var spacing: CGFloat
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {

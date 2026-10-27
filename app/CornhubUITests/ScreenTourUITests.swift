@@ -222,7 +222,22 @@ final class ScreenTourUITests: XCTestCase {
         sleep(4)
         shot("60-home-xxxl")
         app.buttons["Start review"].firstMatch.tap()
-        sleep(3)
+        let card = app.descendants(matching: .any)["review-card"]
+        XCTAssertTrue(card.waitForExistence(timeout: 20), "review card exists")
+        XCTAssertGreaterThan(card.frame.height, 120, "card has room at XXXL")
+        let web = app.webViews.firstMatch
+        XCTAssertTrue(web.waitForExistence(timeout: 20), "card web view exists")
+        XCTAssertTrue(web.staticTexts.firstMatch.waitForExistence(timeout: 20), "question text is rendered")
+        sleep(1)
         shot("61-review-xxxl")
+        card.tap()
+        XCTAssertTrue(app.buttons["grade-again"].waitForExistence(timeout: 10))
+        for name in ["again", "hard", "good", "easy"] {
+            let b = app.buttons["grade-\(name)"]
+            XCTAssertGreaterThanOrEqual(b.frame.height, 44, "\(name) is at least 44 pt")
+        }
+        let close = app.buttons["review-close"], undo = app.buttons["review-undo"]
+        XCTAssertFalse(close.frame.intersects(undo.frame), "close and undo don't overlap")
+        shot("62-review-xxxl-answer")
     }
 }

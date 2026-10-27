@@ -59,9 +59,9 @@ struct CustomStudySheet: View {
         }
     }
 
-    private var unitLabel: String {
+    private var unitLabel: LocalizedStringKey {
         switch option {
-        case .newLimit, .reviewLimit, .cram: String(localized: "^[\(amount) card](inflect: true)")
+        case .newLimit, .reviewLimit, .cram: "^[\(amount) card](inflect: true)"
         case .forgot, .ahead, .preview: "\(amount) days"
         }
     }
