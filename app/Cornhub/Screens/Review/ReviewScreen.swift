@@ -137,7 +137,7 @@ struct ReviewScreen: View {
     }
 
     private func count(_ value: Int, _ color: Color, _ name: String) -> some View {
-        Text("\(value)").font(.subheadline.weight(.semibold))
+        Text("\(value)").font(.display(17, relativeTo: .subheadline))
             .foregroundStyle(value == 0 ? Theme.zero : color)
             .accessibilityLabel("\(value) \(name)")
     }
@@ -173,6 +173,16 @@ struct ReviewScreen: View {
             }
         }
         .frame(maxHeight: .infinity)
+        .background(alignment: .bottom) {
+            // The next card peeking out behind the current one.
+            RoundedRectangle(cornerRadius: Theme.Radius.reviewCard)
+                .fill(Theme.raised)
+                .padding(.horizontal, 14)
+                .offset(y: 12)
+                .opacity(model.counts.new + model.counts.learning + model.counts.review > 1 ? 1 : 0)
+                .accessibilityHidden(true)
+        }
+        .padding(.bottom, 12)
         .offset(x: drag)
         .rotationEffect(.degrees(Double(drag) / 20))
         .contentShape(Rectangle())
@@ -215,6 +225,11 @@ struct ReviewScreen: View {
             grade("Good", .good, Theme.accent, filled: true)
             grade("Easy", .easy, Theme.easy, filled: false)
         }
+        .padding(8)
+        .background(.ultraThinMaterial, in: Capsule())
+        .background(Theme.bg.opacity(0.6), in: Capsule())
+        .overlay(Capsule().strokeBorder(Theme.hairline, lineWidth: 1))
+        .shadow(color: .black.opacity(0.5), radius: 20, y: 10)
         .padding(.bottom, 8)
         .opacity(model.revealed ? 1 : 0.35)
         .allowsHitTesting(model.revealed)
@@ -232,7 +247,7 @@ struct ReviewScreen: View {
             }
             .frame(maxWidth: .infinity, minHeight: 56)
             .foregroundStyle(filled ? Theme.onAccent : color)
-            .background(filled ? color : Theme.control, in: RoundedRectangle(cornerRadius: Theme.Radius.photo))
+            .background(filled ? color : Theme.control, in: Capsule())
         }
         .accessibilityLabel("\(title), next review in \(model.interval(rating))")
         .accessibilityIdentifier("grade-\(title.lowercased())")

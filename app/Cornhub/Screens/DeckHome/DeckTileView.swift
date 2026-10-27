@@ -12,7 +12,7 @@ struct CountsLine: View {
             count(learning, Theme.learning)
             count(review, Theme.accent)
         }
-        .font(.subheadline.weight(.semibold))
+        .font(.display(17, relativeTo: .subheadline))
         .monospacedDigit()
     }
 

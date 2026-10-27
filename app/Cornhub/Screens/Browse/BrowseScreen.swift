@@ -127,7 +127,9 @@ private struct BrowseContent: View {
     private func row(_ id: Int64) -> some View {
         let cells = model.rows[id]?.cells.map(\.text) ?? []
         let title = cells.first.map(Self.plain) ?? " "
-        let subtitle = cells.dropFirst().map(Self.plain).filter { !$0.isEmpty }.joined(separator: " · ")
+        // Cards mode shows question, answer, deck: the secondary line is the answer column only.
+        let rest = model.notesMode ? Array(cells.dropFirst()) : Array(cells.dropFirst().prefix(1))
+        let subtitle = rest.map(Self.plain).filter { !$0.isEmpty }.joined(separator: " · ")
         let selected = model.selection.contains(id)
         return Button {
             if model.selecting {
@@ -173,8 +175,11 @@ private struct BrowseContent: View {
     }
 
     static func plain(_ html: String) -> String {
-        html.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
+        html.replacingOccurrences(of: "(<br\\s*/?>|</div>|</p>|\u{1f})+", with: " · ", options: .regularExpression)
+            .replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
             .replacingOccurrences(of: "&nbsp;", with: " ")
+            .replacingOccurrences(of: "\\s*·\\s*(·\\s*)*", with: " · ", options: .regularExpression)
+            .trimmingCharacters(in: CharacterSet(charactersIn: " ·\n\t"))
     }
 
     static func marker(_ color: Anki_Search_BrowserRow.Color) -> Color? {

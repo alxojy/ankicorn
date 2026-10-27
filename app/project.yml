@@ -10,6 +10,7 @@ settings:
     SWIFT_STRICT_CONCURRENCY: complete
     IPHONEOS_DEPLOYMENT_TARGET: "26.0"
     TARGETED_DEVICE_FAMILY: "1"
+    "EXCLUDED_ARCHS[sdk=iphonesimulator*]": x86_64
 packages:
   SwiftProtobuf:
     url: https://github.com/apple/swift-protobuf

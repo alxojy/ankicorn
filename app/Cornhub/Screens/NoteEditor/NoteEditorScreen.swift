@@ -28,13 +28,15 @@ struct NoteEditorScreen: View {
                     VStack(alignment: .leading, spacing: 16) {
                         if !model.isEditing { chips }
                         fieldBlocks
-                        if !model.isEditing { autoFill }
                         tagsRow
                     }
                     .padding(.horizontal, 16)
                     .padding(.bottom, 16)
                 }
                 .scrollDismissesKeyboard(.interactively)
+                if !model.isEditing {
+                    autoFill.padding(.horizontal, 16).padding(.top, 8)
+                }
                 submitButton
             } else if let message = model.errorMessage {
                 ContentUnavailableView("Could not open the editor", systemImage: "exclamationmark.triangle", description: Text(message))
@@ -88,7 +90,7 @@ struct NoteEditorScreen: View {
             .accessibilityLabel("Close")
             .accessibilityIdentifier("editor-close")
             Spacer()
-            Text(model.isEditing ? "Edit note" : "New card").font(.headline).foregroundStyle(Theme.text)
+            Text(model.isEditing ? "Edit note" : "New card").font(.display(20, relativeTo: .headline)).foregroundStyle(Theme.text)
             Spacer()
             Color.clear.frame(width: Theme.minTarget, height: Theme.minTarget)
         }

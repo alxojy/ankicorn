@@ -158,7 +158,7 @@ struct DeckHomeScreen: View {
                 .foregroundStyle(Theme.text)
                 .minimumScaleFactor(0.5)
                 .accessibilityIdentifier("due-total")
-            Text("cards due").font(.title3).foregroundStyle(Theme.text2)
+            Text("cards due").font(.display(20, relativeTo: .title3)).foregroundStyle(Theme.text2)
             Text(heroLine).font(.footnote).foregroundStyle(Theme.muted)
         }
         .accessibilityElement(children: .combine)

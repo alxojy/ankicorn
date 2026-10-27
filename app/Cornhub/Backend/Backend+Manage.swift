@@ -121,18 +121,23 @@ extension Backend {
         return Int(result.count)
     }
 
-    /// Groups the notes of a note type by the text of one field; only groups of two or more are returned.
+    /// Groups the notes of a note type that the engine reports as duplicates of each other: for every note
+    /// not yet grouped, `dupe:<notetypeId>,<first field>` (the engine's own comparison) lists its twins.
     func findDuplicates(notetypeID: Int64, notetypeName: String, fieldIndex: Int) throws -> [[Int64]] {
         let escaped = notetypeName.replacingOccurrences(of: "\"", with: "\\\"")
         let ids = try browserSearch("\"note:\(escaped)\"", notes: true)
-        var groups: [String: [Int64]] = [:]
-        for id in ids {
+        var seen = Set<Int64>()
+        var groups: [[Int64]] = []
+        for id in ids where !seen.contains(id) {
             let note = try getNote(id: id)
-            guard fieldIndex < note.fields.count else { continue }
-            let key = note.fields[fieldIndex].replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
-                .trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-            if !key.isEmpty { groups[key, default: []].append(id) }
+            guard fieldIndex < note.fields.count, !note.fields[fieldIndex].isEmpty else { continue }
+            let text = note.fields[fieldIndex].replacingOccurrences(of: "\\", with: "\\\\")
+                .replacingOccurrences(of: "\"", with: "\\\"")
+            let twins = try browserSearch("\"dupe:\(notetypeID),\(text)\"", notes: true)
+            seen.formUnion(twins)
+            seen.insert(id)
+            if twins.count > 1 { groups.append(twins) }
         }
-        return groups.values.filter { $0.count > 1 }.sorted { ($0.first ?? 0) < ($1.first ?? 0) }
+        return groups.sorted { ($0.first ?? 0) < ($1.first ?? 0) }
     }
 }
