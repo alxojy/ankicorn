@@ -5,7 +5,7 @@ struct DeckOverviewScreen: View {
     let deck: DeckTile
     let model: DeckHomeModel
     @State private var counts: (new: Int, review: Int)?
-    @State private var showStudyNote = false
+    @State private var reviewTarget: ReviewTarget?
 
     var body: some View {
         ScrollView {
@@ -22,7 +22,7 @@ struct DeckOverviewScreen: View {
                     stat("Review", counts?.review ?? deck.reviewCount, Theme.accent)
                 }
                 Button {
-                    showStudyNote = true
+                    reviewTarget = ReviewTarget(deckID: deck.id)
                 } label: {
                     Text("Study").font(.headline).frame(maxWidth: .infinity, minHeight: Theme.minTarget)
                 }
@@ -37,8 +37,8 @@ struct DeckOverviewScreen: View {
         .background(Theme.bg)
         .navigationTitle(deck.name)
         .navigationBarTitleDisplayMode(.inline)
-        .alert("Reviewing is coming in the next phase.", isPresented: $showStudyNote) {
-            Button("OK", role: .cancel) {}
+        .fullScreenCover(item: $reviewTarget, onDismiss: { Task { await model.refresh() } }) { target in
+            if let backend = model.backend { ReviewScreen(backend: backend, deckID: target.deckID) }
         }
         .task { counts = await model.counts(for: deck.id) }
     }

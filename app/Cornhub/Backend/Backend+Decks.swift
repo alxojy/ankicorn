@@ -32,3 +32,13 @@ extension Backend {
             service: ServiceIndex.Decks.service, method: ServiceIndex.Decks.setDeckCollapsed, request)
     }
 }
+
+extension Backend {
+    /// `set_current_deck`: the deck (and subdecks) the scheduler queues cards from.
+    func setCurrentDeck(_ deckID: Int64) throws {
+        var request = Anki_Decks_DeckId()
+        request.did = deckID
+        let _: Anki_Collection_OpChanges = try call(
+            service: ServiceIndex.Decks.service, method: ServiceIndex.Decks.setCurrentDeck, request)
+    }
+}

@@ -18,7 +18,7 @@ final class DeckHomeModel {
 
     private let launch: LaunchOptions
     private let collectionURL: URL
-    private var backend: Backend?
+    private(set) var backend: Backend?
 
     init(launch: LaunchOptions, directory: URL? = nil) {
         self.launch = launch

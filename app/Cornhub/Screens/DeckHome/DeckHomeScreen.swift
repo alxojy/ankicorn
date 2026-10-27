@@ -4,6 +4,7 @@ import SwiftUI
 struct DeckHomeScreen: View {
     let model: DeckHomeModel
     @State private var showNote: String?
+    @State private var reviewTarget: ReviewTarget?
 
     var body: some View {
         NavigationStack {
@@ -13,6 +14,9 @@ struct DeckHomeScreen: View {
                 .toolbar(.hidden, for: .navigationBar)
         }
         .task { await model.load() }
+        .fullScreenCover(item: $reviewTarget, onDismiss: { Task { await model.refresh() } }) { target in
+            if let backend = model.backend { ReviewScreen(backend: backend, deckID: target.deckID) }
+        }
         .alert(showNote ?? "", isPresented: Binding(get: { showNote != nil }, set: { if !$0 { showNote = nil } })) {
             Button("OK", role: .cancel) {}
         }
@@ -45,7 +49,7 @@ struct DeckHomeScreen: View {
                     hero
                     StackedBar(new: model.newTotal, learning: model.learningTotal, review: model.reviewTotal)
                     Button {
-                        showNote = "Reviewing is coming in the next phase."
+                        reviewTarget = ReviewTarget(deckID: nil)
                     } label: {
                         Text("Start review").font(.headline).frame(maxWidth: .infinity, minHeight: Theme.minTarget)
                     }
