@@ -1,0 +1,174 @@
+import XCTest
+
+/// Walks every tab and the main flows on the seeded sample collection, attaching a screenshot per state.
+/// Checks are soft (continueAfterFailure) so one broken screen does not hide the rest.
+final class ScreenTourUITests: XCTestCase {
+    private var app: XCUIApplication!
+
+    override func setUp() {
+        continueAfterFailure = true
+        app = XCUIApplication()
+        app.launchArguments = ["--seed-sample", "--reset-collection"]
+    }
+
+    private func shot(_ name: String) {
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
+    private func tab(_ title: String) {
+        let button = app.buttons[title].firstMatch
+        XCTAssertTrue(button.waitForExistence(timeout: 10), "tab \(title) exists")
+        button.tap()
+    }
+
+    private func dismissSheet() {
+        app.swipeDown(velocity: .fast)
+    }
+
+    func testHomeAndDeckOverview() {
+        app.launch()
+        XCTAssertTrue(app.descendants(matching: .any)["due-total"].waitForExistence(timeout: 30), "due hero shows")
+        shot("01-home")
+        app.swipeUp()
+        shot("02-home-scrolled")
+        app.swipeDown()
+        let tile = app.descendants(matching: .any).matching(identifier: "deck-tile").firstMatch
+        XCTAssertTrue(tile.waitForExistence(timeout: 10), "deck tiles show")
+        tile.tap()
+        sleep(2)
+        shot("03-deck-overview")
+        let options = app.descendants(matching: .any)["deck-options-button"]
+        if options.waitForExistence(timeout: 5) {
+            options.tap()
+            sleep(4)
+            shot("04-deck-options-web")
+            dismissSheet()
+        }
+        let custom = app.descendants(matching: .any)["custom-study-button"]
+        if custom.waitForExistence(timeout: 5) {
+            custom.tap()
+            sleep(1)
+            shot("05-custom-study")
+            dismissSheet()
+        }
+    }
+
+    func testReviewFlow() {
+        app.launch()
+        let start = app.buttons["Start review"].firstMatch
+        XCTAssertTrue(start.waitForExistence(timeout: 30), "Start review exists")
+        start.tap()
+        let card = app.descendants(matching: .any)["review-card"]
+        XCTAssertTrue(card.waitForExistence(timeout: 15), "review card shows")
+        sleep(2)
+        shot("10-review-question")
+        card.tap()
+        sleep(2)
+        shot("11-review-answer")
+        let good = app.descendants(matching: .any)["grade-good"]
+        XCTAssertTrue(good.waitForExistence(timeout: 5), "Good button shows")
+        good.tap()
+        sleep(2)
+        shot("12-review-next-card")
+        card.swipeRight()
+        sleep(2)
+        shot("13-review-after-swipe")
+        let more = app.buttons["More"].firstMatch
+        if more.waitForExistence(timeout: 5) {
+            more.tap()
+            sleep(1)
+            shot("14-review-more-menu")
+            if app.buttons["Card info"].exists {
+                app.buttons["Card info"].tap()
+                sleep(4)
+                shot("15-card-info-web")
+                dismissSheet()
+            } else {
+                app.tap()
+            }
+        }
+        let undo = app.descendants(matching: .any)["review-undo"]
+        if undo.exists { undo.tap(); sleep(1); shot("16-review-after-undo") }
+        let close = app.descendants(matching: .any)["review-close"]
+        XCTAssertTrue(close.exists, "close button exists")
+        close.tap()
+        sleep(1)
+        shot("17-home-after-review")
+    }
+
+    func testAddCard() {
+        app.launch()
+        let add = app.buttons["Add"].firstMatch
+        XCTAssertTrue(add.waitForExistence(timeout: 30), "Add button exists")
+        add.tap()
+        sleep(2)
+        shot("20-add-card")
+        let field = app.descendants(matching: .any)["editor-field-0"]
+        if field.waitForExistence(timeout: 5) {
+            field.tap()
+            field.typeText("学")
+            shot("21-add-card-typing")
+        }
+        let chip = app.descendants(matching: .any)["editor-notetype-chip"]
+        if chip.exists { chip.tap(); sleep(1); shot("22-notetype-picker"); dismissSheet() }
+    }
+
+    func testBrowse() {
+        app.launch()
+        tab("Browse")
+        sleep(3)
+        shot("30-browse")
+        let filter = app.descendants(matching: .any)["browse-filter"]
+        if filter.waitForExistence(timeout: 5) { filter.tap(); sleep(1); shot("31-browse-filter"); dismissSheet() }
+        let row = app.cells.firstMatch
+        if row.waitForExistence(timeout: 5) { row.tap(); sleep(2); shot("32-browse-edit-note") }
+    }
+
+    func testStats() {
+        app.launch()
+        tab("Stats")
+        sleep(4)
+        shot("40-stats")
+        app.swipeUp()
+        shot("41-stats-scrolled")
+        let more = app.descendants(matching: .any)["more-stats"]
+        if more.waitForExistence(timeout: 5) { more.tap(); sleep(5); shot("42-more-stats-web") }
+    }
+
+    func testSettings() {
+        app.launch()
+        tab("Settings")
+        sleep(2)
+        shot("50-settings")
+        app.swipeUp()
+        shot("51-settings-scrolled")
+        for (id, name) in [("settings-manage", "52-manage"), ("settings-tools", "53-tools"),
+                           ("settings-import-export", "54-import-export")] {
+            let item = app.descendants(matching: .any)[id]
+            if item.waitForExistence(timeout: 5) {
+                item.tap()
+                sleep(2)
+                shot(name)
+                app.navigationBars.buttons.element(boundBy: 0).tap()
+                sleep(1)
+            } else {
+                XCTFail("\(id) not found")
+            }
+        }
+        let login = app.descendants(matching: .any)["settings-login"]
+        if login.waitForExistence(timeout: 5) { login.tap(); sleep(1); shot("55-login") }
+    }
+
+    func testLargestTextSize() {
+        app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+        app.launch()
+        sleep(4)
+        shot("60-home-xxxl")
+        app.buttons["Start review"].firstMatch.tap()
+        sleep(3)
+        shot("61-review-xxxl")
+    }
+}

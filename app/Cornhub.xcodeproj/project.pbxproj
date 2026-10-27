@@ -23,6 +23,7 @@
 		20F600E7EBFA08C636C039E5 /* Backend+NoteEditing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59955AFCEE7B6D4FA128B050 /* Backend+NoteEditing.swift */; };
 		24D160FBD7FEB6C6BDD54CD4 /* SyncModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73EAC1723764796F3126D666 /* SyncModel.swift */; };
 		24F2D8A18C3C73C94F0E3C66 /* FloatingTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E904D4E2911CA1569A7BEBA /* FloatingTabBar.swift */; };
+		2A460F1D9FE3DB79B31B7CFC /* ScreenTourUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9D9A8B49C1DF7DA8DAC493D /* ScreenTourUITests.swift */; };
 		2A5450DC328ACCF00A5FA301 /* anki_ankiweb.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E865C789DE38261BBC7FE644 /* anki_ankiweb.pb.swift */; };
 		2AF67509A9E1A34179BEDD30 /* MediaCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A53FF95B5B0E833D093BA15 /* MediaCapture.swift */; };
 		2C02EBD437FFB6DB6FA03272 /* DeckTreeModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7031B3FAEA9214C97767F32B /* DeckTreeModelTests.swift */; };
@@ -254,6 +255,7 @@
 		F205D8E7E310CDE43B0B71F3 /* DeckHomeScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckHomeScreen.swift; sourceTree = "<group>"; };
 		F5C72B03A14512A45631F26E /* StatsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsModel.swift; sourceTree = "<group>"; };
 		F64BDFD6137DE122AA8BE6EA /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		F9D9A8B49C1DF7DA8DAC493D /* ScreenTourUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenTourUITests.swift; sourceTree = "<group>"; };
 		F9ED73DCD435B2252D9C2AFD /* SampleNotes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleNotes.swift; sourceTree = "<group>"; };
 		FB659C5074B52401AD96595D /* FilteredDecksScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilteredDecksScreen.swift; sourceTree = "<group>"; };
 		FF0265733D038EF95004AF1F /* SettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreen.swift; sourceTree = "<group>"; };
@@ -358,6 +360,7 @@
 			isa = PBXGroup;
 			children = (
 				883EAB423984B79F0D0A0769 /* DeckTreeUITests.swift */,
+				F9D9A8B49C1DF7DA8DAC493D /* ScreenTourUITests.swift */,
 			);
 			path = CornhubUITests;
 			sourceTree = "<group>";
@@ -722,6 +725,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D94917478862BDC32665D664 /* DeckTreeUITests.swift in Sources */,
+				2A460F1D9FE3DB79B31B7CFC /* ScreenTourUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
