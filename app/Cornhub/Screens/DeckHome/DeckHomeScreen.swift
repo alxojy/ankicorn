@@ -1,10 +1,12 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// The Decks tab: date and sync line, due-count hero, stacked bar, Start review and the deck tile grid.
 struct DeckHomeScreen: View {
     let model: DeckHomeModel
     @State private var showNote: String?
     @State private var reviewTarget: ReviewTarget?
+    @State private var pickingFile = false
 
     var body: some View {
         NavigationStack {
@@ -16,6 +18,12 @@ struct DeckHomeScreen: View {
         .task { await model.load() }
         .fullScreenCover(item: $reviewTarget, onDismiss: { Task { await model.refresh() } }) { target in
             if let backend = model.backend { ReviewScreen(backend: backend, deckID: target.deckID) }
+        }
+        .fileImporter(isPresented: $pickingFile, allowedContentTypes: UTType.ankiPackages) { result in
+            if case .success(let url) = result { Task { await model.importPackage(url) } }
+        }
+        .sheet(isPresented: Binding(get: { model.importState != .idle }, set: { if !$0 { model.dismissImport() } })) {
+            ImportSheet(state: model.importState, dismiss: model.dismissImport)
         }
         .alert(showNote ?? "", isPresented: Binding(get: { showNote != nil }, set: { if !$0 { showNote = nil } })) {
             Button("OK", role: .cancel) {}
@@ -41,6 +49,7 @@ struct DeckHomeScreen: View {
                 Text("Add a deck to start learning.")
             } actions: {
                 Button("Add deck") { showNote = "Adding decks is coming soon." }.frame(minHeight: Theme.minTarget)
+                Button("Import deck") { pickingFile = true }.frame(minHeight: Theme.minTarget)
             }
         case .loaded:
             ScrollView {
@@ -79,6 +88,7 @@ struct DeckHomeScreen: View {
             }
             Spacer()
             roundButton("arrow.triangle.2.circlepath", "Sync") { showNote = "Sync arrives in a later phase." }
+            roundButton("square.and.arrow.down", "Import deck") { pickingFile = true }
             roundButton("plus", "Add") { showNote = "Adding cards is coming soon." }
         }
     }

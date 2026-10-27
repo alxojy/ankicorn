@@ -20,6 +20,30 @@ targets:
     platform: iOS
     sources:
       - path: Cornhub
+    info:
+      path: Cornhub/Info.plist
+      properties:
+        LSSupportsOpeningDocumentsInPlace: false
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: Anki deck package
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes: [com.alxojy.cornhub.apkg]
+          - CFBundleTypeName: Anki collection package
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes: [com.alxojy.cornhub.colpkg]
+        UTImportedTypeDeclarations:
+          - UTTypeIdentifier: com.alxojy.cornhub.apkg
+            UTTypeDescription: Anki deck package
+            UTTypeConformsTo: [public.data, public.zip-archive]
+            UTTypeTagSpecification:
+              public.filename-extension: [apkg]
+          - UTTypeIdentifier: com.alxojy.cornhub.colpkg
+            UTTypeDescription: Anki collection package
+            UTTypeConformsTo: [public.data, public.zip-archive]
+            UTTypeTagSpecification:
+              public.filename-extension: [colpkg]
     dependencies:
       - framework: ../build/RslibBridge.xcframework
         embed: false

@@ -62,7 +62,7 @@ struct CardWebView: UIViewRepresentable {
         """
     }
 
-    private static func hex(_ color: Color) -> String {
+    static func hex(_ color: Color) -> String {
         let resolved = UIColor(color).resolvedColor(with: UITraitCollection(userInterfaceStyle: .dark))
         var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
         resolved.getRed(&red, green: &green, blue: &blue, alpha: &alpha)

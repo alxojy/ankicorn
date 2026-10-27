@@ -11,10 +11,18 @@ final class DeckHomeModel {
         case failed(String)
     }
 
+    enum ImportState: Equatable {
+        case idle
+        case importing(String)
+        case done(ImportSummary)
+        case failed(String)
+    }
+
     private(set) var state = State.loading
     private(set) var decks: [DeckTile] = []
     private(set) var studiedToday = ""
     private(set) var syncStatus = "Not synced yet"
+    private(set) var importState = ImportState.idle
 
     private let launch: LaunchOptions
     private let collectionURL: URL
@@ -40,7 +48,11 @@ final class DeckHomeModel {
             let backend = try backend ?? Backend()
             self.backend = backend
             try await backend.openCollection(path: collectionURL)
-            if launch.seedSample { try await seedSampleDecks(backend) }
+            try await backend.ensureChineseNotetype()
+            if launch.seedSample {
+                try await seedSampleDecks(backend)
+                try await backend.seedSampleNotes(deckNames: DeckTreeModel.sampleDecks)
+            }
             try await fetch(backend)
             state = .loaded
         } catch {
@@ -58,6 +70,36 @@ final class DeckHomeModel {
             state = .failed(error.localizedDescription)
         }
     }
+
+    /// Imports an `.apkg` or `.colpkg` picked from Files or opened from another app, and refreshes the decks.
+    func importPackage(_ url: URL) async {
+        if backend == nil { await load() }
+        guard let backend else { return }
+        let isCollection = url.pathExtension.lowercased() == "colpkg"
+        importState = .importing(isCollection ? "Replacing your collection" : "Importing \(url.lastPathComponent)")
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+        do {
+            // The engine reads a plain file path, so copy out of the security-scoped location first.
+            let local = FileManager.default.temporaryDirectory
+                .appending(path: UUID().uuidString).appending(path: url.lastPathComponent)
+            try FileManager.default.createDirectory(
+                at: local.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try FileManager.default.copyItem(at: url, to: local)
+            defer { try? FileManager.default.removeItem(at: local.deletingLastPathComponent()) }
+            let summary =
+                isCollection
+                ? try await backend.importCollectionPackage(path: local, collection: collectionURL)
+                : try await backend.importAnkiPackage(path: local)
+            try await backend.ensureChineseNotetype()
+            try await fetch(backend)
+            importState = .done(summary)
+        } catch {
+            importState = .failed(error.localizedDescription)
+        }
+    }
+
+    func dismissImport() { importState = .idle }
 
     func counts(for deckID: Int64) async -> (new: Int, review: Int)? {
         guard let backend, let counts = try? await backend.countsForDeckToday(deckID: deckID) else { return nil }

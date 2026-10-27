@@ -19,6 +19,7 @@ struct AppShell: View {
             FloatingTabBar(selection: $selection)
         }
         .tint(Theme.accent)
+        .onOpenURL { url in Task { await deckModel.importPackage(url) } }
     }
 
     @ViewBuilder private var screen: some View {
