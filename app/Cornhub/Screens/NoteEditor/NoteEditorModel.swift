@@ -25,6 +25,7 @@ final class NoteEditorModel {
     var errorMessage: String?
     /// Bumped after each successful add, for haptics.
     private(set) var addedCount = 0
+    private(set) var isAutoFilling = false
 
     init(backend: Backend, mode: Mode) {
         self.backend = backend
@@ -151,5 +152,37 @@ final class NoteEditorModel {
 
     nonisolated static func message(_ error: Error) -> String {
         (error as? BackendError)?.message ?? error.localizedDescription
+    }
+
+    /// Fills empty example and audio fields from the first field. A picture needs an image source and is left to the
+    /// user (TODO); nothing is changed when generation is unavailable.
+    func autoFill() async {
+        let headword = CardText.plain(fields.first ?? "")
+        guard !headword.isEmpty, !isAutoFilling else { return }
+        isAutoFilling = true
+        defer { isAutoFilling = false }
+        let language = SpeechSettings.language(deckID: deckID)
+        let exampleIndices = fieldNames.indices.filter { fieldNames[$0].lowercased().hasPrefix("example") && fields[$0].isEmpty }
+        if !exampleIndices.isEmpty {
+            do {
+                let reply = try await TextGenerator.generate(
+                    instructions: "You write one short, natural example sentence for a language learner. "
+                        + "Reply with exactly three lines and nothing else: the sentence, its pinyin or reading, its English translation.",
+                    prompt: "Word: \(headword)")
+                let lines = reply.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+                for (index, line) in zip(exampleIndices, lines) { fields[index] = line }
+            } catch {
+                errorMessage = Self.message(error)
+            }
+        }
+        if let audio = audioIndex(fallback: nil), fields[audio].isEmpty {
+            if let data = await Speaker.render(headword, language: language),
+                let name = await storeMedia(name: "cornhub-\(abs(headword.hashValue)).caf", data: data)
+            {
+                fields[audio] = "[sound:\(name)]"
+            } else if errorMessage == nil {
+                errorMessage = "Speech audio could not be generated on this device."
+            }
+        }
     }
 }

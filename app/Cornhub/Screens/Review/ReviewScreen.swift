@@ -9,6 +9,7 @@ struct ReviewScreen: View {
     @State private var pastThreshold = false
     @State private var editingNote: Anki_Notes_Note?
     @State private var infoPage: AnkiWebPage?
+    @State private var extras = ExtrasModel()
 
     private static let threshold: CGFloat = 110
     private static let flagNames = ["Red", "Orange", "Green", "Blue", "Pink", "Turquoise", "Purple"]
@@ -53,12 +54,21 @@ struct ReviewScreen: View {
                         .submitLabel(.done).onSubmit { withAnimation(.snappy) { model.reveal() } }
                         .accessibilityIdentifier("review-type-answer")
                 }
+                if model.revealed { ExtrasChips(extras: extras) }
                 gradeBar
             }
         }
         .padding(.horizontal, 16)
         .background(Theme.bg.ignoresSafeArea())
         .task { await model.start() }
+        .onChange(of: model.queued?.card.id) { _, _ in extras.reset() }
+        .onChange(of: model.revealed) { _, revealed in
+            guard revealed, let card = model.queued?.card else { return }
+            extras.noteID = card.noteID
+            extras.deckID = card.deckID
+            extras.questionText = CardText.plain(model.questionHTML)
+            extras.answerText = CardText.plain(model.answerHTML)
+        }
         .sensoryFeedback(.impact, trigger: pastThreshold)
         .fullScreenCover(item: Binding(get: { editingNote.map(IdentifiedNote.init) }, set: { editingNote = $0?.note })) { item in
             NoteEditorScreen(backend: model.backend, mode: .edit(item.note)) { saved in
