@@ -1,0 +1,1 @@
+Native fallback for CSV import: the engine guesses the delimiter, columns and defaults in `get_csv_metadata`, and `import_csv` runs with that metadata. Exports write to a temporary file that the share sheet hands on. `.colpkg` export closes the collection in the engine, so the app reopens it afterwards.
