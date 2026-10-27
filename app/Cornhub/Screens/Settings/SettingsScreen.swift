@@ -17,6 +17,17 @@ struct SettingsScreen: View {
                 schedulingSection
                 reviewSection
                 SpeechAndAISection(backend: backend)
+                Section {
+                    NavigationLink {
+                        ManageScreen(backend: backend)
+                    } label: {
+                        Label("Filtered decks, tags, note types", systemImage: "slider.horizontal.3")
+                    }
+                    .frame(minHeight: Theme.minTarget).listRowBackground(Theme.surface)
+                    .accessibilityIdentifier("settings-manage")
+                } header: {
+                    Text("Manage")
+                }
             }
             .scrollContentBackground(.hidden)
             .background(Theme.bg)
