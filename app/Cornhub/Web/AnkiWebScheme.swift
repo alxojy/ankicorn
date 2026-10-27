@@ -8,6 +8,8 @@ import WebKit
 final class AnkiWebSchemeHandler: NSObject, WKURLSchemeHandler {
     nonisolated static let scheme = "cornhub-web"
     nonisolated static let apiPrefix = "/_anki/"
+    /// Fonts bundled with the app (Space Grotesk), served so the Ink override can use them.
+    nonisolated static let fontPrefix = "/_font/"
 
     private let api: AnkiWebAPI
     private var stopped = Set<ObjectIdentifier>()
@@ -35,6 +37,8 @@ final class AnkiWebSchemeHandler: NSObject, WKURLSchemeHandler {
                 if stopped.remove(key) != nil { return }
                 finish(task, result)
             }
+        } else if url.path.hasPrefix(Self.fontPrefix) {
+            finish(task, Self.font(named: String(url.path.dropFirst(Self.fontPrefix.count))))
         } else {
             finish(task, Self.page(for: url.path))
         }
@@ -69,6 +73,15 @@ final class AnkiWebSchemeHandler: NSObject, WKURLSchemeHandler {
             data.append(buffer, count: count)
         }
         return data
+    }
+
+    /// A bundled `.ttf` by file name (no paths).
+    nonisolated static func font(named name: String) -> AnkiWebResult {
+        let base = (name as NSString).deletingPathExtension
+        guard !name.contains("/"), (name as NSString).pathExtension == "ttf",
+            let url = Bundle.main.url(forResource: base, withExtension: "ttf"), let data = try? Data(contentsOf: url)
+        else { return .text(404, "no such font") }
+        return AnkiWebResult(status: 200, body: data, mime: "font/ttf")
     }
 
     static func page(for path: String) -> AnkiWebResult {

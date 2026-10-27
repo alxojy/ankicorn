@@ -67,7 +67,10 @@ final class ScreenTourUITests: XCTestCase {
         let options = app.descendants(matching: .any)["deck-options-button"]
         if options.waitForExistence(timeout: 5) {
             options.tap()
-            sleep(4)
+            XCTAssertTrue(
+                app.webViews.staticTexts["Daily Limits"].waitForExistence(timeout: 40),
+                "deck options page has loaded")
+            sleep(1)
             shot("04-deck-options-web")
             dismissSheet()
         }
