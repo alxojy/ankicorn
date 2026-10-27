@@ -88,3 +88,10 @@ Start review (opened with no deck) SHALL study cards from every deck that has du
 #### Scenario: Cards due in a non-current deck
 - **WHEN** HSK 1 has 45 new cards, the engine's current deck is the empty Default deck, and the user taps Start review
 - **THEN** the review screen shows an HSK 1 question, not the congrats screen
+
+### Requirement: Review at accessibility text sizes
+The review screen SHALL stay usable at the largest accessibility text size: grade labels never break mid-word, header buttons don't overlap, and the card content shows.
+
+#### Scenario: Largest text size
+- **WHEN** the user opens review with Dynamic Type set to the largest accessibility size
+- **THEN** the card question is visible, the Again, Hard, Good and Easy labels are whole words, and the close, undo and ⋯ buttons don't overlap
