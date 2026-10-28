@@ -79,6 +79,8 @@ struct ReviewScreen: View {
                 else { return }
                 extras.speech = SpeechTarget.pick(
                     names: names, fields: note.fields, question: model.questionHTML, language: extras.language)
+                extras.explainInput = ExplainInput.from(
+                    names: names, fields: note.fields, question: model.questionHTML, language: extras.language)
             }
         }
         .sensoryFeedback(.impact, trigger: pastThreshold)
@@ -173,6 +175,8 @@ struct ReviewScreen: View {
             CardWebView(
                 html: model.revealed ? model.answerHTML : model.questionHTML, css: model.rendered?.css ?? "", probe: probe)
                 .padding(16)
+                // The replay button gets its own strip of the Ink frame below the card HTML.
+                .padding(.bottom, model.currentItems.isEmpty ? 0 : Theme.minTarget)
             if !model.currentItems.isEmpty {
                 Button { model.replay() } label: {
                     Image(systemName: "speaker.wave.2.fill").frame(width: Theme.minTarget, height: Theme.minTarget)
@@ -180,7 +184,8 @@ struct ReviewScreen: View {
                 .foregroundStyle(Theme.accent)
                 .accessibilityLabel("Replay audio")
                 .accessibilityIdentifier("review-replay")
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                .padding(.trailing, 8).padding(.bottom, 4)
             }
             RoundedRectangle(cornerRadius: Theme.Radius.reviewCard)
                 .strokeBorder(tint, lineWidth: 3)

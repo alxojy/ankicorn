@@ -29,6 +29,13 @@ enum TextGenerator {
 
     static var isAvailable: Bool { onDeviceAvailable || ClaudeKeychain.load() != nil }
 
+    static func isUnsupportedLanguage(_ error: Error) -> Bool {
+        #if canImport(FoundationModels)
+        if let failure = error as? LanguageModelSession.GenerationError, case .unsupportedLanguageOrLocale = failure { return true }
+        #endif
+        return false
+    }
+
     static func generate(instructions: String, prompt: String) async throws -> String {
         #if canImport(FoundationModels)
         if onDeviceAvailable {

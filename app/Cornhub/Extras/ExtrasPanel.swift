@@ -56,7 +56,8 @@ struct ExtrasChips: View {
             case .none: EmptyView()
             case .explanation(let text): labelled("Explanation", text)
             case .translation(let text): labelled("Translation", text)
-            case .message(let text): Text(text).font(.subheadline).foregroundStyle(Theme.text2)
+            case .message(let text):
+                Label(text, systemImage: "info.circle").font(.subheadline).foregroundStyle(Theme.muted)
             case .loading(let text):
                 HStack { ProgressView(); Text(text).font(.subheadline).foregroundStyle(Theme.text2) }
             case .strokes(let chars):
@@ -68,7 +69,7 @@ struct ExtrasChips: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
-        .background(Theme.raised, in: RoundedRectangle(cornerRadius: Theme.Radius.photo))
+        .background(Theme.raised, in: RoundedRectangle(cornerRadius: Theme.Radius.panel))
         .accessibilityIdentifier("extras-panel")
     }
 

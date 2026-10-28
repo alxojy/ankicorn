@@ -149,9 +149,13 @@ final class ScreenTourUITests: XCTestCase {
         card.tap()
         sleep(3)
         shot("\(prefix)-light-answer")
-        XCTAssertEqual(
-            app.staticTexts["Image missing"].exists, imageMissing,
-            imageMissing ? "placeholder shows for the missing image" : "no placeholder: the image loaded")
+        XCTAssertFalse(app.staticTexts["Image missing"].exists, "no placeholder text for a missing image")
+        if imageMissing { XCTAssertEqual(app.images.matching(identifier: "fixture-image").count, 0) }
+        let replay = app.buttons["review-replay"]
+        let web = app.webViews.firstMatch
+        if replay.exists, web.exists {
+            XCTAssertFalse(replay.frame.intersects(web.frame), "replay sits outside the card HTML")
+        }
         let good = app.descendants(matching: .any)["grade-good"]
         XCTAssertTrue(good.waitForExistence(timeout: 5), "Good button shows")
         good.tap()

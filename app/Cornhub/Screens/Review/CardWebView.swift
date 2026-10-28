@@ -66,15 +66,23 @@ struct CardWebView: UIViewRepresentable {
         <script src="cornhub://app/mathjax.js" async></script>
         """
 
-    /// Swaps an image that fails to load (WebKit would draw a "?" icon) for a small Ink placeholder.
+    /// Removes an image that fails to load (WebKit would draw a "?" icon) and trims the blank space it leaves:
+    /// emptied wrappers and a trailing run of `<br>` at the end of the card.
     static let missingImageScript = """
         <script>document.addEventListener('error', function (event) {
           var image = event.target;
           if (!image || image.tagName !== 'IMG') { return; }
-          var note = document.createElement('span');
-          note.className = 'image-missing';
-          note.textContent = 'Image missing';
-          image.replaceWith(note);
+          var parent = image.parentElement;
+          image.remove();
+          while (parent && parent.tagName !== 'BODY' && !parent.classList.contains('card')
+                 && !parent.textContent.trim() && !parent.querySelector('img,audio,video,svg,canvas')) {
+            var up = parent.parentElement; parent.remove(); parent = up;
+          }
+          var card = document.querySelector('.card');
+          var last = card && card.lastChild;
+          while (last && ((last.nodeType === 3 && !last.textContent.trim()) || last.tagName === 'BR')) {
+            var previous = last.previousSibling; last.remove(); last = previous;
+          }
         }, true);</script>
         """
 
@@ -122,8 +130,6 @@ struct CardWebView: UIViewRepresentable {
             .typeMissed { color: \(hex(Theme.muted)); } code#typeans { font-size: 20px; }
             #typeans { font-family: monospace; }
             img { max-width: 100%; border-radius: 20px; }
-            .image-missing { display: inline-block; padding: 6px 12px; border-radius: 12px; font-size: 14px;
-                             color: \(hex(Theme.muted)); background: \(hex(Theme.raised)); }
             """
     }
 

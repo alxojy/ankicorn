@@ -36,6 +36,7 @@ final class ExtrasModel {
         speaker.stop()
         panel = .none
         translationConfig = nil
+        explainInput = nil
     }
 
     /// Set per card by the review screen; Speak says only this (the note's audio, else the headword).
@@ -55,8 +56,13 @@ final class ExtrasModel {
         panel = chars.isEmpty ? .message("No hanzi on this card.") : .strokes(chars)
     }
 
+    /// The headword, pinyin, meaning and sentence of the shown note; set by the review screen once the note loads.
+    var explainInput: ExplainInput?
+    var generator: TextGenerating = SystemTextGenerator()
+
     func explain() {
-        let key = ExplanationCache.key(noteID: noteID, text: allText)
+        let input = explainInput ?? ExplainInput(headword: questionText, pinyin: "", meaning: answerText, sentence: "")
+        let key = ExplanationCache.key(noteID: noteID, text: input.prompt)
         if let cached = cache.value(for: key) {
             panel = .explanation(cached)
             return
@@ -64,31 +70,36 @@ final class ExtrasModel {
         panel = .loading("Explaining…")
         task?.cancel()
         task = Task {
-            do {
-                let text = try await TextGenerator.generate(
-                    instructions: "You explain flashcards to a language learner. Be concise: meaning, grammar or usage, "
-                        + "one memory aid. Plain text, under 120 words.",
-                    prompt: "Explain this flashcard:\n\(allText)")
-                guard !Task.isCancelled else { return }
+            let outcome = await ExplainRunner.run(input, generator: generator)
+            guard !Task.isCancelled else { return }
+            switch outcome {
+            case .text(let text):
                 cache.store(text, for: key)
                 panel = .explanation(text)
-            } catch {
-                guard !Task.isCancelled else { return }
-                panel = .message(error.localizedDescription)
+            case .message(let text): panel = .message(text)
             }
         }
     }
 
+    /// Source language from the card text, target the device language; same language short-circuits.
     func translate() {
-        let source = Locale.Language(identifier: String(language.prefix(2)) == "zh" ? "zh-Hans" : String(language.prefix(2)))
+        let source = TranslateLanguages.detect(allText, fallback: language)
+        let target = Locale.current.language
+        if TranslateLanguages.isSame(source, target) {
+            panel = .message(TranslateLanguages.alreadyMessage(target: target))
+            return
+        }
         translationText = allText
+        translationSource = source
         panel = .loading("Translating…")
-        translationConfig = .init(source: source, target: Locale.Language(identifier: "en"))
+        translationConfig = .init(source: source, target: target)
     }
+
+    private var translationSource = Locale.Language(identifier: "zh-Hans")
 
     var textToTranslate: String { translationText }
 
     func finishTranslation(_ text: String?) {
-        panel = text.map { .translation($0) } ?? .message("Translation is not available for this language on this device.")
+        panel = text.map { .translation($0) } ?? .message(TranslateLanguages.unavailableMessage(source: translationSource))
     }
 }

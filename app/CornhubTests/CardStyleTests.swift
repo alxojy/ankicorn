@@ -39,7 +39,8 @@ final class CardStyleTests: XCTestCase {
         let html = CardWebView.document(body: "x", css: "")
         XCTAssertTrue(html.contains("class=\"nightMode night_mode\""))
         XCTAssertTrue(html.contains("font-family: \"Kaiti\"") && html.contains("PingFangSC-Regular"))
-        XCTAssertTrue(html.contains("Image missing"))
+        XCTAssertFalse(html.contains("Image missing"), "a missing image leaves no placeholder")
+        XCTAssertTrue(html.contains("image.remove()"))
     }
 }
 
