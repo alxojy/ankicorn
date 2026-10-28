@@ -107,7 +107,8 @@ enum ImportedFixtures {
 extension Backend {
     /// Adds the two fixture note types (once) and a note of each to `deckName`, with media in `mediaFolder`.
     func seedImportedFixtures(
-        deckName: String, mediaFolder: URL? = nil, withImage: Bool = true
+        deckName: String, mediaFolder: URL? = nil, withImage: Bool = true,
+        longCard: Bool = false
     ) throws {
         let rows = DeckRow.rows(from: try deckTree())
         guard let deckID = rows.first(where: { $0.fullName == deckName })?.id else { return }
@@ -115,6 +116,12 @@ extension Backend {
         let stock = try stockNotetypeJSON(kind: .basic)
         let light = try ensureFixtureNotetype(ImportedFixtures.lightName, css: ImportedFixtures.lightCSS, stock: stock)
         let dark = try ensureFixtureNotetype(ImportedFixtures.darkName, css: ImportedFixtures.darkCSS, stock: stock)
+        if longCard {
+            var note = ImportedFixtures.lightNote
+            note[5] = (1...12).map { "Line \($0): the moon is round tonight." }.joined(separator: "<br>")
+            try addNote(notetypeID: light, deckID: deckID, fields: ImportedFixtures.fieldValues(note, withMedia: true))
+            return
+        }
         try addNote(notetypeID: light, deckID: deckID, fields: ImportedFixtures.fieldValues(ImportedFixtures.lightNote, withMedia: true))
         try addNote(notetypeID: dark, deckID: deckID, fields: ImportedFixtures.fieldValues(ImportedFixtures.darkNote, withMedia: true))
     }

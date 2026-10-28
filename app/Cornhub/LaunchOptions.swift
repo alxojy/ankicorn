@@ -19,6 +19,8 @@ struct LaunchOptions: Equatable {
     var seedImported = false
     /// With `seedImported`, leave the fixture image out of the media folder. Tests only.
     var dropFixtureImage = false
+    /// Like `seedImported` but with a single tall card: many lines of text, then the picture. Tests only.
+    var seedLongCard = false
     /// With the sample seed, bury two cards of the first deck. Tests only.
     var seedBuried = false
     /// With the sample seed, add twelve empty subdecks under HSK 2 so its overview scrolls. Tests only.
@@ -29,8 +31,10 @@ struct LaunchOptions: Equatable {
     init(
         seedSample: Bool = false, resetCollection: Bool = false, showFullSyncChoice: Bool = false, stubLogin: Bool = false,
         seedOneDue: Bool = false, seedNoDue: Bool = false,
-        seedImported: Bool = false, dropFixtureImage: Bool = false, seedBuried: Bool = false
+        seedImported: Bool = false, dropFixtureImage: Bool = false, seedBuried: Bool = false,
+        seedLongCard: Bool = false
     ) {
+        self.seedLongCard = seedLongCard
         self.seedBuried = seedBuried
         self.seedImported = seedImported
         self.dropFixtureImage = dropFixtureImage
@@ -52,6 +56,7 @@ struct LaunchOptions: Equatable {
         seedImported = arguments.contains("--seed-imported")
         dropFixtureImage = arguments.contains("--drop-fixture-image")
         seedBuried = arguments.contains("--seed-buried")
+        seedLongCard = arguments.contains("--seed-long-card")
         seedManySubdecks = arguments.contains("--seed-many-subdecks")
         seedFourSubdecks = arguments.contains("--seed-four-subdecks")
     }

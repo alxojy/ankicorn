@@ -7,6 +7,10 @@ struct CardWebView: UIViewRepresentable {
     let css: String
     /// Lets the card's SwiftUI tap ask which picture, if any, sits under a point.
     var probe: CardImageProbe?
+    /// Room kept clear under the last line, so it can scroll past the replay button floating over the corner.
+    var bottomInset: CGFloat = 0
+    /// On the answer side, scroll to the `#answer` divider when it sits below the fold.
+    var scrollsToAnswer = false
 
     func makeUIView(context: Context) -> WKWebView {
         let configuration = WKWebViewConfiguration()
@@ -16,14 +20,20 @@ struct CardWebView: UIViewRepresentable {
         view.backgroundColor = .clear
         view.scrollView.backgroundColor = .clear
         view.scrollView.bounces = false
-        // Taps and drags belong to the SwiftUI card around it.
+        view.scrollView.contentInsetAdjustmentBehavior = .never
+        view.scrollView.showsVerticalScrollIndicator = false
+        view.scrollView.showsHorizontalScrollIndicator = false
+        // Taps and drags belong to the SwiftUI card around it, which scrolls the page itself on a vertical drag.
         view.isUserInteractionEnabled = false
+        view.navigationDelegate = context.coordinator
         probe?.webView = view
         return view
     }
 
     func updateUIView(_ view: WKWebView, context: Context) {
         probe?.webView = view
+        view.scrollView.contentInset.bottom = bottomInset
+        context.coordinator.scrollsToAnswer = scrollsToAnswer
         let document = Self.document(body: html, css: css)
         guard context.coordinator.last != document else { return }
         context.coordinator.last = document
@@ -32,8 +42,23 @@ struct CardWebView: UIViewRepresentable {
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 
-    final class Coordinator {
+    final class Coordinator: NSObject, WKNavigationDelegate {
         var last = ""
+        var scrollsToAnswer = false
+
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            guard scrollsToAnswer else { return }
+            let script = """
+                (function () {
+                  var a = document.getElementById('answer');
+                  return a ? a.getBoundingClientRect().top + window.scrollY : null;
+                })()
+                """
+            webView.evaluateJavaScript(script) { result, _ in
+                guard let top = result as? Double, top >= webView.bounds.height else { return }
+                webView.scrollView.setContentOffset(CGPoint(x: 0, y: max(0, top - 8)), animated: false)
+            }
+        }
     }
 
     static func document(body: String, css: String) -> String {
@@ -141,20 +166,80 @@ struct CardWebView: UIViewRepresentable {
     }
 }
 
-/// Finds the card picture under a point in the card's web view, for tap-to-zoom.
+/// Finds the card picture under a point in the card's web view, for tap-to-zoom, and scrolls the page for the
+/// card's vertical drag (the web view itself takes no touches).
 @MainActor
+@Observable
 final class CardImageProbe {
-    weak var webView: WKWebView?
+    weak var webView: WKWebView? {
+        didSet {
+            guard webView !== oldValue else { return }
+            observers = []
+            guard let scroll = webView?.scrollView else { return }
+            observers = [
+                scroll.observe(\.contentOffset, options: [.new]) { [weak self] _, _ in
+                    MainActor.assumeIsolated { self?.refresh() }
+                },
+                scroll.observe(\.contentSize, options: [.new]) { [weak self] _, _ in
+                    MainActor.assumeIsolated { self?.refresh() }
+                },
+            ]
+            refresh()
+        }
+    }
+    private(set) var canScrollUp = false
+    private(set) var canScrollDown = false
+    @ObservationIgnored private var observers: [NSKeyValueObservation] = []
+
+    var offset: CGFloat { webView?.scrollView.contentOffset.y ?? 0 }
+
+    /// Scrolls the page to `y`, kept within the content.
+    func scroll(to y: CGFloat) {
+        guard let scroll = webView?.scrollView else { return }
+        let most = max(0, scroll.contentSize.height + scroll.contentInset.bottom - scroll.bounds.height)
+        scroll.setContentOffset(CGPoint(x: 0, y: min(max(0, y), most)), animated: false)
+    }
+
+    private func refresh() {
+        guard let scroll = webView?.scrollView else { return }
+        let most = scroll.contentSize.height + scroll.contentInset.bottom - scroll.bounds.height
+        let up = scroll.contentOffset.y > 1
+        let down = scroll.contentOffset.y < most - 1
+        if up != canScrollUp { canScrollUp = up }
+        if down != canScrollDown { canScrollDown = down }
+    }
 
     /// The `src` of the picture at `point` (web view coordinates), or nil when the tap landed elsewhere.
+    /// Works in page coordinates, so a scrolled card finds the picture that is actually under the finger.
     func imageSource(at point: CGPoint) async -> String? {
         guard let webView else { return nil }
         let script = """
             (function () {
-              var e = document.elementFromPoint(\(point.x), \(point.y));
-              return e && e.tagName === 'IMG' && e.src.indexOf('cornhub://app/') !== 0 ? e.src : null;
+              var x = \(point.x), y = \(point.y + offset);
+              var images = document.images;
+              for (var i = 0; i < images.length; i++) {
+                var e = images[i], r = e.getBoundingClientRect();
+                var top = r.top + window.scrollY, left = r.left + window.scrollX;
+                if (e.src.indexOf('cornhub://app/') !== 0 && x >= left && x <= left + r.width
+                    && y >= top && y <= top + r.height) { return e.src; }
+              }
+              return null;
             })()
             """
         return try? await webView.evaluateJavaScript(script) as? String
+    }
+}
+
+/// Which way a card drag goes, decided once from its first real movement.
+enum CardDragAxis {
+    case vertical, horizontal
+
+    /// Movement under this many points is too small to tell.
+    static let slop: CGFloat = 8
+
+    /// `nil` until the drag has moved past the slop; then mostly vertical scrolls, anything else grades.
+    static func decide(_ translation: CGSize) -> CardDragAxis? {
+        guard max(abs(translation.width), abs(translation.height)) >= slop else { return nil }
+        return abs(translation.height) > abs(translation.width) ? .vertical : .horizontal
     }
 }

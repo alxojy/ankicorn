@@ -221,6 +221,48 @@ final class ScreenTourUITests: XCTestCase {
         }
     }
 
+    private func openLongCard() -> XCUIElement {
+        app.launchArguments = ["--seed-long-card", "--reset-collection"]
+        app.launch()
+        let start = app.buttons["Start review"].firstMatch
+        XCTAssertTrue(start.waitForExistence(timeout: 30), "Start review exists")
+        start.tap()
+        let card = app.descendants(matching: .any)["review-card"]
+        XCTAssertTrue(card.waitForExistence(timeout: 15), "review card shows")
+        sleep(3)
+        card.tap()
+        sleep(3)
+        return card
+    }
+
+    /// A card taller than its frame scrolls: the picture at the end is out of view until a vertical swipe.
+    func testLongCardScrollsToItsPicture() {
+        let card = openLongCard()
+        let picture = card.images.firstMatch
+        shot("23-long-card-top")
+        if picture.exists {
+            XCTAssertGreaterThan(picture.frame.maxY, card.frame.maxY, "picture starts below the card edge")
+        }
+        card.swipeUp(velocity: .slow)
+        card.swipeUp(velocity: .slow)
+        sleep(1)
+        shot("23-long-card-scrolled")
+        XCTAssertTrue(picture.exists, "picture shows after scrolling")
+        XCTAssertLessThanOrEqual(picture.frame.maxY, card.frame.maxY, "picture bottom is inside the card")
+    }
+
+    /// A mostly sideways drag on the long card still grades, and the next card is not scrolled.
+    func testSidewaysDragOnLongCardStillGrades() {
+        let card = openLongCard()
+        card.swipeUp(velocity: .slow)
+        let start = card.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.5))
+        let end = card.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.52))
+        start.press(forDuration: 0.1, thenDragTo: end)
+        sleep(3)
+        shot("23-long-card-after-grade")
+        XCTAssertFalse(app.descendants(matching: .any)["grade-good"].exists, "answered: back on a question")
+    }
+
     /// Review ⋯ › Restyle this note type…, preview, apply: the card turns into the Ink card.
     func testRestyleNotetypeFromReviewMenu() {
         app.launchArguments = ["--seed-imported", "--reset-collection"]

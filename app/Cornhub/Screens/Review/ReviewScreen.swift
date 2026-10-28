@@ -9,6 +9,8 @@ struct ReviewScreen: View {
     @AppStorage("swipeGradeCount") private var swipeCount = 0
     @State private var drag: CGFloat = 0
     @State private var pastThreshold = false
+    @State private var dragAxis: CardDragAxis?
+    @State private var scrollStart: CGFloat = 0
     @State private var editingNote: Anki_Notes_Note?
     @State private var infoPage: AnkiWebPage?
     @State private var extras = ExtrasModel()
@@ -195,13 +197,16 @@ struct ReviewScreen: View {
         return ZStack {
             RoundedRectangle(cornerRadius: Theme.Radius.reviewCard).fill(Theme.card)
             CardWebView(
-                html: model.revealed ? model.answerHTML : model.questionHTML, css: model.rendered?.css ?? "", probe: probe)
+                html: model.revealed ? model.answerHTML : model.questionHTML, css: model.rendered?.css ?? "", probe: probe,
+                bottomInset: model.currentItems.isEmpty ? 0 : Theme.minTarget, scrollsToAnswer: model.revealed)
                 .padding(16)
-                // The replay button gets its own strip of the Ink frame below the card HTML.
-                .padding(.bottom, model.currentItems.isEmpty ? 0 : Theme.minTarget)
+                .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.reviewCard))
+            scrollFades
             if !model.currentItems.isEmpty {
                 Button { model.replay() } label: {
                     Image(systemName: "speaker.wave.2.fill").frame(width: Theme.minTarget, height: Theme.minTarget)
+                        .background(.ultraThinMaterial, in: Circle())
+                        .overlay(Circle().strokeBorder(Theme.hairline, lineWidth: 1))
                 }
                 .foregroundStyle(Theme.accent)
                 .accessibilityLabel("Replay audio")
@@ -256,6 +261,22 @@ struct ReviewScreen: View {
         .accessibilityIdentifier("review-card")
     }
 
+    /// Short fades at the card's top and bottom edges while there is more to scroll in that direction.
+    private var scrollFades: some View {
+        VStack(spacing: 0) {
+            LinearGradient(colors: [Theme.card, Theme.card.opacity(0)], startPoint: .top, endPoint: .bottom)
+                .frame(height: 28).opacity(probe.canScrollUp ? 1 : 0)
+            Spacer(minLength: 0)
+            LinearGradient(colors: [Theme.card.opacity(0), Theme.card], startPoint: .top, endPoint: .bottom)
+                .frame(height: 28).opacity(probe.canScrollDown ? 1 : 0)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.reviewCard))
+        .animation(.easeInOut(duration: 0.15), value: probe.canScrollUp)
+        .animation(.easeInOut(duration: 0.15), value: probe.canScrollDown)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
     private func stamp(_ progress: CGFloat) -> String {
         progress >= 0 ? "GOOD · \(model.interval(.good))" : "AGAIN · \(model.interval(.again))"
     }
@@ -263,13 +284,26 @@ struct ReviewScreen: View {
     private var swipe: some Gesture {
         DragGesture()
             .onChanged { value in
-                guard model.revealed else { return }
+                if dragAxis == nil {
+                    dragAxis = CardDragAxis.decide(value.translation)
+                    if dragAxis == .vertical { scrollStart = probe.offset + value.translation.height }
+                }
+                if dragAxis == .vertical {
+                    probe.scroll(to: scrollStart - value.translation.height)
+                    return
+                }
+                guard dragAxis == .horizontal, model.revealed else { return }
                 drag = value.translation.width
                 let past = abs(drag) >= Self.threshold
                 if past != pastThreshold { pastThreshold = past }
             }
             .onEnded { value in
-                guard model.revealed else { return }
+                let axis = dragAxis
+                dragAxis = nil
+                guard axis == .horizontal, model.revealed else {
+                    withAnimation(.snappy) { drag = 0 }
+                    return
+                }
                 let width = value.translation.width
                 pastThreshold = false
                 withAnimation(.snappy) { drag = 0 }
