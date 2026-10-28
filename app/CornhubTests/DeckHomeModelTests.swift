@@ -61,4 +61,39 @@ final class DeckHomeModelTests: XCTestCase {
         let buried = await model.buriedCount(for: deck)
         XCTAssertEqual(buried, 0)
     }
+
+    func testCreateDeckAndSubdeck() async throws {
+        let model = DeckHomeModel(launch: LaunchOptions(seedSample: true), directory: directory)
+        await model.load()
+        let created = await model.createDeck("  Testdeck ")
+        XCTAssertTrue(created)
+        let top = try XCTUnwrap(model.decks.first { $0.name == "Testdeck" })
+        XCTAssertEqual(model.lastCreatedDeckID, top.id)
+        XCTAssertEqual(model.highlightedDeckID, top.id)
+        let sub = await model.createDeck("Testdeck::Sub")
+        XCTAssertTrue(sub)
+        let child = try XCTUnwrap(model.tile(for: top.id)?.children.first)
+        XCTAssertEqual(child.fullName, "Testdeck::Sub")
+    }
+
+    func testDuplicateNameIsReportedBeforeTheEngine() async throws {
+        let model = DeckHomeModel(launch: LaunchOptions(seedSample: true), directory: directory)
+        await model.load()
+        XCTAssertTrue(model.nameTaken("hsk 2::verbs"), "case-insensitive, subdecks included")
+        let created = await model.createDeck("HSK 1")
+        XCTAssertFalse(created)
+        let count = model.decks.count
+        XCTAssertEqual(count, 2, "nothing was created")
+        let empty = await model.createDeck("   ")
+        XCTAssertFalse(empty)
+    }
+
+    func testUndoRemovesTheNewDeck() async throws {
+        let model = DeckHomeModel(launch: LaunchOptions(seedSample: true), directory: directory)
+        await model.load()
+        _ = await model.createDeck("Testdeck")
+        XCTAssertNotNil(model.decks.first { $0.name == "Testdeck" })
+        await model.undoDelete()
+        XCTAssertNil(model.decks.first { $0.name == "Testdeck" })
+    }
 }

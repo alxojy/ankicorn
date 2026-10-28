@@ -7,6 +7,8 @@ struct DeckHomeScreen: View {
     let sync: SyncModel
     @State private var showNote: String?
     @State private var addingCard = false
+    @State private var addCardDeckID: Int64?
+    @State private var creatingDeck = false
     @State private var reviewTarget: ReviewTarget?
     @State private var pickingFile = false
     @State private var showLogin = false
@@ -45,7 +47,16 @@ struct DeckHomeScreen: View {
             if let backend = model.backend { ReviewScreen(backend: backend, deckID: target.deckID, sync: sync) }
         }
         .fullScreenCover(isPresented: $addingCard, onDismiss: { Task { await model.refresh() } }) {
-            if let backend = model.backend { NoteEditorScreen(backend: backend, mode: .add) }
+            if let backend = model.backend { NoteEditorScreen(backend: backend, mode: .add, preferredDeckID: addCardDeckID) }
+        }
+        .sheet(isPresented: $creatingDeck) {
+            NewDeckSheet(model: model) {
+                addCardDeckID = model.lastCreatedDeckID
+                Task {
+                    try? await Task.sleep(for: .seconds(2.5))
+                    model.clearHighlight()
+                }
+            }
         }
         .fileImporter(isPresented: $pickingFile, allowedContentTypes: UTType.ankiPackages) { result in
             if case .success(let url) = result { Task { await model.importPackage(url) } }
@@ -91,10 +102,11 @@ struct DeckHomeScreen: View {
             } description: {
                 Text("Add a deck to start learning.")
             } actions: {
-                Button("Add deck") { showNote = "Adding decks is coming soon." }.frame(minHeight: Theme.minTarget)
+                Button("Add deck") { creatingDeck = true }.frame(minHeight: Theme.minTarget)
                 Button("Import deck") { pickingFile = true }.frame(minHeight: Theme.minTarget)
             }
         case .loaded:
+            ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: Theme.margin) {
                     header
@@ -116,12 +128,17 @@ struct DeckHomeScreen: View {
                     .accessibilityIdentifier("start-review")
                     Text("Decks").font(.display(DisplaySize.sectionHeading, relativeTo: .title2)).foregroundStyle(Theme.text)
                         .accessibilityAddTraits(.isHeader)
-                    DeckGrid(decks: model.decks, model: model, actions: $deckActions)
+                    DeckGrid(decks: model.decks, model: model, actions: $deckActions, highlighted: model.highlightedDeckID)
                 }
                 .padding(.horizontal, Theme.margin)
             }
             .tabBarScroll()
             .refreshable { await runSync() }
+            .onChange(of: model.highlightedDeckID) { _, id in
+                guard let id else { return }
+                withAnimation { proxy.scrollTo(id, anchor: .center) }
+            }
+            }
         }
     }
 
@@ -145,7 +162,17 @@ struct DeckHomeScreen: View {
             HStack(spacing: 10) {
                 roundButton("arrow.triangle.2.circlepath", "Sync") { Task { await runSync() } }
                     .disabled(sync.isSyncing)
-                roundButton("plus", "Add card") { addingCard = true }
+                Menu {
+                    Button { addingCard = true } label: { Label("Add card", systemImage: "plus.rectangle.on.rectangle") }
+                        .accessibilityIdentifier("add-card-item")
+                    Button { creatingDeck = true } label: { Label("New deck", systemImage: "rectangle.stack.badge.plus") }
+                        .accessibilityIdentifier("new-deck-item")
+                } label: {
+                    roundIcon("plus")
+                }
+                .fixedSize()
+                .accessibilityLabel("Add")
+                .accessibilityIdentifier("add-menu")
             }
         }
     }
@@ -165,18 +192,20 @@ struct DeckHomeScreen: View {
     }
 
     private func roundButton(_ symbol: String, _ label: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: symbol)
-                .dynamicTypeSize(...DynamicTypeSize.xLarge)
-                .foregroundStyle(Theme.text)
-                .frame(width: Theme.minTarget, height: Theme.minTarget)
-                .background(Theme.control, in: Circle())
-                .overlay(Circle().strokeBorder(Theme.hairline, lineWidth: 1))
-                .contentShape(Circle())
-        }
+        Button(action: action) { roundIcon(symbol) }
         .buttonStyle(.plain)
         .fixedSize()
         .accessibilityLabel(label)
+    }
+
+    private func roundIcon(_ symbol: String) -> some View {
+        Image(systemName: symbol)
+            .dynamicTypeSize(...DynamicTypeSize.xLarge)
+            .foregroundStyle(Theme.text)
+            .frame(width: Theme.minTarget, height: Theme.minTarget)
+            .background(Theme.control, in: Circle())
+            .overlay(Circle().strokeBorder(Theme.hairline, lineWidth: 1))
+            .contentShape(Circle())
     }
 
     private var hero: some View {

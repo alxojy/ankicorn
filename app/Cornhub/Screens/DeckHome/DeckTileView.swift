@@ -75,12 +75,21 @@ struct DeckGrid: View {
     let decks: [DeckTile]
     let model: DeckHomeModel
     @Binding var actions: DeckActionState
+    var highlighted: Int64?
 
     var body: some View {
         LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
             ForEach(Array(decks.enumerated()), id: \.element.id) { index, deck in
                 NavigationLink(value: deck) { DeckTileView(deck: deck, index: index) }
                     .buttonStyle(.plain)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: Theme.Radius.tile)
+                            .strokeBorder(Theme.accent, lineWidth: 2)
+                            .opacity(highlighted == deck.id ? 1 : 0)
+                            .allowsHitTesting(false)
+                    )
+                    .animation(.easeInOut(duration: 0.3), value: highlighted)
+                    .id(deck.id)
                     .contextMenu { DeckActionItems(model: model, deck: deck, state: $actions) }
                     .accessibilityAction(named: "Rename") { actions.startRename(deck) }
                     .accessibilityAction(named: "Options") { actions.optionsPage = .deckOptions(deckID: deck.id) }

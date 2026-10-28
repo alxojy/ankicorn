@@ -19,8 +19,11 @@ struct NoteEditorScreen: View {
     @State private var translation: TranslationSession.Configuration?
     @State private var addingTag = false
 
-    init(backend: Backend, mode: NoteEditorModel.Mode, onSaved: @escaping (Anki_Notes_Note) -> Void = { _ in }) {
-        _model = State(initialValue: NoteEditorModel(backend: backend, mode: mode))
+    init(
+        backend: Backend, mode: NoteEditorModel.Mode, preferredDeckID: Int64? = nil,
+        onSaved: @escaping (Anki_Notes_Note) -> Void = { _ in }
+    ) {
+        _model = State(initialValue: NoteEditorModel(backend: backend, mode: mode, preferredDeckID: preferredDeckID))
         self.onSaved = onSaved
     }
 

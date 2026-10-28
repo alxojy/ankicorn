@@ -28,6 +28,10 @@ final class DeckHomeModel {
     /// Set after a delete so the screen can show the Undo toast.
     private(set) var deletedNotice: String?
     var actionError: String?
+    /// The most recently created deck, so Add card can default to it.
+    private(set) var lastCreatedDeckID: Int64?
+    /// Top-level tile to scroll to and highlight briefly after a create.
+    private(set) var highlightedDeckID: Int64?
 
     private let launch: LaunchOptions
     private let collectionURL: URL
@@ -196,6 +200,40 @@ final class DeckHomeModel {
             return nil
         }
     }
+
+    /// The name as the engine will store it: surrounding whitespace removed.
+    static func cleanedDeckName(_ raw: String) -> String { raw.trimmingCharacters(in: .whitespacesAndNewlines) }
+
+    /// True when a deck with this full name (case-insensitive, as Anki compares) is already in the tree.
+    func nameTaken(_ raw: String) -> Bool {
+        let name = DeckHomeModel.cleanedDeckName(raw).lowercased()
+        func contains(_ tiles: [DeckTile]) -> Bool {
+            tiles.contains { $0.fullName.lowercased() == name || contains($0.children) }
+        }
+        return contains(decks)
+    }
+
+    /// Creates the deck through the engine (`Parent::Child` makes a subdeck). Returns false and sets `actionError`
+    /// on failure; the caller checks `nameTaken` first so the engine never silently renames a duplicate.
+    @discardableResult
+    func createDeck(_ raw: String) async -> Bool {
+        let name = DeckHomeModel.cleanedDeckName(raw)
+        guard let backend, !name.isEmpty, !nameTaken(name) else { return false }
+        do {
+            let id = try await backend.addDeck(name: name)
+            lastCreatedDeckID = id
+            await refresh()
+            let root = name.components(separatedBy: "::").first?.lowercased()
+            highlightedDeckID = decks.first { $0.fullName.lowercased() == root }?.id
+            deletedNotice = "Created \(name)"
+            return true
+        } catch {
+            actionError = error.localizedDescription
+            return false
+        }
+    }
+
+    func clearHighlight() { highlightedDeckID = nil }
 
     func dismissDeletedNotice() { deletedNotice = nil }
 

@@ -9,6 +9,7 @@ struct DeckOverviewScreen: View {
     @State private var showCustomStudy = false
     @State private var optionsPage: AnkiWebPage?
     @State private var actions = DeckActionState()
+    @State private var newSubdeckPrefix: String?
     @State private var buriedCount = 0
     @State private var unburyNotice: String?
     @Environment(\.dismiss) private var dismiss
@@ -20,7 +21,7 @@ struct DeckOverviewScreen: View {
             VStack(alignment: .leading, spacing: 12) {
                 header
                 studyButton
-                if !deck.children.isEmpty { subdecks }
+                if !current.children.isEmpty { subdecks }
                 if let unburyNotice {
                     Text(unburyNotice)
                         .font(.footnote)
@@ -58,6 +59,9 @@ struct DeckOverviewScreen: View {
                     }
                 }
             }
+        }
+        .sheet(isPresented: Binding(get: { newSubdeckPrefix != nil }, set: { if !$0 { newSubdeckPrefix = nil } })) {
+            NewDeckSheet(model: model, initialName: newSubdeckPrefix ?? "")
         }
         .sheet(item: $optionsPage, onDismiss: { Task { await model.refresh() } }) { page in
             if let backend = model.backend { AnkiWebSheet(page: page, backend: backend) }
@@ -124,6 +128,10 @@ struct DeckOverviewScreen: View {
                 .accessibilityIdentifier("deck-options-button")
             Button { actions.startRename(current) } label: { Label("Rename", systemImage: "pencil") }
                 .accessibilityIdentifier("deck-action-rename")
+            Button {
+                newSubdeckPrefix = (current.fullName.isEmpty ? current.name : current.fullName) + "::"
+            } label: { Label("New subdeck…", systemImage: "rectangle.stack.badge.plus") }
+                .accessibilityIdentifier("deck-new-subdeck")
         }
         if model.canDelete(current) {
             Section {
@@ -135,14 +143,14 @@ struct DeckOverviewScreen: View {
 
     private var subdecks: some View {
         VStack(spacing: 0) {
-            ForEach(Array(deck.children.enumerated()), id: \.element.id) { index, child in
+            ForEach(Array(current.children.enumerated()), id: \.element.id) { index, child in
                 NavigationLink(value: child) { SubdeckRow(deck: child, index: index) }
                     .buttonStyle(.plain)
                     .contextMenu { DeckActionItems(model: model, deck: child, state: $actions) }
                     .accessibilityAction(named: "Rename") { actions.startRename(child) }
                     .accessibilityAction(named: "Options") { actions.optionsPage = .deckOptions(deckID: child.id) }
                     .accessibilityAction(named: "Delete") { if model.canDelete(child) { actions.deleting = child } }
-                if index < deck.children.count - 1 { Divider().overlay(Theme.hairline) }
+                if index < current.children.count - 1 { Divider().overlay(Theme.hairline) }
             }
         }
         .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.tile))

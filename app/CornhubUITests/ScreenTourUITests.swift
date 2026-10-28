@@ -49,7 +49,7 @@ final class ScreenTourUITests: XCTestCase {
         XCTAssertTrue(
             app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'done today'")).firstMatch
                 .waitForExistence(timeout: 10), "hero line reads 'N done today'")
-        XCTAssertTrue(app.buttons["Sync"].exists && app.buttons["Add card"].exists, "header has Sync and Add card")
+        XCTAssertTrue(app.buttons["Sync"].exists && app.buttons["add-menu"].exists, "header has Sync and the + menu")
         XCTAssertFalse(app.buttons["Import deck"].exists, "Import deck left the header")
         let due = app.descendants(matching: .any)["due-total"].firstMatch
         let caption = app.staticTexts["cards due"].firstMatch
@@ -447,8 +447,11 @@ final class ScreenTourUITests: XCTestCase {
 
     func testAddCard() {
         app.launch()
+        let plus = app.buttons["add-menu"].firstMatch
+        XCTAssertTrue(plus.waitForExistence(timeout: 30), "+ menu exists")
+        plus.tap()
         let add = app.buttons["Add card"].firstMatch
-        XCTAssertTrue(add.waitForExistence(timeout: 30), "Add button exists")
+        XCTAssertTrue(add.waitForExistence(timeout: 5), "menu offers Add card")
         add.tap()
         sleep(2)
         shot("20-add-card")
@@ -859,5 +862,36 @@ final class ScreenTourUITests: XCTestCase {
         let close = app.buttons["review-close"], undo = app.buttons["review-undo"]
         XCTAssertFalse(close.frame.intersects(undo.frame), "close and undo don't overlap")
         shot("62-review-xxxl-answer")
+    }
+
+    func testCreateDeckAndSubdeck() {
+        app.launch()
+        let plus = app.buttons["add-menu"].firstMatch
+        XCTAssertTrue(plus.waitForExistence(timeout: 30), "+ menu exists")
+        plus.tap()
+        let newDeck = app.buttons["New deck"].firstMatch
+        XCTAssertTrue(newDeck.waitForExistence(timeout: 5), "menu offers New deck")
+        shot("40-add-menu")
+        newDeck.tap()
+        let field = app.textFields["new-deck-field"]
+        XCTAssertTrue(field.waitForExistence(timeout: 5), "name field shows")
+        XCTAssertFalse(app.buttons["new-deck-create"].isEnabled, "Create is disabled while empty")
+        field.typeText("HSK 1")
+        XCTAssertTrue(app.staticTexts["new-deck-error"].waitForExistence(timeout: 3), "duplicate name is reported")
+        shot("41-new-deck-duplicate")
+        field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 5))
+        field.typeText("Testdeck")
+        app.buttons["new-deck-create"].tap()
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Testdeck'")).firstMatch
+            .waitForExistence(timeout: 10), "the new tile appears")
+        XCTAssertTrue(app.descendants(matching: .any)["deck-deleted-notice"].exists, "Undo toast shows")
+        shot("42-deck-created")
+        // Add card now defaults to the new deck.
+        plus.tap()
+        app.buttons["Add card"].firstMatch.tap()
+        let chip = app.descendants(matching: .any)["editor-deck-chip"]
+        XCTAssertTrue(chip.waitForExistence(timeout: 10), "editor opens")
+        XCTAssertTrue(chip.label.contains("Testdeck"), "deck picker defaults to the new deck")
+        shot("43-add-card-new-deck")
     }
 }

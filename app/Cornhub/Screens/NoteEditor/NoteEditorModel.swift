@@ -36,9 +36,13 @@ final class NoteEditorModel {
     private var autoFillTask: Task<Void, Never>?
     private var lastSources: [Int: String] = [:]
 
-    init(backend: Backend, mode: Mode) {
+    /// Deck Add card starts on instead of the engine's default, e.g. one just created.
+    let preferredDeckID: Int64?
+
+    init(backend: Backend, mode: Mode, preferredDeckID: Int64? = nil) {
         self.backend = backend
         self.mode = mode
+        self.preferredDeckID = preferredDeckID
     }
 
     var isEditing: Bool { if case .edit = mode { true } else { false } }
@@ -129,7 +133,8 @@ final class NoteEditorModel {
             switch mode {
             case .add:
                 let defaults = try await backend.defaultsForAdding()
-                deckID = decks.contains { $0.id == defaults.deckID } ? defaults.deckID : (decks.first?.id ?? 0)
+                let wanted = preferredDeckID.flatMap { id in decks.contains { $0.id == id } ? id : nil }
+                deckID = wanted ?? (decks.contains { $0.id == defaults.deckID } ? defaults.deckID : (decks.first?.id ?? 0))
                 let chosen = notetypes.contains { $0.id == defaults.notetypeID } ? defaults.notetypeID : (notetypes.first?.id ?? 0)
                 try await selectNotetype(chosen)
             case .edit(let note):

@@ -131,6 +131,7 @@
 		DF8A74517291B371844D4109 /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = 8424185EAA298C83E646D810 /* SwiftProtobuf */; };
 		E0DCA87FCE1471B109DE88E5 /* Backend+Notetypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7581712A24A70C0BC172AFC1 /* Backend+Notetypes.swift */; };
 		E13DC34EBF2CEE4C7568C27E /* ExtrasSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49DE81AE6B75DE9B0DBA2B82 /* ExtrasSupport.swift */; };
+		E2FDBB5E162F040147A3B59B /* NewDeckSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C946DAAE4A6350220677D49 /* NewDeckSheet.swift */; };
 		EA80EF04A272E5DA08806C63 /* Backend+Import.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CEFC10607034472B70F86A3 /* Backend+Import.swift */; };
 		EC2B283A4BDF0A68455762CD /* CornhubApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6F1CB7B19369F577917B2FF /* CornhubApp.swift */; };
 		EC5EC83CAAF9459C78AD81F8 /* AnkiWebAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 596F4C94F8C7E3BC7265B68A /* AnkiWebAPI.swift */; };
@@ -180,6 +181,7 @@
 		16F91A86445EE66B9435A3B1 /* anki_config.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = anki_config.pb.swift; sourceTree = "<group>"; };
 		18A8F75BF69FE9CF41FBA9E6 /* ImportExportScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportExportScreen.swift; sourceTree = "<group>"; };
 		1A53FF95B5B0E833D093BA15 /* MediaCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaCapture.swift; sourceTree = "<group>"; };
+		1C946DAAE4A6350220677D49 /* NewDeckSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewDeckSheet.swift; sourceTree = "<group>"; };
 		1D318DFB0F3B401B72709B2D /* ExtrasModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtrasModel.swift; sourceTree = "<group>"; };
 		20E5B00FA332B65105E42797 /* CardWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardWebView.swift; sourceTree = "<group>"; };
 		226E22F58EA430493F064D54 /* ImportedMediaTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportedMediaTests.swift; sourceTree = "<group>"; };
@@ -512,6 +514,7 @@
 				B24BA3FC930E34490CC4E7F8 /* DeckTile.swift */,
 				95DC6AD44718C614BF888AE9 /* DeckTileView.swift */,
 				8D57FB31D1B83AEF3EA9BE0C /* ImportSheet.swift */,
+				1C946DAAE4A6350220677D49 /* NewDeckSheet.swift */,
 			);
 			path = DeckHome;
 			sourceTree = "<group>";
@@ -880,6 +883,7 @@
 				601916C26C0B21DBB8B3A0A6 /* ManageScreen.swift in Sources */,
 				2AF67509A9E1A34179BEDD30 /* MediaCapture.swift in Sources */,
 				56C712171A83DDFA366416D0 /* MediaScheme.swift in Sources */,
+				E2FDBB5E162F040147A3B59B /* NewDeckSheet.swift in Sources */,
 				A87B828AD85C5E1BE49BC00D /* NoteEditorModel.swift in Sources */,
 				C1E0253DC66AA9A51139A26E /* NoteEditorScreen.swift in Sources */,
 				BFBA126BE9695370AC44B5B2 /* NotetypeRestyleSheet.swift in Sources */,
