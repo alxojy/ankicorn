@@ -4,6 +4,7 @@ import SwiftUI
 struct DeckOverviewScreen: View {
     let deck: DeckTile
     let model: DeckHomeModel
+    @Environment(AppState.self) private var appState
     @State private var reviewTarget: ReviewTarget?
     @State private var showCustomStudy = false
     @State private var optionsPage: AnkiWebPage?
@@ -52,6 +53,13 @@ struct DeckOverviewScreen: View {
                 }
                 .buttonStyle(.bordered)
                 .tint(Theme.text2)
+                Button { appState.openBrowse(deckID: deck.id) } label: {
+                    Label("Browse cards", systemImage: "rectangle.stack")
+                        .frame(maxWidth: .infinity, minHeight: Theme.minTarget)
+                }
+                .buttonStyle(.bordered)
+                .tint(Theme.text2)
+                .accessibilityIdentifier("browse-cards-button")
                 Button { optionsPage = .deckOptions(deckID: deck.id) } label: {
                     Label("Deck options", systemImage: "gearshape")
                         .frame(maxWidth: .infinity, minHeight: Theme.minTarget)

@@ -197,3 +197,49 @@ struct CardPreviewSheet: View {
         }
     }
 }
+
+/// Deck scope picker: the deck tree with indented subdecks. Choosing a deck includes its subdecks.
+struct DeckScopeSheet: View {
+    let model: BrowseModel
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                row("All decks", depth: 0, selected: model.deck == nil) { model.deck = nil }
+                ForEach(model.decks, id: \.id) { deck in
+                    let parts = deck.name.components(separatedBy: "::")
+                    row(parts.last ?? deck.name, depth: parts.count - 1, selected: model.deck == deck.name) {
+                        model.deck = deck.name
+                    }
+                }
+            }
+            .scrollContentBackground(.hidden)
+            .background(Theme.bg)
+            .navigationTitle("Deck")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+            }
+        }
+        .presentationDetents([.medium, .large])
+        .accessibilityIdentifier("browse-deck-picker")
+    }
+
+    private func row(_ title: String, depth: Int, selected: Bool, choose: @escaping () -> Void) -> some View {
+        Button {
+            choose()
+            dismiss()
+            Task { await model.search() }
+        } label: {
+            HStack {
+                Text(title).foregroundStyle(Theme.text).padding(.leading, CGFloat(depth) * 16)
+                Spacer()
+                if selected { Image(systemName: "checkmark").foregroundStyle(Theme.accent).accessibilityHidden(true) }
+            }
+            .frame(minHeight: Theme.minTarget)
+            .contentShape(Rectangle())
+        }
+        .accessibilityAddTraits(selected ? [.isSelected] : [])
+    }
+}

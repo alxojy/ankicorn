@@ -1,9 +1,26 @@
 import SwiftUI
+import Observation
+
+/// Shared navigation state: the selected tab, the deck Browse is scoped to, and whether the tab bar is hidden.
+@MainActor @Observable
+final class AppState {
+    var selection: AppTab = .decks
+    /// Deck id Browse should scope to; Browse consumes it and keeps its own scope afterwards.
+    var browseDeckID: Int64?
+    var hideTabBar = false
+    /// The deck name Browse was last scoped to, kept while the app runs.
+    var lastBrowseDeck: String?
+
+    func openBrowse(deckID: Int64) {
+        browseDeckID = deckID
+        selection = .browse
+    }
+}
 
 /// Root of the app: the selected tab's screen with the floating tab bar above it.
 struct AppShell: View {
     let launch: LaunchOptions
-    @State private var selection: AppTab = .decks
+    @State private var appState = AppState()
     @State private var deckModel: DeckHomeModel
     @State private var sync: SyncModel
 
@@ -18,9 +35,14 @@ struct AppShell: View {
             Theme.bg.ignoresSafeArea()
             screen
                 .safeAreaPadding(.bottom, Theme.tabBarHeight + Theme.tabBarBottomInset + 8)
-            FloatingTabBar(selection: $selection)
+            FloatingTabBar(selection: $appState.selection)
+                .offset(y: appState.hideTabBar ? Theme.tabBarHeight + Theme.tabBarBottomInset + 40 : 0)
+                .opacity(appState.hideTabBar ? 0 : 1)
+                .allowsHitTesting(!appState.hideTabBar)
+                .animation(.spring(duration: 0.3), value: appState.hideTabBar)
         }
         .tint(Theme.accent)
+        .environment(appState)
         .task {
             sync.didFinish = { await deckModel.refresh() }
             if launch.showFullSyncChoice {
@@ -40,7 +62,7 @@ struct AppShell: View {
     }
 
     @ViewBuilder private var screen: some View {
-        switch selection {
+        switch appState.selection {
         case .decks:
             DeckHomeScreen(model: deckModel, sync: sync)
         case .browse:

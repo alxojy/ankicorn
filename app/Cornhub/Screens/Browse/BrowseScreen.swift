@@ -27,22 +27,50 @@ private struct BrowseContent: View {
     @State private var activeSheet: BrowseActionSheet.Kind?
     @State private var confirmDelete = false
     @State private var showReplace = false
+    @State private var showDeckPicker = false
+    @State private var pendingDelete: PendingDelete?
+    @State private var undoVisible = false
+    @Environment(AppState.self) private var appState
+
+    private struct PendingDelete {
+        let notes: Int
+        let cards: Int
+    }
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 modePicker
-                if model.hasFilters { filterChips }
+                deckChip
+                if model.hasOtherFilters { filterChips }
                 content
-                if model.selecting { actionBar }
             }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                VStack(spacing: 8) {
+                    if undoVisible { undoToast }
+                    if model.selecting { actionBar }
+                }
+                .padding(.horizontal, Theme.margin)
+                .padding(.bottom, 8)
+            }
+            .animation(.spring(duration: 0.3), value: model.selecting)
+            .onChange(of: model.selecting) { _, _ in syncTabBar() }
+            .onChange(of: undoVisible) { _, _ in syncTabBar() }
+            .onDisappear { appState.hideTabBar = false }
+            .onChange(of: model.deck) { _, value in appState.lastBrowseDeck = value }
+            .onChange(of: appState.browseDeckID) { _, _ in Task { await consumeScopeRequest() } }
             .background(Theme.bg.ignoresSafeArea())
             .navigationTitle("Browse")
             .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $model.query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search cards")
             .onSubmit(of: .search) { Task { await model.search() } }
             .toolbar { toolbar }
-            .task { await model.load() }
+            .task {
+                model.deck = appState.lastBrowseDeck
+                await model.load()
+                await consumeScopeRequest()
+            }
+            .sheet(isPresented: $showDeckPicker) { DeckScopeSheet(model: model) }
             .sheet(isPresented: $showFilters) { BrowseFilterSheet(model: model) }
             .sheet(isPresented: $showReplace) { FindReplaceSheet(model: model) }
             .sheet(item: $activeSheet) { kind in BrowseActionSheet(kind: kind, model: model) }
@@ -52,10 +80,18 @@ private struct BrowseContent: View {
                     Task { await model.search() }
                 }
             }
-            .confirmationDialog("Delete \(model.selection.count) selected?", isPresented: $confirmDelete,
-                                titleVisibility: .visible) {
-                Button("Delete notes", role: .destructive) { Task { await model.perform(.delete) } }
-            } message: { Text("Their notes and all of their cards are removed.") }
+            .confirmationDialog(deleteTitle, isPresented: $confirmDelete, titleVisibility: .visible) {
+                Button("Delete", role: .destructive) {
+                    Task {
+                        await model.perform(.delete)
+                        showUndo()
+                    }
+                }
+                .accessibilityIdentifier("browse-delete-confirm")
+            } message: {
+                Text(model.notesMode ? "The notes and all of their cards are removed."
+                     : "Deleting a card removes its note and all of the note's cards.")
+            }
             .alert("Something went wrong", isPresented: Binding(
                 get: { model.errorMessage != nil }, set: { if !$0 { model.errorMessage = nil } })
             ) {
@@ -63,6 +99,78 @@ private struct BrowseContent: View {
             } message: { Text(model.errorMessage ?? "") }
             .sensoryFeedback(.success, trigger: model.changeCount)
         }
+    }
+
+    private var deleteTitle: String {
+        guard let pending = pendingDelete else { return "Delete?" }
+        return "Delete \(pending.notes) \(pending.notes == 1 ? "note" : "notes") (\(pending.cards) \(pending.cards == 1 ? "card" : "cards"))?"
+    }
+
+    private func syncTabBar() { appState.hideTabBar = model.selecting || undoVisible }
+
+    private func requestDelete() {
+        Task {
+            let summary = await model.deleteSummary()
+            pendingDelete = PendingDelete(notes: summary.notes, cards: summary.cards)
+            confirmDelete = true
+        }
+    }
+
+    private func consumeScopeRequest() async {
+        guard let id = appState.browseDeckID else { return }
+        appState.browseDeckID = nil
+        await model.scope(toDeckID: id)
+    }
+
+    private func showUndo() {
+        guard model.deletedNotice != nil else { return }
+        undoVisible = true
+        Task {
+            try? await Task.sleep(for: .seconds(8))
+            undoVisible = false
+        }
+    }
+
+    private var undoToast: some View {
+        HStack {
+            Text(model.deletedNotice ?? "Deleted").font(.inkLabel).foregroundStyle(Theme.text)
+            Spacer()
+            Button("Undo") {
+                undoVisible = false
+                Task { await model.undoLast() }
+            }
+            .font(.inkLabel.weight(.semibold))
+            .foregroundStyle(Theme.accent)
+            .frame(minWidth: Theme.minTarget, minHeight: Theme.minTarget)
+            .accessibilityIdentifier("browse-undo")
+        }
+        .padding(.horizontal, 16)
+        .glassEffect(.regular.tint(Theme.bg.opacity(0.6)), in: Capsule())
+        .overlay(Capsule().strokeBorder(Theme.hairline, lineWidth: 1))
+        .transition(.move(edge: .bottom).combined(with: .opacity))
+    }
+
+    private var deckChip: some View {
+        HStack {
+            Button { showDeckPicker = true } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "square.stack").accessibilityHidden(true)
+                    Text(model.deck.map { $0.components(separatedBy: "::").last ?? $0 } ?? "All decks")
+                    Image(systemName: "chevron.down").font(.caption2).foregroundStyle(Theme.muted)
+                        .accessibilityHidden(true)
+                }
+                .font(.inkLabel)
+                .foregroundStyle(Theme.text)
+                .padding(.horizontal, 14)
+                .frame(minHeight: Theme.minTarget)
+                .background(Theme.raised, in: Capsule())
+            }
+            .accessibilityLabel("Deck: \(model.deck ?? "All decks")")
+            .accessibilityIdentifier("browse-deck-chip")
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.bottom, 4)
     }
 
     private var modePicker: some View {
@@ -79,8 +187,7 @@ private struct BrowseContent: View {
     private var filterChips: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                if let deck = model.deck { chip(deck, "square.stack") { model.deck = nil } }
-                if let tag = model.tag { chip(tag, "tag") { model.tag = nil } }
+                                if let tag = model.tag { chip(tag, "tag") { model.tag = nil } }
                 if let notetype = model.notetype { chip(notetype, "doc.text") { model.notetype = nil } }
                 if let flag = model.flag { chip("Flag \(flag)", "flag.fill") { model.flag = nil } }
             }
@@ -111,13 +218,14 @@ private struct BrowseContent: View {
             ContentUnavailableView("No matches", systemImage: "magnifyingglass",
                                    description: Text("Try a different search or clear the filters."))
         } else {
+            Text(model.countLine)
+                .font(.inkLabel).foregroundStyle(Theme.muted)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 6)
+                .accessibilityIdentifier("browse-count")
             List {
-                Section {
-                    ForEach(model.ids, id: \.self) { id in row(id) }
-                } header: {
-                    Text("\(model.ids.count) \(model.notesMode ? "notes" : "cards")")
-                        .font(.inkLabel).foregroundStyle(Theme.muted)
-                }
+                ForEach(model.ids, id: \.self) { id in row(id) }
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
@@ -131,7 +239,7 @@ private struct BrowseContent: View {
         // Cards mode shows question, answer, deck: the secondary line is the answer column only.
         let rest = model.notesMode ? Array(cells.dropFirst()) : Array(cells.dropFirst().prefix(1))
         let subtitle = rest.map(Self.plain).filter { !$0.isEmpty }.joined(separator: " · ")
-        let selected = model.selection.contains(id)
+        let selected = model.selecting && model.selection.contains(id)
         return Button {
             if model.selecting {
                 model.toggle(id)
@@ -161,7 +269,7 @@ private struct BrowseContent: View {
         }
         .buttonStyle(.plain)
         .listRowBackground(selected ? Theme.raised : Theme.surface)
-        .task { await model.loadRow(id) }
+        .task(id: model.rows[id] == nil) { await model.loadRow(id) }
         .contextMenu {
             Button("Preview", systemImage: "eye") {
                 Task { previewing = await model.previewCardID(for: id).map(IdentifiedID.init) }
@@ -171,6 +279,13 @@ private struct BrowseContent: View {
             Button("Preview", systemImage: "eye") {
                 Task { previewing = await model.previewCardID(for: id).map(IdentifiedID.init) }
             }.tint(Theme.accent)
+        }
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            Button("Delete", systemImage: "trash", role: .destructive) {
+                model.selection = [id]
+                requestDelete()
+            }
+            .accessibilityIdentifier("browse-row-delete")
         }
         .accessibilityLabel("\(title). \(subtitle)\(selected ? ". Selected" : "")")
         .accessibilityIdentifier("browse-row")
@@ -204,6 +319,14 @@ private struct BrowseContent: View {
                 if !model.selecting { model.selection = [] }
             }
             .accessibilityIdentifier("browse-select")
+        }
+        if model.selecting {
+            ToolbarItem(placement: .topBarLeading) {
+                Button(model.selection.count == model.ids.count ? "Select none" : "Select all") {
+                    model.selection = model.selection.count == model.ids.count ? [] : Set(model.ids)
+                }
+                .accessibilityIdentifier("browse-select-all")
+            }
         }
         ToolbarItemGroup(placement: .topBarTrailing) {
             Menu {
@@ -260,16 +383,20 @@ private struct BrowseContent: View {
             .disabled(none)
             .accessibilityIdentifier("browse-actions")
             Button(role: .destructive) {
-                confirmDelete = true
+                requestDelete()
             } label: {
                 Label("Delete", systemImage: "trash")
                     .labelStyle(.iconOnly)
                     .frame(minWidth: Theme.minTarget, minHeight: Theme.minTarget)
             }
             .disabled(none)
+            .accessibilityIdentifier("browse-delete")
         }
         .padding(.horizontal, 16)
-        .background(Theme.surface)
+        .glassEffect(.regular.tint(Theme.bg.opacity(0.6)), in: Capsule())
+        .overlay(Capsule().strokeBorder(Theme.hairline, lineWidth: 1))
+        .shadow(color: .black.opacity(0.5), radius: 24, y: 10)
+        .transition(.move(edge: .bottom).combined(with: .opacity))
     }
 }
 

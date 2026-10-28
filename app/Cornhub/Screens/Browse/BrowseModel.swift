@@ -29,6 +29,7 @@ final class BrowseModel {
 
     init(backend: Backend) { self.backend = backend }
 
+    var hasOtherFilters: Bool { tag != nil || notetype != nil || flag != nil }
     var hasFilters: Bool { deck != nil || tag != nil || notetype != nil || flag != nil }
     var sortableColumns: [Anki_Search_BrowserColumns.Column] {
         columns.filter { (notesMode ? $0.sortingNotes : $0.sortingCards) != .none }
@@ -105,6 +106,36 @@ final class BrowseModel {
         if selection.contains(id) { selection.remove(id) } else { selection.insert(id) }
     }
 
+    /// Scope Browse to a deck by id (the engine's `deck:` search includes subdecks).
+    func scope(toDeckID id: Int64) async {
+        if decks.isEmpty { decks = (try? await backend.deckNames()) ?? [] }
+        guard let name = decks.first(where: { $0.id == id })?.name else { return }
+        deck = name
+        await search()
+    }
+
+    var countLine: String {
+        let noun = notesMode ? (ids.count == 1 ? "note" : "notes") : (ids.count == 1 ? "card" : "cards")
+        return "\(ids.count) \(noun)" + (deck.map { " in \($0.split(separator: ":").last.map(String.init) ?? $0)" } ?? "")
+    }
+
+    /// Notes and cards a delete of the selection would remove, for the confirmation text.
+    func deleteSummary() async -> (notes: Int, cards: Int) {
+        let chosen = selectedOrdered
+        guard let notes = try? await noteIDs(chosen) else { return (chosen.count, chosen.count) }
+        let cards = (try? await backend.cardIDs(ofNotes: notes).count) ?? chosen.count
+        return (notes.count, cards)
+    }
+
+    /// Whether the last change can be undone, for the Undo toast.
+    func undoLast() async {
+        do {
+            try await backend.undo()
+            changeCount += 1
+            await search()
+        } catch { errorMessage = "\(error)" }
+    }
+
     func clearFilters() async {
         deck = nil; tag = nil; notetype = nil; flag = nil
         await search()
@@ -157,6 +188,8 @@ final class BrowseModel {
         case delete
     }
 
+    var deletedNotice: String?
+
     func perform(_ action: Action) async {
         let chosen = selectedOrdered
         guard !chosen.isEmpty else { return }
@@ -178,7 +211,9 @@ final class BrowseModel {
             case .suspend(let on):
                 try await backend.suspend(cardIDs: try await cardIDs(chosen), suspend: on)
             case .delete:
-                try await backend.deleteNotes(noteIDs: try await noteIDs(chosen))
+                let notes = try await noteIDs(chosen)
+                try await backend.deleteNotes(noteIDs: notes)
+                deletedNotice = "Deleted \(notes.count) \(notes.count == 1 ? "note" : "notes")"
             }
             changeCount += 1
             selection = []

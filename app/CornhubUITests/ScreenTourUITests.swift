@@ -268,6 +268,69 @@ final class ScreenTourUITests: XCTestCase {
         XCTAssertTrue(app.descendants(matching: .any)["editor-field-0"].waitForExistence(timeout: 5), "row opens the note editor")
     }
 
+    private func browseCount() -> Int {
+        let element = app.descendants(matching: .any)["browse-count"].firstMatch
+        guard element.waitForExistence(timeout: 5) else { return -1 }
+        let label = element.label
+        return Int(label.split(separator: " ").first ?? "") ?? -1
+    }
+
+    func testBrowseDeckScopeAndDelete() {
+        app.launch()
+        tab("Browse")
+        let chip = app.buttons["browse-deck-chip"]
+        XCTAssertTrue(chip.waitForExistence(timeout: 10), "deck chip exists")
+        chip.tap()
+        let pick = app.buttons["HSK 2"].firstMatch
+        XCTAssertTrue(pick.waitForExistence(timeout: 5), "picker lists HSK 2")
+        shot("33-browse-deck-picker")
+        pick.tap()
+        let count = app.descendants(matching: .any)["browse-count"].firstMatch
+        XCTAssertTrue(count.waitForExistence(timeout: 5), "count line shows")
+        XCTAssertTrue(count.label.hasSuffix("in HSK 2"), "count line names the deck, got \(count.label)")
+        let before = browseCount()
+        XCTAssertGreaterThan(before, 2, "HSK 2 has cards")
+        app.buttons["browse-select"].tap()
+        let rows = app.buttons.matching(identifier: "browse-row")
+        XCTAssertTrue(rows.firstMatch.waitForExistence(timeout: 5))
+        rows.element(boundBy: 0).tap()
+        rows.element(boundBy: 1).tap()
+        sleep(1)
+        shot("34-browse-select")
+        let delete = app.buttons["browse-delete"]
+        XCTAssertTrue(delete.waitForExistence(timeout: 5), "delete button exists")
+        XCTAssertTrue(delete.isHittable, "delete button is hittable")
+        let tabBar = app.descendants(matching: .any)["tab-settings"].frame
+        XCTAssertFalse(delete.frame.intersects(tabBar), "delete button does not overlap the tab bar")
+        delete.tap()
+        let confirm = app.buttons["browse-delete-confirm"].firstMatch
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5), "delete asks for confirmation")
+        shot("35-browse-delete-confirm")
+        confirm.tap()
+        let undo = app.buttons["browse-undo"]
+        XCTAssertTrue(undo.waitForExistence(timeout: 5), "undo toast shows")
+        shot("36-browse-undo")
+        sleep(1)
+        XCTAssertLessThan(browseCount(), before, "count drops after delete")
+        undo.tap()
+        sleep(2)
+        XCTAssertEqual(browseCount(), before, "undo brings the cards back")
+    }
+
+    func testBrowseFromDeckOverview() {
+        app.launch()
+        let tile = app.descendants(matching: .any).matching(identifier: "deck-tile").firstMatch
+        XCTAssertTrue(tile.waitForExistence(timeout: 30), "deck tiles show")
+        tile.tap()
+        let browse = app.buttons["browse-cards-button"]
+        XCTAssertTrue(browse.waitForExistence(timeout: 10), "overview has Browse cards")
+        browse.tap()
+        let count = app.descendants(matching: .any)["browse-count"].firstMatch
+        XCTAssertTrue(count.waitForExistence(timeout: 10), "Browse opens")
+        XCTAssertTrue(count.label.hasSuffix("in HSK 1"), "scoped to HSK 1, got \(count.label)")
+        shot("37-browse-from-overview")
+    }
+
     func testStats() {
         app.launch()
         tab("Stats")

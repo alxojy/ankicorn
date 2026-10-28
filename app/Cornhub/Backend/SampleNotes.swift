@@ -31,6 +31,14 @@ enum SampleNotes {
         ["How many tones does Mandarin have?", "Four, plus the neutral tone"]
     ]
 
+    /// Notes for the second sample deck, so scoping and deleting in Browse have something to act on.
+    static let hsk2: [[String]] = [
+        ["How do you say \"I am hungry\"?", "我饿了 (wǒ è le)"],
+        ["How do you say \"how much is it?\"", "多少钱 (duōshao qián)"],
+        ["How do you say \"I don't understand\"?", "我不懂 (wǒ bù dǒng)"],
+        ["How do you say \"please wait\"?", "请等一下 (qǐng děng yíxià)"]
+    ]
+
     static let cloze: [[String]] = [
         ["Mandarin Chinese has {{c1::four}} tones and a {{c2::neutral}} tone.", ""],
         ["The character {{c1::水}} means water.", ""]
@@ -62,6 +70,9 @@ extension Backend {
         }
         for fields in SampleNotes.basic { try addNote(notetypeID: basicID, deckID: deckID, fields: fields) }
         for fields in SampleNotes.cloze { try addNote(notetypeID: clozeID, deckID: deckID, fields: fields) }
+        if let secondID = rows.first(where: { $0.fullName == deckNames.dropFirst().first })?.id {
+            for fields in SampleNotes.hsk2 { try addNote(notetypeID: basicID, deckID: secondID, fields: fields) }
+        }
     }
 }
 
