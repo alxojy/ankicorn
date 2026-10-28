@@ -17,6 +17,7 @@ Style Anki's select and popover for the phone through the injected Ink CSS. Anki
 - **Open list:**
   - **Container:** an Ink surface (raised), radius 14, a soft shadow, the full width of the select, and above everything else, with no overlap glitch over section headings.
   - **Rows:** 44 pt high, body text, and a ✓ in the accent colour on the selected row instead of the blue fill and left bar. A subtle Ink highlight while pressed. The list scrolls if long.
+- **Section headers:** each section title ("Daily Limits", "New Cards"…) and its ? help button share one baseline row. The title is on the left in the Ink section-title size (smaller than now, not the huge display size). The ? is a 44 pt target, vertically centred on the title, with the Ink muted icon colour instead of the white filled circle. These come from `ts/lib/components/TitledContainer.svelte` (title) and the help `Badge`/`HelpModal` trigger. The hairline under the title stays.
 - **Every dropdown:** the same rules apply to every `Select` on the deck options page (and on the other hosted pages that use it).
 - **Save:** the split button matches the field's height, and its chevron segment has the same radius.
 - **Fallback:** if CSS can't fix the popover's placement on WKWebView, replace the preset row with a native SwiftUI header above the web view: a native `Menu` of presets, plus Save. These drive the page through the bridge (Anki's page exposes its state; switching presets and saving go through the same calls `ConfigSelector` uses). Document which route was taken.

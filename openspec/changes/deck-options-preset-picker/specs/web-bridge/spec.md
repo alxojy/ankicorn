@@ -10,3 +10,10 @@ Dropdowns on Anki's hosted pages, including the deck options preset picker, SHAL
 #### Scenario: Open preset list
 - **WHEN** the user taps the preset picker
 - **THEN** an Ink list opens above the page with the current preset checked, and no blue highlight or left bar
+
+### Requirement: Aligned section headers on hosted pages
+Section titles on hosted pages SHALL sit on one row with their help button, vertically centred together, in the Ink section-title style.
+
+#### Scenario: Daily Limits header
+- **WHEN** the user views the Daily Limits section in Deck options
+- **THEN** the title and the ? button are centred on the same line
