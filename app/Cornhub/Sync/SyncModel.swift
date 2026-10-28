@@ -32,6 +32,8 @@ final class SyncModel {
 
     private(set) var phase = Phase.idle
     private(set) var username: String?
+    /// Observed copy of "an hkey is stored", so screens redraw on login and logout (the Keychain is not observable).
+    private(set) var isSignedIn: Bool
     private(set) var lastSynced: Date?
     var fullSyncChoice: FullSyncChoice?
     var syncMediaEnabled: Bool { didSet { defaults.set(syncMediaEnabled, forKey: Keys.media) } }
@@ -41,6 +43,8 @@ final class SyncModel {
     var didFinish: () async -> Void = {}
 
     private let store = AccountStore()
+    /// Test seam: logs in without the network, saving an invented hkey.
+    private let stubLogin: Bool
     private let defaults = UserDefaults.standard
     private enum Keys {
         static let last = "sync.lastSynced"
@@ -49,14 +53,16 @@ final class SyncModel {
         static let lastBackup = "backup.last"
     }
 
-    init() {
+    init(stubLogin: Bool = false) {
+        self.stubLogin = stubLogin
+        if stubLogin { store.clear() }
         username = store.username
+        isSignedIn = store.hkey != nil
         lastSynced = defaults.object(forKey: Keys.last) as? Date
         syncMediaEnabled = defaults.object(forKey: Keys.media) as? Bool ?? true
         syncOnOpen = defaults.bool(forKey: Keys.onOpen)
     }
 
-    var isSignedIn: Bool { store.hkey != nil }
     var isSyncing: Bool { if case .syncing = phase { true } else { false } }
 
     /// "Synced 2 min ago" and friends; the quiet line under the date.
@@ -74,15 +80,18 @@ final class SyncModel {
     // MARK: Account
 
     func login(backend: Backend, username: String, password: String) async throws {
-        let auth = try await backend.syncLogin(username: username, password: password)
-        store.save(hkey: auth.hkey, username: username)
+        var hkey = "stub-hkey"
+        if !stubLogin { hkey = try await backend.syncLogin(username: username, password: password).hkey }
+        store.save(hkey: hkey, username: username)
         self.username = username
+        isSignedIn = true
         phase = .idle
     }
 
     func logout() {
         store.clear()
         username = nil
+        isSignedIn = false
         lastSynced = nil
         defaults.removeObject(forKey: Keys.last)
         phase = .idle

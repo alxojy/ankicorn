@@ -117,4 +117,25 @@ final class SyncModelTests: XCTestCase {
         progress.fullSync = full
         XCTAssertEqual(SyncModel.describe(progress, transfer: "Downloading"), "Downloading 42%")
     }
+
+    func testSignInStateNotifiesObservers() async throws {
+        AccountStore().clear()
+        defer { AccountStore().clear() }
+        let model = SyncModel(stubLogin: true)
+        XCTAssertFalse(model.isSignedIn)
+        XCTAssertEqual(model.statusText, "Not signed in")
+
+        var signedInChanged = false
+        withObservationTracking { _ = model.isSignedIn; _ = model.statusText } onChange: { signedInChanged = true }
+        try await model.login(backend: try Backend(), username: "testuser", password: "x")
+        XCTAssertTrue(signedInChanged, "login notifies observers of isSignedIn and statusText")
+        XCTAssertTrue(model.isSignedIn)
+        XCTAssertEqual(model.statusText, "Not synced yet")
+
+        var signedOutChanged = false
+        withObservationTracking { _ = model.isSignedIn; _ = model.statusText } onChange: { signedOutChanged = true }
+        model.logout()
+        XCTAssertTrue(signedOutChanged, "logout notifies observers")
+        XCTAssertFalse(model.isSignedIn)
+    }
 }

@@ -9,7 +9,11 @@ struct LaunchOptions: Equatable {
     /// Show the full-sync prompt on launch, for screenshots and UI tests (no account or network involved).
     var showFullSyncChoice = false
 
-    init(seedSample: Bool = false, resetCollection: Bool = false, showFullSyncChoice: Bool = false) {
+    /// Log in without the network (any credentials succeed), starting signed out. Tests only.
+    var stubLogin = false
+
+    init(seedSample: Bool = false, resetCollection: Bool = false, showFullSyncChoice: Bool = false, stubLogin: Bool = false) {
+        self.stubLogin = stubLogin
         self.seedSample = seedSample
         self.resetCollection = resetCollection
         self.showFullSyncChoice = showFullSyncChoice
@@ -19,5 +23,6 @@ struct LaunchOptions: Equatable {
         seedSample = arguments.contains("--seed-sample")
         resetCollection = arguments.contains("--reset-collection")
         showFullSyncChoice = arguments.contains("--show-full-sync-choice")
+        stubLogin = arguments.contains("--stub-login")
     }
 }

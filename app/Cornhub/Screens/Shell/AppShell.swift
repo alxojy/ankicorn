@@ -5,10 +5,11 @@ struct AppShell: View {
     let launch: LaunchOptions
     @State private var selection: AppTab = .decks
     @State private var deckModel: DeckHomeModel
-    @State private var sync = SyncModel()
+    @State private var sync: SyncModel
 
     init(launch: LaunchOptions) {
         self.launch = launch
+        _sync = State(initialValue: SyncModel(stubLogin: launch.stubLogin))
         _deckModel = State(initialValue: DeckHomeModel(launch: launch))
     }
 
