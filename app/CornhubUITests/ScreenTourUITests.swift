@@ -242,6 +242,22 @@ final class ScreenTourUITests: XCTestCase {
         tab("Browse")
         sleep(3)
         shot("30-browse")
+        let search = app.searchFields.firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 5), "browse has a search field")
+        let tabBar = app.descendants(matching: .any)["tab-settings"].frame
+        XCTAssertFalse(search.frame.intersects(tabBar), "search field does not overlap the tab bar")
+        XCTAssertLessThan(search.frame.minY, tabBar.minY, "search field sits above the tab bar")
+        let rowsBefore = app.buttons.matching(identifier: "browse-row").count
+        search.tap()
+        search.typeText("zzzqqqnomatch\n")
+        sleep(2)
+        shot("30b-browse-search")
+        XCTAssertLessThan(app.buttons.matching(identifier: "browse-row").count, max(rowsBefore, 1), "query filters results")
+        if app.buttons["Clear text"].exists { app.buttons["Clear text"].tap() }
+        search.typeText("hello\n")
+        sleep(2)
+        XCTAssertTrue(app.buttons.matching(identifier: "browse-row").firstMatch.waitForExistence(timeout: 5), "matching query lists rows")
+        if app.keyboards.count > 0, app.buttons["Cancel"].exists { app.buttons["Cancel"].tap() }
         let filter = app.descendants(matching: .any)["browse-filter"]
         if filter.waitForExistence(timeout: 5) { filter.tap(); sleep(1); shot("31-browse-filter"); dismissSheet() }
         let row = app.buttons.matching(identifier: "browse-row").firstMatch

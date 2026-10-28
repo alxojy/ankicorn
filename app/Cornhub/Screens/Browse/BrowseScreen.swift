@@ -39,7 +39,7 @@ private struct BrowseContent: View {
             .background(Theme.bg.ignoresSafeArea())
             .navigationTitle("Browse")
             .navigationBarTitleDisplayMode(.inline)
-            .searchable(text: $model.query, prompt: "Search cards")
+            .searchable(text: $model.query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search cards")
             .onSubmit(of: .search) { Task { await model.search() } }
             .toolbar { toolbar }
             .task { await model.load() }
