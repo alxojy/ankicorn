@@ -146,7 +146,7 @@ final class ScreenTourUITests: XCTestCase {
 
     func testAddCard() {
         app.launch()
-        let add = app.buttons["Add"].firstMatch
+        let add = app.buttons["Add card"].firstMatch
         XCTAssertTrue(add.waitForExistence(timeout: 30), "Add button exists")
         add.tap()
         sleep(2)
