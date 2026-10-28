@@ -69,11 +69,11 @@ final class DeckHomeModel {
                     for index in 1...12 { _ = try await backend.addDeck(name: "HSK 2::Topic \(index)") }
                 }
                 if launch.seedBuried { try await backend.buryCards(deckName: DeckHomeModel.sampleDecks[0], limit: 2) }
-            } else if launch.seedImported || launch.seedLongCard {
+            } else if launch.seedImported || launch.seedLongCard || launch.seedPictureCard {
                 try await seedSampleDecks(backend)
                 try await backend.seedImportedFixtures(
                     deckName: DeckHomeModel.sampleDecks[0], withImage: !launch.dropFixtureImage,
-                    longCard: launch.seedLongCard)
+                    longCard: launch.seedLongCard, pictureCardLines: launch.seedPictureCard ? 5 : 0)
             } else if launch.seedOneDue || launch.seedNoDue {
                 try await seedSampleDecks(backend)
                 if launch.seedOneDue { try await backend.seedOneDueNote(deckName: DeckHomeModel.sampleDecks[0]) }

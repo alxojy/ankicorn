@@ -251,6 +251,32 @@ final class ScreenTourUITests: XCTestCase {
         XCTAssertLessThanOrEqual(picture.frame.maxY, card.frame.maxY, "picture bottom is inside the card")
     }
 
+    /// A card that overflows only by its picture: the picture shrinks to fit whole inside the card, clear of the
+    /// replay button, with nothing left to scroll.
+    func testPictureShrinksToFitCard() {
+        app.launchArguments = ["--seed-picture-card", "--reset-collection"]
+        app.launch()
+        let start = app.buttons["Start review"].firstMatch
+        XCTAssertTrue(start.waitForExistence(timeout: 30), "Start review exists")
+        start.tap()
+        let card = app.descendants(matching: .any)["review-card"]
+        XCTAssertTrue(card.waitForExistence(timeout: 15), "review card shows")
+        sleep(3)
+        card.tap()
+        sleep(3)
+        shot("24-picture-fit")
+        let picture = card.images.firstMatch
+        XCTAssertTrue(picture.exists, "picture shows")
+        XCTAssertGreaterThanOrEqual(picture.frame.minY, card.frame.minY, "picture top is inside the card")
+        XCTAssertLessThanOrEqual(picture.frame.maxY, card.frame.maxY, "picture bottom is inside the card")
+        let replay = app.buttons["review-replay"]
+        if replay.exists {
+            XCTAssertLessThanOrEqual(replay.frame.maxX, card.frame.maxX, "replay is inside the card's right edge")
+            XCTAssertLessThanOrEqual(replay.frame.maxY, card.frame.maxY, "replay is inside the card's bottom edge")
+            XCTAssertFalse(replay.frame.intersects(picture.frame), "replay doesn't cover the picture")
+        }
+    }
+
     /// A mostly sideways drag on the long card still grades, and the next card is not scrolled.
     func testSidewaysDragOnLongCardStillGrades() {
         let card = openLongCard()

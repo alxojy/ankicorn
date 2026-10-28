@@ -194,7 +194,7 @@ struct ReviewScreen: View {
                 .accessibilityLabel("Replay audio")
                 .accessibilityIdentifier("review-replay")
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-                .padding(.trailing, 8).padding(.bottom, 4)
+                .padding(.trailing, 12).padding(.bottom, 12)
             }
             RoundedRectangle(cornerRadius: Theme.Radius.reviewCard)
                 .strokeBorder(tint, lineWidth: 3)

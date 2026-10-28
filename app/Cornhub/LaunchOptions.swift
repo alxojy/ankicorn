@@ -21,6 +21,8 @@ struct LaunchOptions: Equatable {
     var dropFixtureImage = false
     /// Like `seedImported` but with a single tall card: many lines of text, then the picture. Tests only.
     var seedLongCard = false
+    /// Like `seedLongCard` but a few lines only, so the card overflows just by its picture. Tests only.
+    var seedPictureCard = false
     /// With the sample seed, bury two cards of the first deck. Tests only.
     var seedBuried = false
     /// With the sample seed, add twelve empty subdecks under HSK 2 so its overview scrolls. Tests only.
@@ -57,6 +59,7 @@ struct LaunchOptions: Equatable {
         dropFixtureImage = arguments.contains("--drop-fixture-image")
         seedBuried = arguments.contains("--seed-buried")
         seedLongCard = arguments.contains("--seed-long-card")
+        seedPictureCard = arguments.contains("--seed-picture-card")
         seedManySubdecks = arguments.contains("--seed-many-subdecks")
         seedFourSubdecks = arguments.contains("--seed-four-subdecks")
     }

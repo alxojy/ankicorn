@@ -92,3 +92,22 @@ final class CardInkColoursTests: XCTestCase {
         XCTAssertTrue(CardWebView.document(body: "x", css: ".card { background: #111111; }").contains(CardWebView.backgroundOverrideCSS))
     }
 }
+
+final class CardFitScriptTests: XCTestCase {
+    func testDocumentCarriesFitScriptWithFloorAndHandler() {
+        let html = CardWebView.document(body: "<img src=\"a.jpg\">", css: "")
+        XCTAssertTrue(html.contains("window.cornhubFit"))
+        XCTAssertTrue(html.contains("var FLOOR = 96"))
+        XCTAssertTrue(html.contains("messageHandlers.\(CardWebView.fitHandler)"))
+    }
+
+    func testRefitCallPassesInset() {
+        XCTAssertEqual(CardWebView.refitCall(inset: 44), "window.cornhubFit && window.cornhubFit(44);")
+    }
+
+    @MainActor func testScrollingOffUntilCardOverflows() {
+        let probe = CardImageProbe()
+        XCTAssertFalse(probe.overflows)
+        XCTAssertFalse(probe.canScrollDown, "a card that fits shows no bottom fade")
+    }
+}

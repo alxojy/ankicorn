@@ -14,6 +14,7 @@ struct CardWebView: UIViewRepresentable {
 
     func makeUIView(context: Context) -> WKWebView {
         let configuration = WKWebViewConfiguration()
+        configuration.userContentController.add(FitMessageProxy(context.coordinator), name: Self.fitHandler)
         configuration.setURLSchemeHandler(MediaSchemeHandler(), forURLScheme: MediaSchemeHandler.scheme)
         let view = WKWebView(frame: CGRect(x: 0, y: 0, width: 320, height: 480), configuration: configuration)
         view.isOpaque = false
@@ -26,6 +27,7 @@ struct CardWebView: UIViewRepresentable {
         // Taps and drags belong to the SwiftUI card around it, which scrolls the page itself on a vertical drag.
         view.isUserInteractionEnabled = false
         view.navigationDelegate = context.coordinator
+        context.coordinator.probe = probe
         probe?.webView = view
         return view
     }
@@ -33,9 +35,17 @@ struct CardWebView: UIViewRepresentable {
     func updateUIView(_ view: WKWebView, context: Context) {
         probe?.webView = view
         view.scrollView.contentInset.bottom = bottomInset
+        context.coordinator.probe = probe
         context.coordinator.scrollsToAnswer = scrollsToAnswer
         let document = Self.document(body: html, css: css)
+        if context.coordinator.last == document, context.coordinator.inset != bottomInset {
+            // Same card, new bottom inset (Dynamic Type, rotation): fit again.
+            context.coordinator.inset = bottomInset
+            view.evaluateJavaScript(Self.refitCall(inset: bottomInset))
+        }
+        context.coordinator.inset = bottomInset
         guard context.coordinator.last != document else { return }
+        probe?.overflows = false
         context.coordinator.last = document
         view.loadHTMLString(document, baseURL: URL(string: "cornhub://media/"))
     }
@@ -45,8 +55,15 @@ struct CardWebView: UIViewRepresentable {
     final class Coordinator: NSObject, WKNavigationDelegate {
         var last = ""
         var scrollsToAnswer = false
+        var inset: CGFloat = 0
+        weak var probe: CardImageProbe?
+
+        @MainActor func fitReported(overflows: Bool) {
+            if probe?.overflows != overflows { probe?.overflows = overflows }
+        }
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            webView.evaluateJavaScript(CardWebView.refitCall(inset: inset))
             guard scrollsToAnswer else { return }
             let script = """
                 (function () {
@@ -61,10 +78,63 @@ struct CardWebView: UIViewRepresentable {
         }
     }
 
+    /// Name of the script message the page posts its "still overflows" answer to.
+    static let fitHandler = "cornhubFit"
+    /// The shortest a picture is squeezed to, in points, before the card scrolls instead.
+    static let imageFloor = 96
+
+    static func refitCall(inset: CGFloat) -> String { "window.cornhubFit && window.cornhubFit(\(Int(inset)));" }
+
+    /// Fits the card without scrolling when only its pictures are too tall: measures the content against the
+    /// viewport (minus the bottom inset kept for the replay button), then shrinks the pictures' max-height by
+    /// the overflow shared out over what each can give up above the floor. Posts whether it still overflows.
+    /// Runs on load, on image load, on resize and when Swift asks (reveal, Dynamic Type, rotation).
+    static var fitScript: String {
+        """
+        <script>(function () {
+          var FLOOR = \(imageFloor), inset = 0;
+          function pictures() {
+            return Array.prototype.filter.call(document.querySelectorAll('.card img'), function (i) {
+              return i.getAttribute('src') !== null && i.src.indexOf('cornhub://app/') !== 0; });
+          }
+          function need() {
+            var card = document.querySelector('.card');
+            if (!card) { return 0; }
+            var range = document.createRange(); range.selectNodeContents(card);
+            return range.getBoundingClientRect().height + 16;
+          }
+          window.cornhubFit = function (newInset) {
+            if (typeof newInset === 'number') { inset = newInset; }
+            var images = pictures();
+            images.forEach(function (i) { i.style.removeProperty('max-height'); });
+            var over = need() - (window.innerHeight - inset);
+            var overflows = over > 0.5;
+            if (overflows) {
+              var heights = images.map(function (i) { return i.getBoundingClientRect().height; });
+              var slack = heights.map(function (h) { return Math.max(0, h - FLOOR); });
+              var total = slack.reduce(function (a, v) { return a + v; }, 0);
+              if (total > 0 && over <= total) {
+                images.forEach(function (i, n) {
+                  i.style.setProperty('max-height', Math.floor(heights[n] - (over + 1) * slack[n] / total) + 'px', 'important');
+                });
+                overflows = need() - (window.innerHeight - inset) > 1;
+              }
+            }
+            try { window.webkit.messageHandlers.\(fitHandler).postMessage(overflows); } catch (e) {}
+          };
+          function again() { window.cornhubFit(); }
+          document.addEventListener('load', again, true);
+          document.addEventListener('error', function () { setTimeout(again, 0); }, true);
+          window.addEventListener('load', function () { again(); setTimeout(again, 400); });
+          window.addEventListener('resize', again);
+        })();</script>
+        """
+    }
+
     static func document(body: String, css: String) -> String {
         """
         <!doctype html><html class="night_mode"><head><meta name="viewport" content="width=device-width, initial-scale=1">
-        <style>\(fontAliases)\n\(baseCSS())\n\(css)</style><style>\(backgroundOverrideCSS)\n\(imageCSS)</style>\(missingImageScript)\(contrastScript)\(mathScript)</head>
+        <style>\(fontAliases)\n\(baseCSS())\n\(css)</style><style>\(backgroundOverrideCSS)\n\(imageCSS)</style>\(missingImageScript)\(fitScript)\(contrastScript)\(mathScript)</head>
         <body class="nightMode night_mode"><div class="card nightMode night_mode">\(body)</div></body></html>
         """
     }
@@ -206,6 +276,17 @@ struct CardWebView: UIViewRepresentable {
     }
 }
 
+/// Keeps the page's script-message handler from retaining the coordinator through the web view's configuration.
+private final class FitMessageProxy: NSObject, WKScriptMessageHandler {
+    weak var target: CardWebView.Coordinator?
+    init(_ target: CardWebView.Coordinator) { self.target = target }
+
+    func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
+        guard let overflows = message.body as? Bool else { return }
+        Task { @MainActor in target?.fitReported(overflows: overflows) }
+    }
+}
+
 /// Finds the card picture under a point in the card's web view, for tap-to-zoom, and scrolls the page for the
 /// card's vertical drag (the web view itself takes no touches).
 @MainActor
@@ -229,6 +310,10 @@ final class CardImageProbe {
     }
     private(set) var canScrollUp = false
     private(set) var canScrollDown = false
+    /// Whether the card still doesn't fit after the pictures were squeezed; only then does it scroll or fade.
+    var overflows = false {
+        didSet { if overflows != oldValue { refresh() } }
+    }
     @ObservationIgnored private var observers: [NSKeyValueObservation] = []
 
     var offset: CGFloat { webView?.scrollView.contentOffset.y ?? 0 }
@@ -236,15 +321,15 @@ final class CardImageProbe {
     /// Scrolls the page to `y`, kept within the content.
     func scroll(to y: CGFloat) {
         guard let scroll = webView?.scrollView else { return }
-        let most = max(0, scroll.contentSize.height + scroll.contentInset.bottom - scroll.bounds.height)
+        let most = overflows ? max(0, scroll.contentSize.height + scroll.contentInset.bottom - scroll.bounds.height) : 0
         scroll.setContentOffset(CGPoint(x: 0, y: min(max(0, y), most)), animated: false)
     }
 
     private func refresh() {
         guard let scroll = webView?.scrollView else { return }
         let most = scroll.contentSize.height + scroll.contentInset.bottom - scroll.bounds.height
-        let up = scroll.contentOffset.y > 1
-        let down = scroll.contentOffset.y < most - 1
+        let up = overflows && scroll.contentOffset.y > 1
+        let down = overflows && scroll.contentOffset.y < most - 1
         if up != canScrollUp { canScrollUp = up }
         if down != canScrollDown { canScrollDown = down }
     }
