@@ -155,7 +155,10 @@ struct DeckHomeScreen: View {
 
     private var hero: some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack(alignment: .firstTextBaseline, spacing: 10) {
+            let row = typeSize.isAccessibilitySize
+                ? AnyLayout(VStackLayout(alignment: .leading, spacing: 0))
+                : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: 10))
+            row {
                 Text("\(model.dueTotal)")
                     .font(.display(DisplaySize.dueCount))
                     .tracking(-4)
@@ -166,7 +169,6 @@ struct DeckHomeScreen: View {
                 Text("cards due")
                     .font(.display(DisplaySize.heroCaption, relativeTo: .title3).weight(.medium))
                     .foregroundStyle(Theme.muted)
-                    .lineLimit(1)
             }
             Text(heroLine).font(.subheadline).foregroundStyle(Theme.muted)
         }

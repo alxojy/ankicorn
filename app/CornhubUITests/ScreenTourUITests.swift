@@ -54,7 +54,9 @@ final class ScreenTourUITests: XCTestCase {
         let due = app.descendants(matching: .any)["due-total"].firstMatch
         let caption = app.staticTexts["cards due"].firstMatch
         XCTAssertTrue(caption.exists, "cards due shows")
-        XCTAssertLessThan(abs(due.frame.maxY - caption.frame.maxY), 30, "cards due sits on the due count's row")
+        // Baseline-aligned: the small caption sits in the lower part of the big count's frame, not above or below it.
+        XCTAssertGreaterThan(caption.frame.midY, due.frame.midY, "cards due sits on the count's baseline, below its middle")
+        XCTAssertLessThanOrEqual(caption.frame.maxY, due.frame.maxY + 4, "cards due does not drop below the count's row")
         XCTAssertGreaterThan(caption.frame.minX, due.frame.minX + 60, "cards due is to the right of the count")
         XCTAssertTrue(
             app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'streak'")).firstMatch.exists,
