@@ -9,8 +9,13 @@ description = "C ABI over Anki's rslib for the Cornhub iOS app"
 crate-type = ["staticlib", "lib"]
 
 [dependencies]
-anki = { path = "../../third_party/anki/rslib" }
+# native-tls: Anki's reqwest has no TLS backend by default; rustls cannot load the system roots on iOS.
+anki = { path = "../../third_party/anki/rslib", features = ["native-tls"] }
 anki_proto = { path = "../../third_party/anki/rslib/proto" }
 # rslib relies on another Anki workspace member to enable this feature; alone it fails to compile.
 tokio = { version = "1", features = ["io-util"] }
 prost = "0.13"
+
+[dev-dependencies]
+# Same version as Anki's lock file; no features of its own, so it only sees the TLS backend anki enables.
+reqwest = { version = "0.12.20", default-features = false }

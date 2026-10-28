@@ -6,6 +6,20 @@
 use std::collections::BTreeSet;
 use std::path::Path;
 
+/// Packages of the `native-tls` backend. Anki's own build uses rustls, so its lock file lacks
+/// these; Cargo resolved them for us. Everything else must still match Anki's lock.
+const NATIVE_TLS: &[&str] = &[
+    "native-tls",
+    "openssl",
+    "openssl-probe",
+    "openssl-sys",
+    "schannel",
+    "security-framework",
+    "security-framework-sys",
+    "windows-link",
+    "windows-sys",
+];
+
 fn packages(lock: &str) -> BTreeSet<(String, String)> {
     let mut set = BTreeSet::new();
     let mut name = None;
@@ -31,6 +45,7 @@ fn root_lock_versions_match_anki_lock() {
     let drifted: Vec<_> = packages(&ours)
         .into_iter()
         .filter(|(name, _)| name != "rslib-bridge")
+        .filter(|(name, _)| !NATIVE_TLS.contains(&name.as_str()))
         .filter(|pkg| !anki.contains(pkg))
         .collect();
     assert!(drifted.is_empty(), "not in Anki's Cargo.lock: {drifted:?}");
