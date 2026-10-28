@@ -58,6 +58,9 @@ final class DeckHomeModel {
             if launch.seedSample {
                 try await seedSampleDecks(backend)
                 try await backend.seedSampleNotes(deckNames: DeckHomeModel.sampleDecks)
+                if launch.seedFourSubdecks {
+                    for index in 1...3 { _ = try await backend.addDeck(name: "HSK 2::Topic \(index)") }
+                }
                 if launch.seedManySubdecks {
                     for index in 1...12 { _ = try await backend.addDeck(name: "HSK 2::Topic \(index)") }
                 }

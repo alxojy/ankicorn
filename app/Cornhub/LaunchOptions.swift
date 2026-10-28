@@ -23,6 +23,8 @@ struct LaunchOptions: Equatable {
     var seedBuried = false
     /// With the sample seed, add twelve empty subdecks under HSK 2 so its overview scrolls. Tests only.
     var seedManySubdecks = false
+    /// With the sample seed, add three more subdecks under HSK 2 (four in all). Tests only.
+    var seedFourSubdecks = false
 
     init(
         seedSample: Bool = false, resetCollection: Bool = false, showFullSyncChoice: Bool = false, stubLogin: Bool = false,
@@ -51,5 +53,6 @@ struct LaunchOptions: Equatable {
         dropFixtureImage = arguments.contains("--drop-fixture-image")
         seedBuried = arguments.contains("--seed-buried")
         seedManySubdecks = arguments.contains("--seed-many-subdecks")
+        seedFourSubdecks = arguments.contains("--seed-four-subdecks")
     }
 }

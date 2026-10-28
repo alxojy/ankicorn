@@ -78,9 +78,11 @@ final class ScreenTourUITests: XCTestCase {
         tile.tap()
         sleep(2)
         shot("03-deck-overview")
-        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "New: 20")).firstMatch.waitForExistence(timeout: 5), "overview shows 20 new (daily limit of the 45 cards)")
-        XCTAssertTrue(app.staticTexts["45 cards"].exists, "overview shows 45 cards")
-        let options = app.descendants(matching: .any)["deck-options-button"]
+        let summary = app.descendants(matching: .any)["deck-summary"]
+        XCTAssertTrue(summary.waitForExistence(timeout: 5), "overview shows the summary line")
+        XCTAssertTrue(summary.label.contains("20 new"), "overview shows 20 new (daily limit of the 45 cards), got \(summary.label)")
+        XCTAssertTrue(summary.label.contains("45 cards"), "overview shows 45 cards, got \(summary.label)")
+        let options = deckMenuItem("deck-options-button")
         if options.waitForExistence(timeout: 5) {
             options.tap()
             XCTAssertTrue(
@@ -90,7 +92,7 @@ final class ScreenTourUITests: XCTestCase {
             shot("04-deck-options-web")
             dismissSheet()
         }
-        let custom = app.descendants(matching: .any)["custom-study-button"]
+        let custom = deckMenuItem("custom-study-button")
         if custom.waitForExistence(timeout: 5) {
             custom.tap()
             sleep(1)
@@ -111,12 +113,7 @@ final class ScreenTourUITests: XCTestCase {
         let tabBar = app.descendants(matching: .any)["tab-settings"]
         let study = app.buttons["study-button"]
         XCTAssertTrue(study.waitForExistence(timeout: 10), "overview shows")
-        let expand = app.buttons.matching(NSPredicate(format: "label == 'Expand subdecks'")).firstMatch
-        if expand.waitForExistence(timeout: 3) {
-            expand.tap()
-            sleep(1)
-        }
-        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "deck-tile").count > 6, "subdeck tiles show")
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "subdeck-row").count > 6, "subdeck rows show")
         XCTAssertTrue(tabBar.isHittable, "tab bar shows before scrolling")
         shot("tabbar-01-before")
         app.swipeUp()
@@ -129,8 +126,8 @@ final class ScreenTourUITests: XCTestCase {
         for _ in 0..<4 { app.swipeUp(velocity: .fast) }
         sleep(1)
         XCTAssertTrue(tabBar.isHittable, "tab bar is back at the end of the content")
-        let lastTile = app.descendants(matching: .any).matching(identifier: "deck-tile").allElementsBoundByIndex.last
-        let last = lastTile?.exists == true ? lastTile! : app.buttons["browse-cards-button"]
+        let lastRow = app.descendants(matching: .any).matching(identifier: "subdeck-row").allElementsBoundByIndex.last
+        let last = lastRow?.exists == true ? lastRow! : study
         XCTAssertLessThanOrEqual(last.frame.maxY, tabBar.frame.minY, "the last row sits above the tab bar")
         shot("tabbar-03-end")
     }
@@ -299,13 +296,16 @@ final class ScreenTourUITests: XCTestCase {
         let tile = app.descendants(matching: .any).matching(identifier: "deck-tile").firstMatch
         XCTAssertTrue(tile.waitForExistence(timeout: 30), "deck tiles show")
         tile.tap()
-        let unbury = app.buttons["unbury-button"]
-        XCTAssertTrue(unbury.waitForExistence(timeout: 10), "Unbury shows with buried cards")
+        let unbury = deckMenuItem("unbury-button")
+        XCTAssertTrue(unbury.waitForExistence(timeout: 10), "Unbury shows in the menu with buried cards")
         shot("03b-deck-overview-buried")
         unbury.tap()
         XCTAssertTrue(
             app.staticTexts["Unburied 2 cards"].waitForExistence(timeout: 10), "confirmation shows the count")
-        XCTAssertTrue(unbury.waitForNonExistence(timeout: 5), "Unbury disappears afterwards")
+        app.buttons["deck-actions-menu"].tap()
+        XCTAssertTrue(app.buttons["custom-study-button"].waitForExistence(timeout: 5), "menu reopens")
+        XCTAssertFalse(app.buttons["unbury-button"].exists, "Unbury disappears afterwards")
+        app.buttons["deck-actions-menu"].tap()
         shot("03c-deck-overview-unburied")
     }
 
@@ -314,8 +314,8 @@ final class ScreenTourUITests: XCTestCase {
         let tile = app.descendants(matching: .any).matching(identifier: "deck-tile").firstMatch
         XCTAssertTrue(tile.waitForExistence(timeout: 30), "deck tiles show")
         tile.tap()
-        XCTAssertTrue(app.buttons["custom-study-button"].waitForExistence(timeout: 10), "overview shows")
-        sleep(1)
+        XCTAssertTrue(app.buttons["study-button"].waitForExistence(timeout: 10), "overview shows")
+        XCTAssertTrue(deckMenuItem("custom-study-button").waitForExistence(timeout: 5), "menu shows")
         XCTAssertFalse(app.buttons["unbury-button"].exists, "no Unbury without buried cards")
     }
 
@@ -324,8 +324,8 @@ final class ScreenTourUITests: XCTestCase {
         let tile = app.descendants(matching: .any).matching(identifier: "deck-tile").firstMatch
         XCTAssertTrue(tile.waitForExistence(timeout: 30), "deck tiles show")
         tile.tap()
-        let options = app.buttons["deck-options-button"]
-        XCTAssertTrue(options.waitForExistence(timeout: 10), "Deck options button")
+        let options = deckMenuItem("deck-options-button")
+        XCTAssertTrue(options.waitForExistence(timeout: 10), "Deck options menu item")
         options.tap()
         XCTAssertTrue(
             app.descendants(matching: .any)["anki-web-deck-options"].waitForExistence(timeout: 30), "options page opens")
@@ -559,6 +559,35 @@ final class ScreenTourUITests: XCTestCase {
         XCTAssertEqual(browseCount(), before, "undo brings the cards back")
     }
 
+    /// Opens the overview's ⋯ menu and returns the item with this identifier.
+    private func deckMenuItem(_ id: String) -> XCUIElement {
+        let menu = app.buttons["deck-actions-menu"]
+        if menu.waitForExistence(timeout: 10) { menu.tap() }
+        return app.buttons[id]
+    }
+
+    /// A parent deck with 4 subdecks shows Study and every subdeck row without scrolling; the menu lists the actions.
+    func testDeckOverviewFitsOnOneScreen() {
+        app.launchArguments += ["--seed-four-subdecks"]
+        app.launch()
+        let parent = deckTile("HSK 2")
+        XCTAssertTrue(parent.waitForExistence(timeout: 30), "HSK 2 tile exists")
+        parent.tap()
+        let study = app.buttons["study-button"]
+        XCTAssertTrue(study.waitForExistence(timeout: 10), "overview shows")
+        let rows = app.descendants(matching: .any).matching(identifier: "subdeck-row")
+        XCTAssertEqual(rows.count, 4, "four subdeck rows")
+        XCTAssertTrue(study.isHittable, "Study visible without scrolling")
+        for row in rows.allElementsBoundByIndex { XCTAssertTrue(row.isHittable, "row \(row.label) visible without scrolling") }
+        XCTAssertFalse(app.buttons["browse-cards-button"].exists, "no full-width Browse button")
+        shot("03d-deck-overview-compact")
+        app.buttons["deck-actions-menu"].tap()
+        for id in ["custom-study-button", "browse-cards-button", "deck-options-button", "deck-action-rename", "deck-action-delete"] {
+            XCTAssertTrue(app.buttons[id].waitForExistence(timeout: 5), "menu lists \(id)")
+        }
+        shot("03e-deck-overview-menu")
+    }
+
     private func deckTile(_ name: String) -> XCUIElement {
         app.descendants(matching: .any).matching(NSPredicate(format: "identifier == 'deck-tile' AND label BEGINSWITH %@", "\(name):")).firstMatch
     }
@@ -610,8 +639,8 @@ final class ScreenTourUITests: XCTestCase {
         let tile = app.descendants(matching: .any).matching(identifier: "deck-tile").firstMatch
         XCTAssertTrue(tile.waitForExistence(timeout: 30), "deck tiles show")
         tile.tap()
-        let browse = app.buttons["browse-cards-button"]
-        XCTAssertTrue(browse.waitForExistence(timeout: 10), "overview has Browse cards")
+        let browse = deckMenuItem("browse-cards-button")
+        XCTAssertTrue(browse.waitForExistence(timeout: 10), "menu has Browse cards")
         browse.tap()
         let count = app.descendants(matching: .any)["browse-count"].firstMatch
         XCTAssertTrue(count.waitForExistence(timeout: 10), "Browse opens")

@@ -17,71 +17,16 @@ struct DeckOverviewScreen: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                HStack(spacing: 16) {
-                    Text(deck.glyph)
-                        .font(.display(DisplaySize.hanzi, relativeTo: .largeTitle))
-                        .foregroundStyle(Theme.accent)
-                    Text("\(deck.totalCards) cards").foregroundStyle(Theme.muted)
-                }
-                HStack(spacing: 12) {
-                    stat("New", current.newCount, Theme.new)
-                    stat("Learning", current.learningCount, Theme.learning)
-                    stat("Review", current.reviewCount, Theme.accent)
-                }
-                Button {
-                    reviewTarget = ReviewTarget(deckID: deck.id)
-                } label: {
-                    Text("Study").font(.headline).frame(maxWidth: .infinity, minHeight: Theme.minTarget)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(Theme.accent)
-                .foregroundStyle(Theme.onAccent)
-                .accessibilityIdentifier("study-button")
-                HStack(spacing: 12) {
-                    Button { showCustomStudy = true } label: {
-                        Label("Custom study", systemImage: "slider.horizontal.3")
-                            .frame(maxWidth: .infinity, minHeight: Theme.minTarget)
-                    }
-                    .accessibilityIdentifier("custom-study-button")
-                    if buriedCount > 0 {
-                        Button {
-                            Task {
-                                if let count = await model.unbury(current) {
-                                    buriedCount = await model.buriedCount(for: current)
-                                    unburyNotice = "Unburied \(count) \(count == 1 ? "card" : "cards")"
-                                }
-                            }
-                        } label: {
-                            Label("Unbury (\(buriedCount))", systemImage: "tray.and.arrow.up")
-                                .frame(maxWidth: .infinity, minHeight: Theme.minTarget)
-                        }
-                        .accessibilityIdentifier("unbury-button")
-                    }
-                }
-                .buttonStyle(.bordered)
-                .tint(Theme.text2)
+            VStack(alignment: .leading, spacing: 12) {
+                header
+                studyButton
+                if !deck.children.isEmpty { subdecks }
                 if let unburyNotice {
                     Text(unburyNotice)
                         .font(.footnote)
                         .foregroundStyle(Theme.text2)
                         .accessibilityIdentifier("unbury-notice")
                 }
-                Button { appState.openBrowse(deckID: deck.id) } label: {
-                    Label("Browse cards", systemImage: "rectangle.stack")
-                        .frame(maxWidth: .infinity, minHeight: Theme.minTarget)
-                }
-                .buttonStyle(.bordered)
-                .tint(Theme.text2)
-                .accessibilityIdentifier("browse-cards-button")
-                Button { optionsPage = .deckOptions(deckID: deck.id) } label: {
-                    Label("Deck options", systemImage: "gearshape")
-                        .frame(maxWidth: .infinity, minHeight: Theme.minTarget)
-                }
-                .buttonStyle(.bordered)
-                .tint(Theme.text2)
-                .accessibilityIdentifier("deck-options-button")
-                if !deck.children.isEmpty { subdecks }
             }
             .padding(.horizontal, 16)
         }
@@ -92,7 +37,7 @@ struct DeckOverviewScreen: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Menu { DeckActionItems(model: model, deck: current, state: $actions) } label: {
+                Menu { menuItems } label: {
                     Image(systemName: "ellipsis.circle").frame(minWidth: Theme.minTarget, minHeight: Theme.minTarget)
                 }
                 .accessibilityLabel("Deck actions")
@@ -119,31 +64,119 @@ struct DeckOverviewScreen: View {
         }
     }
 
-    @ViewBuilder private var subdecks: some View {
-        Button {
-            Task { await model.setCollapsed(deck.id, !deck.collapsed) }
-        } label: {
-            HStack {
-                Text("Subdecks").inkLabel()
-                Spacer()
-                Image(systemName: deck.collapsed ? "chevron.down" : "chevron.up")
-                    .foregroundStyle(Theme.text2)
-            }
-            .frame(minHeight: Theme.minTarget)
-        }
-        .accessibilityLabel(deck.collapsed ? "Expand subdecks" : "Collapse subdecks")
-        if !deck.collapsed { DeckGrid(decks: deck.children, model: model, actions: $actions) }
+    private var nothingDue: Bool {
+        current.newCount + current.learningCount + current.reviewCount == 0
     }
 
-    private func stat(_ label: String, _ value: Int, _ color: Color) -> some View {
-        VStack(spacing: 4) {
-            Text("\(value)").font(.display(28, relativeTo: .title)).foregroundStyle(value == 0 ? Theme.zero : color)
-            Text(label).inkLabel()
+    private var header: some View {
+        HStack(spacing: 6) {
+            Text("\(current.totalCards) cards").foregroundStyle(Theme.muted)
+            Text("·").foregroundStyle(Theme.muted)
+            CountsLine(new: current.newCount, learning: current.learningCount, review: current.reviewCount)
         }
-        .frame(maxWidth: .infinity, minHeight: Theme.minTarget)
-        .padding(.vertical, 12)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.Radius.tile))
+        .font(.subheadline)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(label): \(value)")
+        .accessibilityLabel(
+            "\(current.totalCards) cards: \(current.newCount) new, \(current.learningCount) learning, \(current.reviewCount) review")
+        .accessibilityIdentifier("deck-summary")
+    }
+
+    @ViewBuilder private var studyButton: some View {
+        Button {
+            reviewTarget = ReviewTarget(deckID: deck.id)
+        } label: {
+            Text(nothingDue ? "Nothing due" : "Study").font(.headline).frame(maxWidth: .infinity, minHeight: Theme.minTarget)
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(Theme.accent)
+        .foregroundStyle(Theme.onAccent)
+        .disabled(nothingDue)
+        .accessibilityIdentifier("study-button")
+        if nothingDue {
+            Button("Custom study") { showCustomStudy = true }
+                .font(.subheadline)
+                .foregroundStyle(Theme.accent)
+                .frame(maxWidth: .infinity, minHeight: Theme.minTarget)
+                .accessibilityIdentifier("custom-study-link")
+        }
+    }
+
+    @ViewBuilder private var menuItems: some View {
+        Section {
+            Button { showCustomStudy = true } label: { Label("Custom study", systemImage: "slider.horizontal.3") }
+                .accessibilityIdentifier("custom-study-button")
+            if buriedCount > 0 {
+                Button {
+                    Task {
+                        if let count = await model.unbury(current) {
+                            buriedCount = await model.buriedCount(for: current)
+                            unburyNotice = "Unburied \(count) \(count == 1 ? "card" : "cards")"
+                        }
+                    }
+                } label: { Label("Unbury (\(buriedCount))", systemImage: "tray.and.arrow.up") }
+                    .accessibilityIdentifier("unbury-button")
+            }
+        }
+        Section {
+            Button { appState.openBrowse(deckID: deck.id) } label: { Label("Browse cards", systemImage: "rectangle.stack") }
+                .accessibilityIdentifier("browse-cards-button")
+            Button { optionsPage = .deckOptions(deckID: deck.id) } label: { Label("Deck options", systemImage: "gearshape") }
+                .accessibilityIdentifier("deck-options-button")
+            Button { actions.startRename(current) } label: { Label("Rename", systemImage: "pencil") }
+                .accessibilityIdentifier("deck-action-rename")
+        }
+        if model.canDelete(current) {
+            Section {
+                Button(role: .destructive) { actions.deleting = current } label: { Label("Delete", systemImage: "trash") }
+                    .accessibilityIdentifier("deck-action-delete")
+            }
+        }
+    }
+
+    private var subdecks: some View {
+        VStack(spacing: 0) {
+            ForEach(Array(deck.children.enumerated()), id: \.element.id) { index, child in
+                NavigationLink(value: child) { SubdeckRow(deck: child, index: index) }
+                    .buttonStyle(.plain)
+                    .contextMenu { DeckActionItems(model: model, deck: child, state: $actions) }
+                    .accessibilityAction(named: "Rename") { actions.startRename(child) }
+                    .accessibilityAction(named: "Options") { actions.optionsPage = .deckOptions(deckID: child.id) }
+                    .accessibilityAction(named: "Delete") { if model.canDelete(child) { actions.deleting = child } }
+                if index < deck.children.count - 1 { Divider().overlay(Theme.hairline) }
+            }
+        }
+        .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.tile))
+        .overlay(RoundedRectangle(cornerRadius: Theme.Radius.tile).strokeBorder(Theme.hairline, lineWidth: 1))
+    }
+}
+
+/// Compact subdeck row: small glyph, name, coloured due counts, chevron.
+struct SubdeckRow: View {
+    let deck: DeckTile
+    var index = 0
+
+    private var glyphColor: Color { [Theme.new, Theme.learning, Theme.synced, Theme.again][index % 4] }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Text(deck.glyph)
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(glyphColor)
+                .minimumScaleFactor(0.5)
+                .frame(width: 28)
+            Text(deck.name)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Theme.text)
+                .lineLimit(2)
+            Spacer(minLength: 8)
+            CountsLine(new: deck.newCount, learning: deck.learningCount, review: deck.reviewCount)
+            Image(systemName: "chevron.right").font(.footnote).foregroundStyle(Theme.text2)
+        }
+        .padding(.horizontal, 12)
+        .frame(minHeight: Theme.minTarget)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(deck.accessibilityLabel)
+        .accessibilityIdentifier("subdeck-row")
     }
 }
