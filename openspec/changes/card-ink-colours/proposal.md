@@ -1,0 +1,15 @@
+## Why
+User screenshot (HSK card 感觉 on iPhone): the card is a bright cream page inside the dark app. The user doesn't want the cream background at all; cards must look like the README mockup (Review screen): the dark Ink `card` panel, Ink text, accent pinyin. `card-always-dark` (merged 80081e6) shows light cards dark by inverting their colours (`filter: invert(1) hue-rotate(180deg)`) behind a *Card colours* setting. The user rejected inversion before it merged (the stop message reached the worker too late). This change replaces it: it drops the note type's colours instead of inverting them, and removes the setting.
+
+Cause, observed in code: `CardStyle.decide` reads the note type's `.card { background… }`. A light background gives `.light(background:)`, which keeps the cream background and dark default text. `notetype-app-style` can rewrite the note type CSS, but only when the user applies it per note type; until then every imported card is cream.
+
+## What Changes
+- **Cards are always on the Ink card in the app.** Whatever the note type's CSS says, the app shows the card on the `card` token with no other background: background colours and background images on `html`, `body` and `.card` from the note type are ignored. Nothing in the collection changes, so desktop looks as it does today. No setting, no per-note-type step.
+- **Ink text colours:** the default text colour is the Ink `text` token. A fixed text colour from the note type (for example `#222222` on `.card`, or the grey `#575757` description) that is too dark on the Ink card is replaced by the Ink role it is closest to: near-black/grey becomes `text` or `muted`. Coloured text keeps its hue but is lightened until it reaches WCAG AA against the `card` token (the green `#005500` pinyin becomes a readable green). This is done in the page after layout on computed colours, not by rewriting CSS in Swift.
+- **No inversion:** pictures, video and everything else keep their real colours. There is no filter.
+- **Unchanged:** fonts, sizes and layout from the note type's CSS stay as they are; `notetype-cornhub-layout` (separate change) gives the full mockup layout.
+- **Remove the inversion and the setting:** delete the `invert`/`hue-rotate` rendering and the media re-inversion added by `card-always-dark`, and the *Card colours* setting in Settings › Review (there is only one mode now).
+- **Remove the light branch:** `CardStyle.light` no longer produces a cream card in the app; the review ⋯ "Restyle this note type…" prompt for light note types is removed (Settings › Note types keeps "Use Cornhub style" for people who want desktop to match).
+
+## Impact
+`Screens/Review/CardWebView.swift` (document CSS: override backgrounds; a small in-page script that fixes text colours below the contrast floor), `Screens/Review/CardStyle.swift` (light branch), `ReviewScreen` (⋯ entry), the settings store and Settings › Review (remove Card colours), tests (replace `CardColoursTests` and `testCardColoursAppAndNoteTypesOwn`). Updates the `Imported note types render readably` requirement.
