@@ -277,7 +277,9 @@ final class ScreenTourUITests: XCTestCase {
         password.typeText("secret")
         app.buttons["login-submit"].tap()
         XCTAssertTrue(app.buttons["settings-logout"].waitForExistence(timeout: 5), "Log out appears without leaving Settings")
-        XCTAssertTrue(app.staticTexts["testuser"].exists, "Signed in as testuser")
+        XCTAssertTrue(
+            app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] %@", "testuser")).firstMatch.exists,
+            "Signed in as testuser")
         XCTAssertFalse(login.exists, "login row is gone")
         shot("57-signed-in")
     }
