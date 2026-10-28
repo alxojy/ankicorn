@@ -11,8 +11,17 @@ struct LaunchOptions: Equatable {
 
     /// Log in without the network (any credentials succeed), starting signed out. Tests only.
     var stubLogin = false
+    /// Create the sample decks with exactly one due card in the first one. Tests only.
+    var seedOneDue = false
+    /// Create the sample decks with no cards at all, so review opens straight to "All done for now". Tests only.
+    var seedNoDue = false
 
-    init(seedSample: Bool = false, resetCollection: Bool = false, showFullSyncChoice: Bool = false, stubLogin: Bool = false) {
+    init(
+        seedSample: Bool = false, resetCollection: Bool = false, showFullSyncChoice: Bool = false, stubLogin: Bool = false,
+        seedOneDue: Bool = false, seedNoDue: Bool = false
+    ) {
+        self.seedOneDue = seedOneDue
+        self.seedNoDue = seedNoDue
         self.stubLogin = stubLogin
         self.seedSample = seedSample
         self.resetCollection = resetCollection
@@ -24,5 +33,7 @@ struct LaunchOptions: Equatable {
         resetCollection = arguments.contains("--reset-collection")
         showFullSyncChoice = arguments.contains("--show-full-sync-choice")
         stubLogin = arguments.contains("--stub-login")
+        seedOneDue = arguments.contains("--seed-one-due")
+        seedNoDue = arguments.contains("--seed-no-due")
     }
 }

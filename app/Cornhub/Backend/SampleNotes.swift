@@ -64,3 +64,13 @@ extension Backend {
         for fields in SampleNotes.cloze { try addNote(notetypeID: clozeID, deckID: deckID, fields: fields) }
     }
 }
+
+extension Backend {
+    /// Adds a single Basic note (one new card) to the named deck, for tests that need exactly one due card.
+    func seedOneDueNote(deckName: String) throws {
+        let rows = DeckRow.rows(from: try deckTree())
+        guard let deckID = rows.first(where: { $0.fullName == deckName })?.id else { return }
+        let basicID = try ensureStockNotetype(named: "Basic", kind: .basic)
+        _ = try addNote(notetypeID: basicID, deckID: deckID, fields: SampleNotes.basic[0])
+    }
+}

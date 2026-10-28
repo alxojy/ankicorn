@@ -164,6 +164,48 @@ final class ScreenTourUITests: XCTestCase {
         shot("17-home-after-review")
     }
 
+    func testCongratsUndoBringsCardBack() {
+        app.launchArguments = ["--seed-one-due", "--reset-collection"]
+        app.launch()
+        let start = app.buttons["Start review"].firstMatch
+        XCTAssertTrue(start.waitForExistence(timeout: 30), "Start review exists")
+        start.tap()
+        let card = app.descendants(matching: .any)["review-card"]
+        XCTAssertTrue(card.waitForExistence(timeout: 15), "the one due card shows")
+        sleep(2)
+        card.tap()
+        // Easy graduates the new card, so nothing is left due (Good would put it into learning and show it again).
+        let easy = app.descendants(matching: .any)["grade-easy"]
+        XCTAssertTrue(easy.waitForExistence(timeout: 5), "Easy button shows")
+        easy.tap()
+        let congrats = app.descendants(matching: .any)["congrats"]
+        XCTAssertTrue(congrats.waitForExistence(timeout: 10), "congrats shows after the last card")
+        XCTAssertFalse(app.buttons["More"].exists, "no More menu on congrats")
+        XCTAssertTrue(app.buttons["review-close"].exists, "close shows on congrats")
+        let undo = app.buttons["review-undo"]
+        XCTAssertTrue(undo.exists && undo.isEnabled, "Undo shows and is enabled after grading")
+        shot("18-congrats-before-undo")
+        undo.tap()
+        XCTAssertTrue(card.waitForExistence(timeout: 10), "the graded card is back")
+        XCTAssertTrue(congrats.waitForNonExistence(timeout: 5), "congrats is gone")
+        XCTAssertTrue(app.buttons["Show answer"].firstMatch.exists, "card is on its question side")
+        sleep(5)
+        shot("19-congrats-after-undo")
+    }
+
+    func testCongratsWithNothingGradedHasNoDeadControls() {
+        app.launchArguments = ["--seed-no-due", "--reset-collection"]
+        app.launch()
+        let start = app.buttons["Start review"].firstMatch
+        XCTAssertTrue(start.waitForExistence(timeout: 30), "Start review exists")
+        start.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["congrats"].waitForExistence(timeout: 15), "congrats shows")
+        XCTAssertTrue(app.buttons["review-close"].exists, "close shows")
+        XCTAssertFalse(app.buttons["More"].exists, "no More menu")
+        XCTAssertFalse(app.buttons["review-undo"].exists, "no Undo with nothing to undo")
+        shot("18b-congrats-nothing-graded")
+    }
+
     func testAddCard() {
         app.launch()
         let add = app.buttons["Add card"].firstMatch

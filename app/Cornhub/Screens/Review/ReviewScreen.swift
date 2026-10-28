@@ -99,12 +99,16 @@ struct ReviewScreen: View {
                 .accessibilityLabel("Close review")
                 .accessibilityIdentifier("review-close")
                 Spacer()
-                Button { Task { await model.undo() } } label: {
-                    Image(systemName: "arrow.uturn.backward").frame(width: Theme.minTarget, height: Theme.minTarget)
+                if model.showsUndo {
+                    Button { Task { await model.undo() } } label: {
+                        Image(systemName: "arrow.uturn.backward").frame(width: Theme.minTarget, height: Theme.minTarget)
+                    }
+                    .foregroundStyle(model.canUndo ? Theme.text : Theme.zero)
+                    .disabled(!model.canUndo)
+                    .accessibilityLabel(model.canUndo ? model.undoLabel : "Undo")
+                    .accessibilityIdentifier("review-undo")
                 }
-                .disabled(model.undoLabel.isEmpty)
-                .accessibilityLabel(model.undoLabel.isEmpty ? "Undo" : model.undoLabel)
-                .accessibilityIdentifier("review-undo")
+                if model.showsMoreMenu {
                 Menu {
                     if model.phase == .card {
                         Menu("Flag", systemImage: model.currentFlag == 0 ? "flag" : "flag.fill") {
@@ -127,11 +131,12 @@ struct ReviewScreen: View {
                         }
                     }
                     Button("Redo", systemImage: "arrow.uturn.forward") { Task { await model.redo() } }
-                        .disabled(model.redoLabel.isEmpty)
+                        .disabled(!model.canRedo)
                 } label: {
                     Image(systemName: "ellipsis").frame(width: Theme.minTarget, height: Theme.minTarget)
                 }
                 .accessibilityLabel("More")
+                }
             }
             .foregroundStyle(Theme.text)
             .font(.body)
