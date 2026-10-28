@@ -76,7 +76,11 @@ struct LoginSheet: View {
             password = ""
             dismiss()
         } catch {
-            self.error = error.localizedDescription
+            if let backendError = error as? BackendError, !backendError.context.isEmpty {
+                self.error = "\(backendError.message)\n\(backendError.context)"
+            } else {
+                self.error = error.localizedDescription
+            }
         }
         working = false
     }
