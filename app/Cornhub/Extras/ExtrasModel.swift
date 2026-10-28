@@ -38,7 +38,16 @@ final class ExtrasModel {
         translationConfig = nil
     }
 
-    func speak() { speaker.speak(answerText.isEmpty ? questionText : answerText, language: language) }
+    /// Set per card by the review screen; Speak says only this (the note's audio, else the headword).
+    var speech = SpeechTarget.text("")
+    var playFile: ((String) -> Void)?
+
+    func speak() {
+        switch speech {
+        case .audio(let file): playFile?(file)
+        case .text(let word): speaker.speak(word, language: language)
+        }
+    }
 
     func showStrokes() {
         let chars = hanzi
