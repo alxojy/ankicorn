@@ -163,6 +163,28 @@ final class ScreenTourUITests: XCTestCase {
         shot("\(prefix)-dark-answer")
     }
 
+    /// Stroke order on the imported fixture card shows only the headword's characters, fully inside the panel.
+    func testStrokeOrderShowsOnlyTheHeadword() {
+        app.launchArguments = ["--seed-imported", "--reset-collection"]
+        app.launch()
+        let start = app.buttons["Start review"].firstMatch
+        XCTAssertTrue(start.waitForExistence(timeout: 30), "Start review exists")
+        start.tap()
+        let card = app.descendants(matching: .any)["review-card"]
+        XCTAssertTrue(card.waitForExistence(timeout: 15), "review card shows")
+        card.tap()
+        let chip = app.buttons["chip-strokes"]
+        XCTAssertTrue(chip.waitForExistence(timeout: 10), "Stroke order chip shows")
+        chip.tap()
+        let strokes = app.descendants(matching: .any)["stroke-order-view"]
+        XCTAssertTrue(strokes.waitForExistence(timeout: 5), "stroke view shows")
+        XCTAssertEqual(strokes.value as? String, "2", "月亮 has two characters, the sentence's others are left out")
+        let panel = app.descendants(matching: .any)["extras-panel"]
+        XCTAssertTrue(panel.frame.contains(strokes.frame), "the strokes sit fully inside the panel")
+        sleep(3)
+        shot("22-stroke-order-headword")
+    }
+
     func testImportedDeckCardsAreReadableWithMedia() {
         reviewImportedCards(arguments: [], prefix: "20-imported", imageMissing: false)
     }

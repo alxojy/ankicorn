@@ -28,13 +28,17 @@ final class ExtrasModel {
     var answerText = ""
 
     var allText: String { [questionText, answerText].filter { !$0.isEmpty }.joined(separator: "\n") }
-    var hanzi: [Character] { CardText.hanzi(allText) }
+    /// The card's headword (the same word Speak uses); set by the review screen once the note loads.
+    var headword = ""
+    /// Hanzi of the headword only, in order, each once. Empty hides the Stroke order button.
+    var hanzi: [Character] { CardText.hanzi(headword) }
     var language: String { SpeechSettings.language(deckID: deckID) }
 
     func reset() {
         task?.cancel()
         speaker.stop()
         panel = .none
+        headword = ""
         translationConfig = nil
         explainInput = nil
     }
@@ -53,7 +57,7 @@ final class ExtrasModel {
 
     func showStrokes() {
         let chars = hanzi
-        panel = chars.isEmpty ? .message("No hanzi on this card.") : .strokes(chars)
+        if !chars.isEmpty { panel = .strokes(chars) }
     }
 
     /// The headword, pinyin, meaning and sentence of the shown note; set by the review screen once the note loads.

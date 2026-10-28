@@ -62,7 +62,10 @@ struct ExtrasChips: View {
                 HStack { ProgressView(); Text(text).font(.subheadline).foregroundStyle(Theme.text2) }
             case .strokes(let chars):
                 Text("Stroke order").inkLabel().foregroundStyle(Theme.accent)
-                StrokeOrderView(characters: chars).frame(height: 120)
+                StrokeOrderView(characters: chars).frame(height: StrokeOrderView.height)
+                    .accessibilityIdentifier("stroke-order-view")
+                    .accessibilityLabel("Stroke order")
+                    .accessibilityValue("\(chars.count)")
                 Text("hanzi-writer (MIT), Make Me a Hanzi data (Arphic Public License)")
                     .font(.caption2).foregroundStyle(Theme.muted)
             }

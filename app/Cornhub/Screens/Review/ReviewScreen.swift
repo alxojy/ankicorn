@@ -87,6 +87,8 @@ struct ReviewScreen: View {
                 else { return }
                 extras.speech = SpeechTarget.pick(
                     names: names, fields: note.fields, question: model.questionHTML, language: extras.language)
+                extras.headword = SpeechTarget.headword(
+                    names: names, fields: note.fields, question: model.questionHTML, language: extras.language)
                 extras.explainInput = ExplainInput.from(
                     names: names, fields: note.fields, question: model.questionHTML, language: extras.language)
             }
