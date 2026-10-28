@@ -19,12 +19,15 @@ struct LaunchOptions: Equatable {
     var seedImported = false
     /// With `seedImported`, leave the fixture image out of the media folder. Tests only.
     var dropFixtureImage = false
+    /// With the sample seed, bury two cards of the first deck. Tests only.
+    var seedBuried = false
 
     init(
         seedSample: Bool = false, resetCollection: Bool = false, showFullSyncChoice: Bool = false, stubLogin: Bool = false,
         seedOneDue: Bool = false, seedNoDue: Bool = false,
-        seedImported: Bool = false, dropFixtureImage: Bool = false
+        seedImported: Bool = false, dropFixtureImage: Bool = false, seedBuried: Bool = false
     ) {
+        self.seedBuried = seedBuried
         self.seedImported = seedImported
         self.dropFixtureImage = dropFixtureImage
         self.seedOneDue = seedOneDue
@@ -44,5 +47,6 @@ struct LaunchOptions: Equatable {
         seedNoDue = arguments.contains("--seed-no-due")
         seedImported = arguments.contains("--seed-imported")
         dropFixtureImage = arguments.contains("--drop-fixture-image")
+        seedBuried = arguments.contains("--seed-buried")
     }
 }

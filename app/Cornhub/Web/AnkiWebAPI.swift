@@ -1,4 +1,5 @@
 import Foundation
+import WebKit
 import SwiftProtobuf
 
 /// Hooks for the few desktop-only endpoints Anki's pages call (mediasrv.py's `post_handler_list`).
@@ -8,6 +9,8 @@ final class AnkiWebEvents: @unchecked Sendable {
     /// The page asks to be closed (saved, or the user confirmed discarding changes).
     var onClose: @MainActor () -> Void = {}
     var openLink: @MainActor (URL) -> Void = { _ in }
+    /// The hosting web view, so the sheet's Done button can ask the page about unsaved changes.
+    @MainActor weak var webView: WKWebView?
 }
 
 /// What a page gets back: an HTTP status and body. Empty bodies answer 204 like mediasrv.py.

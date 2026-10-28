@@ -51,6 +51,7 @@ struct AnkiWebView: UIViewRepresentable {
         view.backgroundColor = UIColor(Theme.bg)
         view.scrollView.backgroundColor = UIColor(Theme.bg)
         view.navigationDelegate = context.coordinator
+        events.webView = view
         view.load(URLRequest(url: page.url))
         return view
     }
@@ -95,6 +96,25 @@ struct AnkiWebView: UIViewRepresentable {
         CardWebView.hex(color).replacingOccurrences(of: "#", with: "%23")
     }
 
+    /// Phone layout for `ConfigSelector.svelte`'s `.button-bar` (preset select + Save split button): 16 pt margins,
+    /// equal 44 pt heights, accent Save with an attached chevron segment, and a truncating preset name.
+    static var deckOptionsHeaderCSS: String {
+        let hex = CardWebView.hex
+        let height = Int(Theme.minTarget)
+        let radius = Int(Theme.Radius.photo)
+        return """
+            *:has(> .button-bar) { background: \(hex(Theme.bg)) !important; border-bottom: 1px solid \(hex(Theme.raised)) !important; box-sizing: border-box; max-width: 100vw; }
+            .button-bar { display: flex !important; flex-wrap: nowrap !important; align-items: center; gap: 8px; box-sizing: border-box; width: 100%; max-width: 100vw; margin: 0 !important; padding: 8px max(16px, env(safe-area-inset-right)) 8px max(16px, env(safe-area-inset-left)); overflow: hidden; }
+            .button-bar > :first-child { flex: 1 1 0 !important; min-width: 0; margin: 0 !important; }
+            .button-bar select, .button-bar .select, .button-bar [class*="select"] { box-sizing: border-box; width: 100%; min-width: 0; height: \(height)px; min-height: \(height)px; border-radius: \(radius)px; background-color: \(hex(Theme.control)); color: \(hex(Theme.text)); text-overflow: ellipsis; white-space: nowrap; overflow: hidden; }
+            .button-bar > .d-flex { flex: none; align-items: stretch; height: \(height)px; gap: 1px; }
+            .button-bar > .d-flex .save { margin: 0 4px; }
+            .button-bar > .d-flex button { box-sizing: border-box; height: \(height)px; min-height: \(height)px; margin: 0; border-radius: 0; }
+            .button-bar > .d-flex > :first-child button { min-width: 64px; border-radius: \(radius)px 0 0 \(radius)px; background: \(hex(Theme.accent)) !important; color: \(hex(Theme.onAccent)) !important; border-color: \(hex(Theme.accent)) !important; }
+            .button-bar > .d-flex button.chevron, .button-bar > .d-flex > :last-child button { width: \(height)px; min-width: \(height)px; padding: 0; border-radius: 0 \(radius)px \(radius)px 0; background: \(hex(Theme.accent)) !important; color: \(hex(Theme.onAccent)) !important; border-color: \(hex(Theme.accent)) !important; border-left: 1px solid \(hex(Theme.onAccent))40 !important; }
+            """
+    }
+
     /// Colours resolved from the Ink tokens; no raw values live here.
     static var inkCSS: String {
         let hex = CardWebView.hex
@@ -129,6 +149,7 @@ struct AnkiWebView: UIViewRepresentable {
             .form-switch .form-check-input:checked { --bs-form-switch-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='\(hexEscaped(Theme.onAccent))'/%3e%3c/svg%3e"); }
             select, .form-select, input[type=text], input[type=number], textarea, .form-control { background-color: \(hex(Theme.control)) !important; color: \(hex(Theme.text)) !important; border-color: \(hex(Theme.raisedHigh)) !important; }
             input[type=radio], input[type=checkbox], input[type=range], progress { accent-color: \(hex(Theme.accent)); }
+            \(deckOptionsHeaderCSS)
             .nav-tabs .nav-link.active, .tab.active, .tab-active, [role=tab][aria-selected=true] { color: \(hex(Theme.accent)) !important; border-color: \(hex(Theme.accent)) !important; border-bottom-color: \(hex(Theme.accent)) !important; }
             """
     }
@@ -142,6 +163,7 @@ struct AnkiWebSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var events = AnkiWebEvents()
     @State private var failure: String?
+    @State private var askSave = false
 
     var body: some View {
         NavigationStack {
@@ -151,16 +173,48 @@ struct AnkiWebSheet: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("Done") { close() }
+                        Button("Done") { Task { await done() } }
                             .accessibilityIdentifier("web-done")
                     }
                 }
         }
         .tint(Theme.accent)
+        .confirmationDialog("Save changes?", isPresented: $askSave, titleVisibility: .visible) {
+            Button("Save") { save() }
+            Button("Discard", role: .destructive) { close() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("You changed the deck options.")
+        }
         .onAppear {
             events.onClose = { close() }
             events.openLink = { UIApplication.shared.open($0) }
         }
+    }
+
+    /// Done on deck options asks the page whether it has unsaved edits (`anki.deckOptionsPendingChanges`, the hook
+    /// desktop Anki calls on close). The page's own `confirm()` is stubbed to learn the answer; with no edits the
+    /// page closes itself, with edits we ask Save / Discard / Cancel.
+    private func done() async {
+        guard case .deckOptions = page, let view = events.webView else { return close() }
+        let script = """
+            let dirty = false;
+            const original = window.confirm;
+            window.confirm = () => { dirty = true; return false; };
+            try { await window.anki.deckOptionsPendingChanges(); } finally { window.confirm = original; }
+            return dirty;
+            """
+        let result = try? await view.callAsyncJavaScript(script, contentWorld: .page)
+        if (result as? Bool) == true { askSave = true } else { close() }
+    }
+
+    /// Triggers the page's Save the way its button does (the Control+Enter shortcut); the page then asks to close.
+    private func save() {
+        let script = """
+            document.dispatchEvent(new KeyboardEvent('keydown',
+              { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, ctrlKey: true, bubbles: true }));
+            """
+        Task { _ = try? await events.webView?.evaluateJavaScript(script) }
     }
 
     private func close() {

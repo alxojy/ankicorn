@@ -33,4 +33,14 @@ final class AnkiWebInkTests: XCTestCase {
         XCTAssertEqual(AnkiWebSchemeHandler.font(named: "SpaceGrotesk-SemiBold.ttf").status, 200)
         XCTAssertEqual(AnkiWebSchemeHandler.font(named: "../x.ttf").status, 404)
     }
+
+    func testDeckOptionsHeaderFitsThePhone() {
+        let header = AnkiWebView.deckOptionsHeaderCSS
+        XCTAssertTrue(css.contains(header), "the header CSS is part of the injected Ink CSS")
+        XCTAssertTrue(header.contains(".button-bar"))
+        XCTAssertTrue(header.contains("max(16px, env(safe-area-inset-left))"), "16 pt margins, safe-area aware")
+        XCTAssertTrue(header.contains("height: \(Int(Theme.minTarget))px"), "44 pt controls")
+        XCTAssertTrue(header.contains("text-overflow: ellipsis"), "long preset names truncate")
+        XCTAssertTrue(header.contains("background: \(accent) !important"), "Save is accent filled")
+    }
 }

@@ -66,4 +66,10 @@ extension Backend {
         let _: Anki_Generic_Empty = try call(
             service: ServiceIndex.Scheduler.service, method: ServiceIndex.Scheduler.unburyDeck, request)
     }
+
+    /// Cards in the deck (and its subdecks) that are buried, from the engine's `is:buried` search.
+    func buriedCardIDs(deckName: String) throws -> [Int64] {
+        let escaped = deckName.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
+        return try browserSearch("\"deck:\(escaped)\" is:buried", notes: false)
+    }
 }

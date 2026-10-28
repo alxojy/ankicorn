@@ -58,6 +58,7 @@ final class DeckHomeModel {
             if launch.seedSample {
                 try await seedSampleDecks(backend)
                 try await backend.seedSampleNotes(deckNames: DeckHomeModel.sampleDecks)
+                if launch.seedBuried { try await backend.buryCards(deckName: DeckHomeModel.sampleDecks[0], limit: 2) }
             } else if launch.seedImported {
                 try await seedSampleDecks(backend)
                 try await backend.seedImportedFixtures(
@@ -167,6 +168,27 @@ final class DeckHomeModel {
             try await backend.undo()
             await refresh()
         } catch { actionError = error.localizedDescription }
+    }
+
+    /// How many cards in the deck (with subdecks) are buried, from the engine.
+    func buriedCount(for deck: DeckTile) async -> Int {
+        guard let backend else { return 0 }
+        return (try? await backend.buriedCardIDs(deckName: deck.fullName.isEmpty ? deck.name : deck.fullName).count) ?? 0
+    }
+
+    /// Unburies the deck's cards and returns how many came back; failures land in `actionError`.
+    func unbury(_ deck: DeckTile) async -> Int? {
+        guard let backend else { return nil }
+        let before = await buriedCount(for: deck)
+        do {
+            try await backend.unburyDeck(id: deck.id)
+            await refresh()
+            let after = await buriedCount(for: deck)
+            return max(before - after, 0)
+        } catch {
+            actionError = error.localizedDescription
+            return nil
+        }
     }
 
     func dismissDeletedNotice() { deletedNotice = nil }

@@ -84,4 +84,12 @@ extension Backend {
         let basicID = try ensureStockNotetype(named: "Basic", kind: .basic)
         _ = try addNote(notetypeID: basicID, deckID: deckID, fields: SampleNotes.basic[0])
     }
+
+    /// Buries up to `limit` cards of the named deck, for tests that need something to unbury.
+    @discardableResult
+    func buryCards(deckName: String, limit: Int) throws -> [Int64] {
+        let ids = Array(try browserSearch("\"deck:\(deckName)\"", notes: false).prefix(limit))
+        for id in ids { try buryOrSuspend(cardID: id, mode: .buryUser) }
+        return ids
+    }
 }

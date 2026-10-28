@@ -199,6 +199,59 @@ final class ScreenTourUITests: XCTestCase {
         shot("17-home-after-review")
     }
 
+    func testUnburyShowsOnlyWithBuriedCards() {
+        app.launchArguments = ["--seed-sample", "--seed-buried", "--reset-collection"]
+        app.launch()
+        let tile = app.descendants(matching: .any).matching(identifier: "deck-tile").firstMatch
+        XCTAssertTrue(tile.waitForExistence(timeout: 30), "deck tiles show")
+        tile.tap()
+        let unbury = app.buttons["unbury-button"]
+        XCTAssertTrue(unbury.waitForExistence(timeout: 10), "Unbury shows with buried cards")
+        shot("03b-deck-overview-buried")
+        unbury.tap()
+        XCTAssertTrue(
+            app.staticTexts["Unburied 2 cards"].waitForExistence(timeout: 10), "confirmation shows the count")
+        XCTAssertTrue(unbury.waitForNonExistence(timeout: 5), "Unbury disappears afterwards")
+        shot("03c-deck-overview-unburied")
+    }
+
+    func testNoUnburyWhenNothingBuried() {
+        app.launch()
+        let tile = app.descendants(matching: .any).matching(identifier: "deck-tile").firstMatch
+        XCTAssertTrue(tile.waitForExistence(timeout: 30), "deck tiles show")
+        tile.tap()
+        XCTAssertTrue(app.buttons["custom-study-button"].waitForExistence(timeout: 10), "overview shows")
+        sleep(1)
+        XCTAssertFalse(app.buttons["unbury-button"].exists, "no Unbury without buried cards")
+    }
+
+    func testDeckOptionsDoneKeepsEdits() {
+        app.launch()
+        let tile = app.descendants(matching: .any).matching(identifier: "deck-tile").firstMatch
+        XCTAssertTrue(tile.waitForExistence(timeout: 30), "deck tiles show")
+        tile.tap()
+        let options = app.buttons["deck-options-button"]
+        XCTAssertTrue(options.waitForExistence(timeout: 10), "Deck options button")
+        options.tap()
+        XCTAssertTrue(
+            app.descendants(matching: .any)["anki-web-deck-options"].waitForExistence(timeout: 30), "options page opens")
+        sleep(3)
+        shot("04b-deck-options-header")
+        // Edit "New cards/day" in the page, then Done: the app saves or asks Save / Discard / Cancel.
+        let field = app.webViews.textFields.firstMatch
+        if field.waitForExistence(timeout: 10) {
+            field.tap()
+            field.typeText("7")
+        }
+        app.buttons["web-done"].tap()
+        let save = app.buttons["Save"]
+        if save.waitForExistence(timeout: 5) {
+            shot("04c-deck-options-save-prompt")
+            save.tap()
+        }
+        XCTAssertTrue(options.waitForExistence(timeout: 15), "the sheet closes after Done / Save")
+    }
+
     func testCongratsUndoBringsCardBack() {
         app.launchArguments = ["--seed-one-due", "--reset-collection"]
         app.launch()

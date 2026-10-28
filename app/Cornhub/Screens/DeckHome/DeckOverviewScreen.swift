@@ -9,6 +9,8 @@ struct DeckOverviewScreen: View {
     @State private var showCustomStudy = false
     @State private var optionsPage: AnkiWebPage?
     @State private var actions = DeckActionState()
+    @State private var buriedCount = 0
+    @State private var unburyNotice: String?
     @Environment(\.dismiss) private var dismiss
 
     private var current: DeckTile { model.tile(for: deck.id) ?? deck }
@@ -42,19 +44,29 @@ struct DeckOverviewScreen: View {
                             .frame(maxWidth: .infinity, minHeight: Theme.minTarget)
                     }
                     .accessibilityIdentifier("custom-study-button")
-                    Button {
-                        Task {
-                            try? await model.backend?.unburyDeck(id: deck.id)
-                            await model.refresh()
+                    if buriedCount > 0 {
+                        Button {
+                            Task {
+                                if let count = await model.unbury(current) {
+                                    buriedCount = await model.buriedCount(for: current)
+                                    unburyNotice = "Unburied \(count) \(count == 1 ? "card" : "cards")"
+                                }
+                            }
+                        } label: {
+                            Label("Unbury (\(buriedCount))", systemImage: "tray.and.arrow.up")
+                                .frame(maxWidth: .infinity, minHeight: Theme.minTarget)
                         }
-                    } label: {
-                        Label("Unbury", systemImage: "tray.and.arrow.up")
-                            .frame(maxWidth: .infinity, minHeight: Theme.minTarget)
+                        .accessibilityIdentifier("unbury-button")
                     }
-                    .accessibilityIdentifier("unbury-button")
                 }
                 .buttonStyle(.bordered)
                 .tint(Theme.text2)
+                if let unburyNotice {
+                    Text(unburyNotice)
+                        .font(.footnote)
+                        .foregroundStyle(Theme.text2)
+                        .accessibilityIdentifier("unbury-notice")
+                }
                 Button { appState.openBrowse(deckID: deck.id) } label: {
                     Label("Browse cards", systemImage: "rectangle.stack")
                         .frame(maxWidth: .infinity, minHeight: Theme.minTarget)
@@ -74,6 +86,7 @@ struct DeckOverviewScreen: View {
             .padding(.horizontal, 16)
         }
         .background(Theme.bg)
+        .task { buriedCount = await model.buriedCount(for: current) }
         .navigationTitle(current.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
