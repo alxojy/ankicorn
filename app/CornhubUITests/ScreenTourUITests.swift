@@ -403,6 +403,44 @@ final class ScreenTourUITests: XCTestCase {
         XCTAssertTrue(((again.value as? String) ?? "").contains("7"), "the saved edit persisted")
     }
 
+    func testDeckOptionsPresetPickerAndSectionHeader() {
+        app.launch()
+        let tile = app.descendants(matching: .any).matching(identifier: "deck-tile").firstMatch
+        XCTAssertTrue(tile.waitForExistence(timeout: 30), "deck tiles show")
+        tile.tap()
+        let options = deckMenuItem("deck-options-button")
+        XCTAssertTrue(options.waitForExistence(timeout: 10), "Deck options menu item")
+        options.tap()
+        XCTAssertTrue(
+            app.descendants(matching: .any)["anki-web-deck-options"].waitForExistence(timeout: 30), "options page opens")
+        sleep(3)
+        shot("04d-preset-picker-closed")
+
+        let web = app.webViews.firstMatch
+        let picker = web.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'used by'")).firstMatch
+        XCTAssertTrue(picker.waitForExistence(timeout: 10), "the preset select shows 'used by N decks'")
+        let save = web.buttons["Save"].firstMatch
+        XCTAssertTrue(save.waitForExistence(timeout: 10), "Save shows")
+        XCTAssertEqual(picker.frame.height, save.frame.height, accuracy: 2, "select and Save are the same height")
+
+        picker.tap()
+        sleep(1)
+        shot("04e-preset-picker-open")
+        let option = web.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'used by'")).element(boundBy: 1)
+        if option.exists {
+            XCTAssertGreaterThanOrEqual(option.frame.height, 43, "list rows are at least 44 pt")
+        }
+        picker.tap()
+
+        let title = web.staticTexts["Daily Limits"].firstMatch
+        XCTAssertTrue(title.waitForExistence(timeout: 10), "Daily Limits title shows")
+        let help = web.buttons.matching(NSPredicate(format: "frame.origin.y >= %f", title.frame.minY - 30)).firstMatch
+        if help.exists, abs(help.frame.minY - title.frame.minY) < 60 {
+            XCTAssertEqual(help.frame.midY, title.frame.midY, accuracy: 2, "title and help button share a centre line")
+        }
+        shot("04f-daily-limits-header")
+    }
+
     func testCongratsUndoBringsCardBack() {
         app.launchArguments = ["--seed-one-due", "--reset-collection"]
         app.launch()

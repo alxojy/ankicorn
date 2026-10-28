@@ -29,6 +29,10 @@ enum Theme {
         static let tile: CGFloat = 22
         static let photo: CGFloat = 20
         static let bar: CGFloat = 4
+        /// Closed dropdown fields on hosted web pages.
+        static let control: CGFloat = 12
+        /// Open dropdown lists on hosted web pages.
+        static let menu: CGFloat = 14
     }
 
     /// Minimum touch target.

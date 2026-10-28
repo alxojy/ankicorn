@@ -115,6 +115,45 @@ struct AnkiWebView: UIViewRepresentable {
             """
     }
 
+    /// Every `Select.svelte` on the hosted pages (preset picker, gather order…): a one-line 44 pt field with a centred
+    /// chevron, and its portalled `Popover.svelte` list as an Ink raised surface with 44 pt rows and an accent check.
+    /// The list is placed by Anki's floating-ui; CSS only restyles it and lifts it above the page's sections.
+    static var selectCSS: String {
+        let hex = CardWebView.hex
+        let height = Int(Theme.minTarget)
+        let radius = Int(Theme.Radius.control)
+        let menuRadius = Int(Theme.Radius.menu)
+        return """
+            .select-container { box-sizing: border-box; display: flex !important; flex-flow: row nowrap; align-items: stretch !important; width: 100%; height: \(height)px !important; min-height: \(height)px; padding: 0 !important; border-radius: \(radius)px !important; background: \(hex(Theme.control)) !important; color: \(hex(Theme.text)) !important; border: 1px solid \(hex(Theme.raisedHigh)) !important; line-height: 1.2 !important; overflow: hidden; }
+            .select-container > .inner { flex: 1 1 0; min-width: 0; position: relative; display: flex; align-items: center; }
+            .select-container > .inner > .label { position: static !important; display: block; width: 100%; padding: 0 12px; line-height: \(height - 2)px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .select-container > .chevron { flex: none; width: \(height)px; height: auto !important; align-self: stretch !important; display: flex; align-items: center; justify-content: center; border: none !important; color: \(hex(Theme.text2)); }
+            .floating { z-index: 10000 !important; border-radius: \(menuRadius)px; }
+            .popover-wrapper { min-height: 0 !important; }
+            .popover { box-sizing: border-box; width: var(--popover-width, auto); max-width: calc(100vw - 32px); max-height: min(60vh, \(height * 7)px) !important; padding: 6px !important; border-radius: \(menuRadius)px !important; background: \(hex(Theme.raised)) !important; border: 1px solid \(hex(Theme.raisedHigh)) !important; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45) !important; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+            .popover .dropdown-item { box-sizing: border-box; display: flex !important; align-items: center; width: 100%; min-height: \(height)px; padding: 0 12px !important; border: none !important; border-radius: \(radius - 2)px !important; background: transparent !important; color: \(hex(Theme.text)) !important; font-size: 1rem !important; line-height: 1.25; white-space: normal; text-align: left; }
+            .popover .dropdown-item:hover:not([disabled]), .popover .dropdown-item.focus { background: transparent !important; color: \(hex(Theme.text)) !important; }
+            .popover .dropdown-item:active:not([disabled]) { background: \(hex(Theme.raisedHigh)) !important; }
+            .popover .dropdown-item.active { font-weight: 600; }
+            .popover .dropdown-item.active::after { content: "\\2713"; margin-left: auto; padding-left: 12px; color: \(hex(Theme.accent)); font-weight: 700; }
+            .popover .dropdown-item[disabled] { color: \(hex(Theme.muted)) !important; }
+            """
+    }
+
+    /// `TitledContainer.svelte` sections: title and help button on one centred row in the section-title size,
+    /// the help button a muted 44 pt target instead of a white filled circle, hairline kept under the row.
+    static var sectionHeaderCSS: String {
+        let hex = CardWebView.hex
+        let height = Int(Theme.minTarget)
+        return """
+            .container > .position-relative:has(> h1) { display: flex; align-items: center; justify-content: space-between; min-height: \(height)px; border-bottom: 1px solid \(hex(Theme.raisedHigh)); margin-bottom: 4px; }
+            .container > .position-relative > h1 { flex: 1 1 auto; min-width: 0; margin: 0 !important; padding: 0 !important; border: none !important; font-size: \(Int(DisplaySize.sectionHeading) - 4)px !important; line-height: 1.2; }
+            .container > .position-relative > .help-badge { position: static !important; flex: none; display: flex; align-items: center; justify-content: center; margin-right: -12px; color: \(hex(Theme.muted)) !important; }
+            .help-badge .badge { box-sizing: border-box; display: flex; align-items: center; justify-content: center; min-width: \(height)px; min-height: \(height)px; padding: 0; background: transparent !important; border: none !important; box-shadow: none !important; color: \(hex(Theme.muted)) !important; }
+            .help-badge .badge svg { fill: currentColor; }
+            """
+    }
+
     /// Colours resolved from the Ink tokens; no raw values live here.
     static var inkCSS: String {
         let hex = CardWebView.hex
@@ -150,6 +189,8 @@ struct AnkiWebView: UIViewRepresentable {
             select, .form-select, input[type=text], input[type=number], textarea, .form-control { background-color: \(hex(Theme.control)) !important; color: \(hex(Theme.text)) !important; border-color: \(hex(Theme.raisedHigh)) !important; }
             input[type=radio], input[type=checkbox], input[type=range], progress { accent-color: \(hex(Theme.accent)); }
             \(deckOptionsHeaderCSS)
+            \(selectCSS)
+            \(sectionHeaderCSS)
             .nav-tabs .nav-link.active, .tab.active, .tab-active, [role=tab][aria-selected=true] { color: \(hex(Theme.accent)) !important; border-color: \(hex(Theme.accent)) !important; border-bottom-color: \(hex(Theme.accent)) !important; }
             """
     }

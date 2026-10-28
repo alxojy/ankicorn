@@ -43,4 +43,28 @@ final class AnkiWebInkTests: XCTestCase {
         XCTAssertTrue(header.contains("text-overflow: ellipsis"), "long preset names truncate")
         XCTAssertTrue(header.contains("background: \(accent) !important"), "Save is accent filled")
     }
+
+    func testSelectIsOneLineFieldWithInkList() {
+        let select = AnkiWebView.selectCSS
+        XCTAssertTrue(css.contains(select), "the select CSS is part of the injected Ink CSS")
+        XCTAssertTrue(select.contains(".select-container"))
+        XCTAssertTrue(select.contains("height: \(Int(Theme.minTarget))px"), "44 pt field and rows")
+        XCTAssertTrue(select.contains("text-overflow: ellipsis"), "long names truncate")
+        XCTAssertTrue(select.contains("border-radius: \(Int(Theme.Radius.control))px"))
+        XCTAssertTrue(select.contains("border-radius: \(Int(Theme.Radius.menu))px"))
+        XCTAssertTrue(select.contains("background: \(CardWebView.hex(Theme.raised)) !important"), "raised list surface")
+        XCTAssertTrue(select.contains("z-index: 10000"), "the list sits above section headings")
+        XCTAssertTrue(select.contains(".dropdown-item.active::after"), "selected row gets a check")
+        XCTAssertTrue(select.contains("color: \(accent)"), "the check is accent")
+        XCTAssertFalse(select.contains("border-left"), "no left bar on the selected row")
+    }
+
+    func testSectionHeaderSharesOneCentredRow() {
+        let header = AnkiWebView.sectionHeaderCSS
+        XCTAssertTrue(css.contains(header), "the section header CSS is part of the injected Ink CSS")
+        XCTAssertTrue(header.contains("align-items: center"))
+        XCTAssertTrue(header.contains("position: static !important"), "the help button joins the row")
+        XCTAssertTrue(header.contains("min-width: \(Int(Theme.minTarget))px"), "44 pt help target")
+        XCTAssertTrue(header.contains("color: \(CardWebView.hex(Theme.muted))"), "muted help icon")
+    }
 }
