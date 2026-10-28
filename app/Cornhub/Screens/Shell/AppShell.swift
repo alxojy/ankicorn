@@ -21,8 +21,11 @@ struct AppShell: View {
         }
         .tint(Theme.accent)
         .task {
-            sync.reopenCollection = { try await deckModel.reopen() }
             sync.didFinish = { await deckModel.refresh() }
+            if launch.showFullSyncChoice {
+                sync.fullSyncChoice = FullSyncChoice(
+                    canUpload: true, canDownload: true, serverUsn: 0, auth: Anki_Sync_SyncAuth())
+            }
             await deckModel.load()
             if let backend = deckModel.backend {
                 await sync.backupIfDue(backend)

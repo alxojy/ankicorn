@@ -71,14 +71,6 @@ final class DeckHomeModel {
         if (try? await backend.checkDatabase()) != nil { UserDefaults.standard.set(true, forKey: key) }
     }
 
-    /// Reopens the collection after a full sync transfer closed it.
-    func reopen() async throws {
-        guard let backend else { return }
-        try await backend.openCollection(path: collectionURL)
-        try await fetch(backend)
-        state = .loaded
-    }
-
     /// Reloads the counts (a sync calls this when it finishes).
     func refresh() async {
         guard let backend else { return await load() }

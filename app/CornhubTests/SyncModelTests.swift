@@ -5,6 +5,7 @@ import XCTest
 final class FakeSyncEngine: SyncEngine, @unchecked Sendable {
     var fullTransfers: [Bool] = []
     var mediaSyncs = 0
+    var failMedia = false
     var failTransfer = false
 
     func syncCollection(auth: Anki_Sync_SyncAuth) async throws -> Anki_Sync_SyncCollectionResponse {
@@ -14,7 +15,10 @@ final class FakeSyncEngine: SyncEngine, @unchecked Sendable {
         return response
     }
 
-    func syncMedia(auth: Anki_Sync_SyncAuth) async throws { mediaSyncs += 1 }
+    func syncMedia(auth: Anki_Sync_SyncAuth) async throws {
+        mediaSyncs += 1
+        if failMedia { throw BackendError(kind: .invalidInput, message: "media offline") }
+    }
 
     func fullUploadOrDownload(auth: Anki_Sync_SyncAuth, upload: Bool, serverUsn: Int32?) async throws {
         fullTransfers.append(upload)
@@ -41,9 +45,76 @@ final class SyncModelTests: XCTestCase {
     func testDownloadRunsAfterTheDialogDismisses() async throws {
         let engine = FakeSyncEngine()
         let model = await modelAwaitingChoice(engine)
-        XCTAssertNotNil(model.fullSyncChoice)
-        model.cancelFullSync()
-        await model.resolveFullSync(upload: false, backend: engine)
+        let choice = try XCTUnwrap(model.fullSyncChoice)
+        XCTAssertTrue(choice.canDownload && choice.canUpload)
+        model.cancelFullSync()  // the dialog's dismissal setter
+        XCTAssertNil(model.fullSyncChoice)
+        await model.resolveFullSync(choice, upload: false, backend: engine)
         XCTAssertEqual(engine.fullTransfers, [false])
+        XCTAssertEqual(model.phase, .idle)
+        XCTAssertNotNil(model.lastSynced)
+    }
+
+    func testUploadRunsAfterTheDialogDismisses() async throws {
+        let engine = FakeSyncEngine()
+        let model = await modelAwaitingChoice(engine)
+        let choice = try XCTUnwrap(model.fullSyncChoice)
+        model.cancelFullSync()
+        await model.resolveFullSync(choice, upload: true, backend: engine)
+        XCTAssertEqual(engine.fullTransfers, [true])
+    }
+
+    /// The engine reopens the collection itself, so the model only refreshes the screens (once), never reopens.
+    func testFinishRefreshesOnceAndSyncsMedia() async throws {
+        let engine = FakeSyncEngine()
+        let model = await modelAwaitingChoice(engine)
+        model.syncMediaEnabled = true
+        var refreshes = 0
+        model.didFinish = { refreshes += 1 }
+        let choice = try XCTUnwrap(model.fullSyncChoice)
+        await model.resolveFullSync(choice, upload: false, backend: engine)
+        XCTAssertEqual(refreshes, 1)
+        XCTAssertEqual(engine.mediaSyncs, 1)
+    }
+
+    func testNoMediaSyncWhenSwitchedOff() async throws {
+        let engine = FakeSyncEngine()
+        let model = await modelAwaitingChoice(engine)
+        model.syncMediaEnabled = false
+        let choice = try XCTUnwrap(model.fullSyncChoice)
+        await model.resolveFullSync(choice, upload: false, backend: engine)
+        XCTAssertEqual(engine.mediaSyncs, 0)
+        model.syncMediaEnabled = true
+    }
+
+    func testFailureShowsEngineErrorAndStillRefreshes() async throws {
+        let engine = FakeSyncEngine()
+        engine.failTransfer = true
+        let model = await modelAwaitingChoice(engine)
+        var refreshes = 0
+        model.didFinish = { refreshes += 1 }
+        let choice = try XCTUnwrap(model.fullSyncChoice)
+        await model.resolveFullSync(choice, upload: false, backend: engine)
+        XCTAssertEqual(model.phase, .failed("network down"))
+        XCTAssertEqual(engine.mediaSyncs, 0)
+        XCTAssertEqual(refreshes, 1)
+    }
+
+    func testCancelClearsTheChoiceWithoutTransferring() async throws {
+        let engine = FakeSyncEngine()
+        let model = await modelAwaitingChoice(engine)
+        model.cancelFullSync()
+        XCTAssertNil(model.fullSyncChoice)
+        XCTAssertEqual(model.phase, .idle)
+        XCTAssertTrue(engine.fullTransfers.isEmpty)
+    }
+
+    func testProgressTextNamesTheDirection() {
+        var progress = Anki_Collection_Progress()
+        var full = Anki_Collection_Progress.FullSync()
+        full.transferred = 42
+        full.total = 100
+        progress.fullSync = full
+        XCTAssertEqual(SyncModel.describe(progress, transfer: "Downloading"), "Downloading 42%")
     }
 }

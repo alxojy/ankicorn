@@ -99,6 +99,27 @@ final class ScreenTourUITests: XCTestCase {
         }
     }
 
+    func testFullSyncChoiceDialog() {
+        app.launchArguments += ["--show-full-sync-choice"]
+        app.launch()
+        let download = app.buttons["Download from AnkiWeb"]
+        let upload = app.buttons["Upload to AnkiWeb"]
+        let cancel = app.buttons["Cancel"]
+        XCTAssertTrue(download.waitForExistence(timeout: 30), "Download button shows")
+        XCTAssertTrue(upload.exists && cancel.exists, "Upload and Cancel show")
+        XCTAssertTrue(app.staticTexts["Sync conflict"].exists, "title reads Sync conflict")
+        XCTAssertTrue(
+            app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Download replaces this device'")).firstMatch
+                .exists, "message explains what each choice replaces")
+        // Short labels with no parenthetical text render at the same system size, so the three rows have equal heights.
+        XCTAssertEqual(download.frame.height, upload.frame.height, accuracy: 1)
+        XCTAssertEqual(download.frame.height, cancel.frame.height, accuracy: 1)
+        shot("full-sync-choice")
+        cancel.tap()
+        XCTAssertTrue(download.waitForNonExistence(timeout: 5), "Cancel closes the prompt")
+        XCTAssertTrue(app.descendants(matching: .any)["due-total"].exists, "Decks still shows")
+    }
+
     func testReviewFlow() {
         app.launch()
         let start = app.buttons["Start review"].firstMatch

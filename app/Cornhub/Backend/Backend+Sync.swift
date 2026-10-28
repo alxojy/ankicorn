@@ -23,8 +23,8 @@ extension Backend {
             service: ServiceIndex.Sync.service, method: ServiceIndex.Sync.syncMedia, auth)
     }
 
-    /// `full_upload_or_download`: replaces the server (upload) or this collection (download). The engine closes
-    /// the collection, so the caller reopens it afterwards.
+    /// `full_upload_or_download`: replaces the server (upload) or this collection (download). The engine reopens
+    /// the collection itself, even when the transfer fails, so the caller must not open it again.
     func fullUploadOrDownload(auth: Anki_Sync_SyncAuth, upload: Bool, serverUsn: Int32?) throws {
         var request = Anki_Sync_FullUploadOrDownloadRequest()
         request.auth = auth

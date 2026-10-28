@@ -30,19 +30,21 @@ struct DeckHomeScreen: View {
         }
         .sheet(isPresented: $showLogin) { LoginSheet(sync: sync, backend: model.backend) }
         .confirmationDialog(
-            "Your collection and AnkiWeb differ", isPresented: Binding(
+            "Sync conflict", isPresented: Binding(
                 get: { sync.fullSyncChoice != nil }, set: { if !$0 { sync.cancelFullSync() } }),
-            titleVisibility: .visible
-        ) {
-            if sync.fullSyncChoice?.canUpload == true {
-                Button("Upload to AnkiWeb (replaces AnkiWeb)", role: .destructive) { resolve(upload: true) }
+            titleVisibility: .visible, presenting: sync.fullSyncChoice
+        ) { choice in
+            if choice.canDownload {
+                Button("Download from AnkiWeb", role: .destructive) { resolve(choice, upload: false) }
             }
-            if sync.fullSyncChoice?.canDownload == true {
-                Button("Download from AnkiWeb (replaces this device)", role: .destructive) { resolve(upload: false) }
+            if choice.canUpload {
+                Button("Upload to AnkiWeb", role: .destructive) { resolve(choice, upload: true) }
             }
             Button("Cancel", role: .cancel) { sync.cancelFullSync() }
-        } message: {
-            Text("One side has to overwrite the other. A backup of this collection is made first.")
+        } message: { _ in
+            Text(
+                "This device and AnkiWeb can't be merged. Download replaces this device's collection with AnkiWeb's. "
+                    + "Upload replaces AnkiWeb's collection with this device's. A backup of this device is made first.")
         }
         .alert(showNote ?? "", isPresented: Binding(get: { showNote != nil }, set: { if !$0 { showNote = nil } })) {
             Button("OK", role: .cancel) {}
@@ -119,6 +121,7 @@ struct DeckHomeScreen: View {
             if !typeSize.isAccessibilitySize { Spacer() }
             HStack(spacing: 10) {
                 roundButton("arrow.triangle.2.circlepath", "Sync") { Task { await runSync() } }
+                    .disabled(sync.isSyncing)
                 roundButton("plus", "Add card") { addingCard = true }
             }
         }
@@ -133,9 +136,9 @@ struct DeckHomeScreen: View {
         await sync.sync(backend: backend)
     }
 
-    private func resolve(upload: Bool) {
-        guard let backend = model.backend else { return }
-        Task { await sync.resolveFullSync(upload: upload, backend: backend) }
+    private func resolve(_ choice: FullSyncChoice, upload: Bool) {
+        guard let backend = model.backend else { return sync.failFullSync("The collection is not open.") }
+        Task { await sync.resolveFullSync(choice, upload: upload, backend: backend) }
     }
 
     private func roundButton(_ symbol: String, _ label: String, action: @escaping () -> Void) -> some View {

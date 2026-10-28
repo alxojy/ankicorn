@@ -6,6 +6,7 @@ struct FullSyncChoice: Equatable {
     var canUpload: Bool
     var canDownload: Bool
     var serverUsn: Int32
+    var auth: Anki_Sync_SyncAuth
 }
 
 /// The engine calls a sync needs; `Backend` is the real one and tests substitute a fake.
@@ -36,8 +37,7 @@ final class SyncModel {
     var syncMediaEnabled: Bool { didSet { defaults.set(syncMediaEnabled, forKey: Keys.media) } }
     var syncOnOpen: Bool { didSet { defaults.set(syncOnOpen, forKey: Keys.onOpen) } }
 
-    /// Reopens the collection after a full transfer closed it, then refreshes the screens.
-    var reopenCollection: () async throws -> Void = {}
+    /// Refreshes the screens after a sync; the engine itself reopens the collection after a full transfer.
     var didFinish: () async -> Void = {}
 
     private let store = AccountStore()
@@ -103,10 +103,9 @@ final class SyncModel {
             if response.hasNewEndpoint { auth.endpoint = response.newEndpoint }
             switch response.required {
             case .fullSync, .fullDownload, .fullUpload:
-                pendingAuth = auth
                 fullSyncChoice = FullSyncChoice(
                     canUpload: response.required != .fullDownload, canDownload: response.required != .fullUpload,
-                    serverUsn: response.serverMediaUsn)
+                    serverUsn: response.serverMediaUsn, auth: auth)
                 phase = .idle
                 return
             default:
@@ -121,29 +120,46 @@ final class SyncModel {
         }
     }
 
-    /// The user's answer to the full-sync prompt. Takes a backup first, then transfers and reopens.
-    func resolveFullSync(upload: Bool, backend: any SyncEngine) async {
-        guard let choice = fullSyncChoice, let auth = pendingAuth else { return }
+    /// The user's answer to the full-sync prompt. The choice is passed in because the dialog clears
+    /// `fullSyncChoice` as it dismisses, before the tapped button's action runs. Takes a backup first, then
+    /// transfers; the engine reopens the collection itself, so this only refreshes the screens.
+    func resolveFullSync(_ choice: FullSyncChoice, upload: Bool, backend: any SyncEngine) async {
+        guard !isSyncing else { return }
         fullSyncChoice = nil
-        phase = .syncing(upload ? "Uploading…" : "Downloading…")
-        let poller = startProgress(backend)
+        let verb = upload ? "Uploading" : "Downloading"
+        phase = .syncing("\(verb)…")
+        let poller = startProgress(backend, transfer: verb)
         defer { poller.cancel() }
         do {
-            try? await backend.createBackup(folder: Self.backupsFolder, force: true, wait: true)
-            try await backend.fullUploadOrDownload(auth: auth, upload: upload, serverUsn: syncMediaEnabled ? choice.serverUsn : nil)
-            try await reopenCollection()
-            finish()
-            await didFinish()
+            _ = try? await backend.createBackup(folder: Self.backupsFolder, force: true, wait: true)
+            try await backend.fullUploadOrDownload(auth: choice.auth, upload: upload, serverUsn: nil)
         } catch {
-            try? await reopenCollection()
+            fail(error)
+            await didFinish()
+            return
+        }
+        do {
+            if syncMediaEnabled {
+                phase = .syncing("Syncing media…")
+                try await backend.syncMedia(auth: choice.auth)
+            }
+            finish()
+        } catch {
             fail(error)
         }
+        await didFinish()
     }
 
+    /// Clears the prompt without transferring anything (Cancel, or a dismissal with no choice made).
     func cancelFullSync() {
         fullSyncChoice = nil
-        pendingAuth = nil
-        phase = .idle
+        if !isSyncing { phase = .idle }
+    }
+
+    /// Shows an error for a full-sync answer that cannot run (never a silent return).
+    func failFullSync(_ message: String) {
+        fullSyncChoice = nil
+        phase = .failed(message)
     }
 
     // MARK: Backups
@@ -176,10 +192,7 @@ final class SyncModel {
 
     // MARK: Private
 
-    private var pendingAuth: Anki_Sync_SyncAuth?
-
     private func finish() {
-        pendingAuth = nil
         lastSynced = Date()
         defaults.set(lastSynced, forKey: Keys.last)
         phase = .idle
@@ -190,10 +203,10 @@ final class SyncModel {
     }
 
     /// Polls `latest_progress` while a long call occupies the backend.
-    private func startProgress(_ backend: any SyncEngine) -> Task<Void, Never> {
+    private func startProgress(_ backend: any SyncEngine, transfer: String? = nil) -> Task<Void, Never> {
         Task { [weak self] in
             while !Task.isCancelled {
-                if let progress = try? backend.latestProgress(), let text = Self.describe(progress) {
+                if let progress = try? backend.latestProgress(), let text = Self.describe(progress, transfer: transfer) {
                     self?.updateDetail(text)
                 }
                 try? await Task.sleep(for: .milliseconds(400))
@@ -205,11 +218,11 @@ final class SyncModel {
         if case .syncing = phase { phase = .syncing(text) }
     }
 
-    nonisolated static func describe(_ progress: Anki_Collection_Progress) -> String? {
+    nonisolated static func describe(_ progress: Anki_Collection_Progress, transfer: String? = nil) -> String? {
         switch progress.value {
         case .normalSync(let value)?: return value.stage.isEmpty ? nil : "Syncing \(value.stage)…"
         case .fullSync(let value)? where value.total > 0:
-            return "Transferring \(Int(value.transferred) * 100 / Int(value.total))%"
+            return "\(transfer ?? "Transferring") \(Int(value.transferred) * 100 / Int(value.total))%"
         case .mediaSync?: return "Syncing media…"
         default: return nil
         }
