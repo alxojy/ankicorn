@@ -15,7 +15,8 @@ enum CardStyle: Equatable {
         pattern: #"(?<![\w-])background(?:-color)?\s*:\s*([^;}]+)"#, options: [.caseInsensitive])
 
     /// Reads the last plain `.card { background… }` declaration of `css`.
-    static func decide(css: String) -> CardStyle {
+    static func decide(css rawCSS: String) -> CardStyle {
+        let css = strippingComments(rawCSS)
         var found: String?
         let whole = NSRange(css.startIndex..., in: css)
         for block in blockPattern?.matches(in: css, range: whole) ?? [] {
@@ -29,8 +30,13 @@ enum CardStyle: Equatable {
             }
         }
         guard let found, let color = rgb(of: found) else { return .ink }
-        let css = String(format: "#%02X%02X%02X", color.red, color.green, color.blue)
-        return luminance(color) > 0.5 ? .light(background: css) : .dark(background: css)
+        let hex = String(format: "#%02X%02X%02X", color.red, color.green, color.blue)
+        return luminance(color) > 0.5 ? .light(background: hex) : .dark(background: hex)
+    }
+
+    /// `css` without `/* … */` comments, so a kept copy of old CSS in a comment is never read as live rules.
+    static func strippingComments(_ css: String) -> String {
+        css.replacingOccurrences(of: #"/\*[\s\S]*?\*/"#, with: "", options: .regularExpression)
     }
 
     struct RGB: Equatable {

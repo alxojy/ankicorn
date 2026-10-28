@@ -214,6 +214,12 @@ extension ReviewModel {
         return try? await backend.getNote(id: queued.card.noteID)
     }
 
+    /// Re-renders the current card, e.g. after its note type's CSS changed.
+    func refreshRendered() async {
+        guard let queued, let fresh = try? await backend.renderExistingCard(id: queued.card.id) else { return }
+        rendered = fresh
+    }
+
     func save(note: Anki_Notes_Note) async {
         await perform(reload: false) { try await self.backend.updateNote(note) }
         if let queued, let fresh = try? await backend.renderExistingCard(id: queued.card.id) {

@@ -3,6 +3,7 @@ import SwiftUI
 /// Note types with use counts; opens the field and template editor, find duplicates, and delete.
 struct NotetypesScreen: View {
     let backend: Backend
+    var sync: SyncModel?
     @State private var types: [Anki_Notetypes_NotetypeNameIdUseCount] = []
     @State private var loaded = false
     @State private var message: String?
@@ -14,7 +15,7 @@ struct NotetypesScreen: View {
             }
             ForEach(types, id: \.id) { type in
                 NavigationLink {
-                    NotetypeEditorScreen(backend: backend, notetypeID: type.id)
+                    NotetypeEditorScreen(backend: backend, notetypeID: type.id, sync: sync)
                 } label: {
                     VStack(alignment: .leading) {
                         Text(type.name).foregroundStyle(Theme.text)
@@ -54,7 +55,9 @@ struct NotetypesScreen: View {
 struct NotetypeEditorScreen: View {
     let backend: Backend
     let notetypeID: Int64
+    var sync: SyncModel?
     @Environment(\.dismiss) private var dismiss
+    @State private var showRestyle = false
     @State private var notetype: Anki_Notetypes_Notetype?
     @State private var errorMessage: String?
     @State private var duplicates: [[Int64]]?
@@ -100,6 +103,9 @@ struct NotetypeEditorScreen: View {
                     }
                 }
                 Section("Styling") {
+                    Button("Use Cornhub style", systemImage: "paintbrush") { showRestyle = true }
+                        .frame(minHeight: Theme.minTarget).listRowBackground(Theme.surface)
+                        .accessibilityIdentifier("notetype-restyle")
                     TextEditor(text: Binding(
                         get: { self.notetype?.config.css ?? "" }, set: { self.notetype?.config.css = $0 }))
                         .font(.system(.footnote, design: .monospaced)).frame(minHeight: 160)
@@ -131,6 +137,11 @@ struct NotetypeEditorScreen: View {
         .task {
             do { notetype = try await backend.getNotetype(id: notetypeID) } catch {
                 errorMessage = error.localizedDescription
+            }
+        }
+        .sheet(isPresented: $showRestyle) {
+            NotetypeRestyleSheet(backend: backend, notetypeID: notetypeID, sync: sync) {
+                Task { notetype = try? await backend.getNotetype(id: notetypeID) }
             }
         }
         .sheet(isPresented: $showDuplicates) {

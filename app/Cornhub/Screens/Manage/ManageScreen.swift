@@ -3,6 +3,7 @@ import SwiftUI
 /// Entry point (from Settings) for filtered decks, tags and note types.
 struct ManageScreen: View {
     let backend: Backend?
+    var sync: SyncModel?
 
     var body: some View {
         List {
@@ -22,7 +23,7 @@ struct ManageScreen: View {
                 .frame(minHeight: Theme.minTarget).listRowBackground(Theme.surface)
                 .accessibilityIdentifier("manage-tags")
                 NavigationLink {
-                    NotetypesScreen(backend: backend)
+                    NotetypesScreen(backend: backend, sync: sync)
                 } label: {
                     Label("Note types", systemImage: "rectangle.stack")
                 }

@@ -20,7 +20,7 @@ struct SettingsScreen: View {
                 SpeechAndAISection(backend: backend)
                 Section {
                     NavigationLink {
-                        ManageScreen(backend: backend)
+                        ManageScreen(backend: backend, sync: sync)
                     } label: {
                         Label("Filtered decks, tags, note types", systemImage: "slider.horizontal.3")
                     }

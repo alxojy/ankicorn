@@ -42,7 +42,7 @@ struct DeckHomeScreen: View {
                 .toolbar(.hidden, for: .navigationBar)
         }
         .fullScreenCover(item: $reviewTarget, onDismiss: { Task { await model.refresh() } }) { target in
-            if let backend = model.backend { ReviewScreen(backend: backend, deckID: target.deckID) }
+            if let backend = model.backend { ReviewScreen(backend: backend, deckID: target.deckID, sync: sync) }
         }
         .fullScreenCover(isPresented: $addingCard, onDismiss: { Task { await model.refresh() } }) {
             if let backend = model.backend { NoteEditorScreen(backend: backend, mode: .add) }

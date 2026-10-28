@@ -199,6 +199,34 @@ final class ScreenTourUITests: XCTestCase {
         }
     }
 
+    /// Review ⋯ › Restyle this note type…, preview, apply: the card turns into the Ink card.
+    func testRestyleNotetypeFromReviewMenu() {
+        app.launchArguments = ["--seed-imported", "--reset-collection"]
+        app.launch()
+        app.buttons["Start review"].firstMatch.tap()
+        let card = app.descendants(matching: .any)["review-card"]
+        XCTAssertTrue(card.waitForExistence(timeout: 15), "review card shows")
+        sleep(3)
+        shot("24-restyle-before")
+        app.buttons["More"].tap()
+        let restyle = app.buttons["Restyle this note type…"]
+        XCTAssertTrue(restyle.waitForExistence(timeout: 5), "menu offers the restyle for a cream card")
+        restyle.tap()
+        sleep(3)
+        shot("24-restyle-preview")
+        let apply = app.buttons["restyle-apply"]
+        XCTAssertTrue(apply.waitForExistence(timeout: 5), "Use Cornhub style button shows")
+        apply.tap()
+        XCTAssertTrue(app.buttons["restyle-undo"].waitForExistence(timeout: 5), "applied: undo is offered")
+        XCTAssertTrue(app.staticTexts["Saved. Sync to update desktop."].exists, "tells the user to sync")
+        shot("24-restyle-applied")
+        app.buttons["restyle-done"].tap()
+        sleep(3)
+        shot("24-restyle-after")
+        app.buttons["More"].tap()
+        XCTAssertFalse(app.buttons["Restyle this note type…"].waitForExistence(timeout: 2), "no longer offered once styled")
+    }
+
     func testTappingCardPictureShowsViewerAndCloseKeepsCard() {
         app.launchArguments = ["--seed-imported", "--reset-collection"]
         app.launch()
