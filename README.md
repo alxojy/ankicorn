@@ -31,7 +31,20 @@ Details, the desktop parity table, the design standard and the phases are in [`P
 
 ## Status
 
-Phase 0: the bridge builds, and the Xcode project, typed Swift `Backend` and a diagnostic screen that lists the deck tree returned by rslib are in place. Next is Phase 1 (Ink theme, real Decks and Review screens).
+Phases 0 to 4 are built and the app is in daily use on my iPhone. That covers review with the Ink theme, AnkiWeb sync (including the full-sync choice), adding and editing cards, the browser, deck options, stats, filtered decks, tags, note types, import/export, speech, translation, AI explanations and stroke order. The full gate (Rust, unit and UI tests with a screenshot tour) passes on `main`.
+
+Now: fixing what comes up in daily use, one OpenSpec change at a time (see `openspec/changes/`).
+
+Not done yet:
+- the home-screen widget
+- image occlusion
+- changing a note's type
+- LaTeX
+- auto-fill pictures
+- autoplay settings
+- a file picker for CSV import
+
+Sync and Apple Intelligence still need checking on a real device against desktop Anki.
 
 ## Build and test
 
