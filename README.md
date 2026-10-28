@@ -31,20 +31,7 @@ Details, the desktop parity table, the design standard and the phases are in [`P
 
 ## Status
 
-Phases 0 to 4 are built. That covers review with the Ink theme, AnkiWeb sync (including the full-sync choice), adding and editing cards, the browser, deck options, stats, filtered decks, tags, note types, import/export, speech, translation, AI explanations and stroke order. The full gate (Rust, unit and UI tests with a screenshot tour) passed after Phase 4.
-
-Now: fixing what comes up in use, one OpenSpec change at a time (see `openspec/changes/`).
-
-Not done yet:
-- the home-screen widget
-- image occlusion
-- changing a note's type
-- LaTeX
-- auto-fill pictures
-- autoplay settings
-- a file picker for CSV import
-
-Sync and Apple Intelligence still need checking on a real device against desktop Anki.
+Usable day to day and still changing. What's built and what's left is tracked in the parity table in [`PLAN.md`](PLAN.md). Work in progress lives in [`openspec/changes/`](openspec/changes/).
 
 ## Build and test
 
