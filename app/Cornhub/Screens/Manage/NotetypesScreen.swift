@@ -58,6 +58,7 @@ struct NotetypeEditorScreen: View {
     var sync: SyncModel?
     @Environment(\.dismiss) private var dismiss
     @State private var showRestyle = false
+    @State private var showLayout = false
     @State private var notetype: Anki_Notetypes_Notetype?
     @State private var errorMessage: String?
     @State private var duplicates: [[Int64]]?
@@ -106,6 +107,11 @@ struct NotetypeEditorScreen: View {
                     Button("Use Cornhub style", systemImage: "paintbrush") { showRestyle = true }
                         .frame(minHeight: Theme.minTarget).listRowBackground(Theme.surface)
                         .accessibilityIdentifier("notetype-restyle")
+                    if NotetypeLayout.offered(for: notetype.fields.map(\.name)) {
+                        Button("Use Cornhub layout", systemImage: "rectangle.3.group") { showLayout = true }
+                            .frame(minHeight: Theme.minTarget).listRowBackground(Theme.surface)
+                            .accessibilityIdentifier("notetype-layout")
+                    }
                     TextEditor(text: Binding(
                         get: { self.notetype?.config.css ?? "" }, set: { self.notetype?.config.css = $0 }))
                         .font(.system(.footnote, design: .monospaced)).frame(minHeight: 160)
@@ -141,6 +147,11 @@ struct NotetypeEditorScreen: View {
         }
         .sheet(isPresented: $showRestyle) {
             NotetypeRestyleSheet(backend: backend, notetypeID: notetypeID, sync: sync) {
+                Task { notetype = try? await backend.getNotetype(id: notetypeID) }
+            }
+        }
+        .sheet(isPresented: $showLayout) {
+            NotetypeLayoutSheet(backend: backend, notetypeID: notetypeID, sync: sync) {
                 Task { notetype = try? await backend.getNotetype(id: notetypeID) }
             }
         }

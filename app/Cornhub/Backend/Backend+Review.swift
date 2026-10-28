@@ -28,6 +28,30 @@ extension Backend {
             question: join(response.questionNodes), answer: join(response.answerNodes), css: response.css)
     }
 
+    /// `render_uncommitted_card`: how `note` would render with `template` before it is saved (the layout preview).
+    func renderUncommittedCard(
+        note: Anki_Notes_Note, ordinal: Int, template: Anki_Notetypes_Notetype.Template
+    ) throws -> RenderedCard {
+        var request = Anki_CardRendering_RenderUncommittedCardRequest()
+        request.note = note
+        request.cardOrd = UInt32(ordinal)
+        request.template = template
+        let response: Anki_CardRendering_RenderCardResponse = try call(
+            service: ServiceIndex.CardRendering.service, method: ServiceIndex.CardRendering.renderUncommittedCard,
+            request)
+        func join(_ nodes: [Anki_CardRendering_RenderedTemplateNode]) -> String {
+            nodes.map { node in
+                switch node.value {
+                case .text(let text): text
+                case .replacement(let replacement): replacement.currentText
+                case nil: ""
+                }
+            }.joined()
+        }
+        return RenderedCard(
+            question: join(response.questionNodes), answer: join(response.answerNodes), css: response.css)
+    }
+
     /// `get_undo_status`: what Undo and Redo would do; an empty string means nothing to do.
     func undoStatus() throws -> Anki_Collection_UndoStatus {
         try call(

@@ -49,7 +49,7 @@ enum NotetypeStyle {
 
     // MARK: Mapping
 
-    private static let lightText = "#1C1C1E", lightMuted = "#5F5F66", lightAccent = "#0B6B52"
+    static let lightText = "#1C1C1E", lightMuted = "#5F5F66", lightAccent = "#0B6B52"
 
     /// Simple `.class` selectors of `css` (in first-seen order) with their role.
     static func classes(in css: String) -> [(String, Role)] {
