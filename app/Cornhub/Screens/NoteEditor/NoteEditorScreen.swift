@@ -1,5 +1,6 @@
 import PhotosUI
 import SwiftUI
+@preconcurrency import Translation
 
 /// Full-screen Add card, also used to edit an existing note.
 struct NoteEditorScreen: View {
@@ -15,6 +16,7 @@ struct NoteEditorScreen: View {
     @State private var showPhotoPicker = false
     @State private var showCamera = false
     @State private var newTag = ""
+    @State private var translation: TranslationSession.Configuration?
     @State private var addingTag = false
 
     init(backend: Backend, mode: NoteEditorModel.Mode, onSaved: @escaping (Anki_Notes_Note) -> Void = { _ in }) {
@@ -46,6 +48,18 @@ struct NoteEditorScreen: View {
         }
         .background(Theme.bg.ignoresSafeArea())
         .task { await model.load() }
+        .onChange(of: model.translationRequest) {
+            if translation == nil {
+                translation = .init(source: Locale.Language(identifier: "zh-Hans"), target: Locale.Language(identifier: "en"))
+            } else {
+                translation?.invalidate()
+            }
+        }
+        .translationTask(translation) { session in
+            guard let source = await model.translationSource else { return }
+            let reply = try? await session.translate(source).targetText
+            await model.finishTranslation(source: source, result: reply)
+        }
         .sensoryFeedback(.success, trigger: model.addedCount)
         .photosPicker(isPresented: $showPhotoPicker, selection: $photoItem, matching: .images)
         .onChange(of: photoItem) { _, item in
@@ -159,6 +173,11 @@ struct NoteEditorScreen: View {
         return VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text(name).inkLabel().foregroundStyle(Theme.muted)
+                if model.isAutoFilled(index) {
+                    Label("auto", systemImage: "sparkles").inkLabel().foregroundStyle(Theme.accent)
+                        .accessibilityLabel("Filled automatically")
+                        .accessibilityIdentifier("editor-auto-\(index)")
+                }
                 Spacer()
                 if !model.isEditing {
                     Button { model.toggleSticky(index) } label: {

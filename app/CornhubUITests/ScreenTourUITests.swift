@@ -311,6 +311,15 @@ final class ScreenTourUITests: XCTestCase {
             let shown = (field.value as? String) ?? ""
             XCTAssertFalse(shown.contains("<b>"), "bold shows as styling, not a literal tag: \(shown)")
             XCTAssertTrue(shown.contains("粗"), "typed text is in the field")
+            let pinyin = app.descendants(matching: .any)["editor-field-1"]
+            if pinyin.exists {
+                field.typeText("生")
+                let expected = NSPredicate(format: "value CONTAINS 'shēng'")
+                XCTAssertEqual(
+                    XCTWaiter().wait(for: [XCTNSPredicateExpectation(predicate: expected, object: pinyin)], timeout: 5),
+                    .completed, "Pinyin fills from the Hanzi field")
+                shot("21b-add-card-auto-pinyin")
+            }
         }
         let chip = app.descendants(matching: .any)["editor-notetype-chip"]
         XCTAssertTrue(chip.exists, "notetype chip exists")
