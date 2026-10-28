@@ -515,6 +515,8 @@ final class ScreenTourUITests: XCTestCase {
         let login = app.descendants(matching: .any)["settings-login"]
         scrollTo(login)
         XCTAssertTrue(login.exists, "login row exists")
+        XCTAssertFalse(app.staticTexts["Status"].exists, "no Status row while signed out")
+        XCTAssertFalse(app.buttons["Sync now"].exists, "no Sync now while signed out")
         login.tap()
         sleep(1)
         shot("55-login")
@@ -543,6 +545,20 @@ final class ScreenTourUITests: XCTestCase {
             app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] %@", "testuser")).firstMatch.exists,
             "Signed in as testuser")
         XCTAssertFalse(login.exists, "login row is gone")
+        XCTAssertFalse(app.staticTexts["Status"].exists, "no Status row")
+        let syncNow = app.buttons["settings-sync-now"]
+        scrollTo(syncNow)
+        XCTAssertTrue(syncNow.exists, "Sync now after login")
+        let mediaToggle = app.switches["Sync media"]
+        XCTAssertTrue(mediaToggle.exists, "Sync media toggle after login")
+        for id in ["settings-sync-now", "settings-logout"] {
+            let row = app.buttons[id]
+            scrollTo(row)
+            XCTAssertLessThan(abs(row.frame.height - mediaToggle.frame.height), 4, "\(id) row height matches toggle row")
+        }
+        let backup = app.buttons["Back up now"]
+        scrollTo(backup)
+        XCTAssertLessThan(abs(backup.frame.height - mediaToggle.frame.height), 4, "Back up now row height matches toggle row")
         shot("57-signed-in")
     }
 

@@ -24,7 +24,7 @@ struct SettingsScreen: View {
                     } label: {
                         Label("Filtered decks, tags, note types", systemImage: "slider.horizontal.3")
                     }
-                    .frame(minHeight: Theme.minTarget).listRowBackground(Theme.surface)
+                    .listRowBackground(Theme.surface)
                     .accessibilityIdentifier("settings-manage")
                 } header: {
                     Text("Manage")
@@ -35,14 +35,14 @@ struct SettingsScreen: View {
                     } label: {
                         Label("Import and export", systemImage: "square.and.arrow.up.on.square")
                     }
-                    .frame(minHeight: Theme.minTarget).listRowBackground(Theme.surface)
+                    .listRowBackground(Theme.surface)
                     .accessibilityIdentifier("settings-import-export")
                     NavigationLink {
                         ToolsScreen(backend: backend)
                     } label: {
                         Label("Check database, media, empty cards", systemImage: "wrench.and.screwdriver")
                     }
-                    .frame(minHeight: Theme.minTarget).listRowBackground(Theme.surface)
+                    .listRowBackground(Theme.surface)
                     .accessibilityIdentifier("settings-tools")
                 } header: {
                     Text("Data")
@@ -63,30 +63,58 @@ struct SettingsScreen: View {
     }
 
     private var accountSection: some View {
-        Section("AnkiWeb account") {
+        Section {
             if sync.isSignedIn {
                 LabeledContent("Signed in as", value: sync.username ?? "AnkiWeb")
                     .listRowBackground(Theme.surface)
                 Button("Log out", role: .destructive) { confirmLogout = true }
-                    .frame(minHeight: Theme.minTarget).listRowBackground(Theme.surface)
+                    .listRowBackground(Theme.surface)
                     .accessibilityIdentifier("settings-logout")
             } else {
                 Button("Log in to AnkiWeb") { showLogin = true }
-                    .frame(minHeight: Theme.minTarget).listRowBackground(Theme.surface)
+                    .listRowBackground(Theme.surface)
                     .accessibilityIdentifier("settings-login")
+            }
+        } header: {
+            Text("AnkiWeb account")
+        } footer: {
+            if !sync.isSignedIn {
+                Text("Sync your collection with desktop Anki through AnkiWeb.")
             }
         }
     }
 
-    private var syncSection: some View {
-        @Bindable var sync = sync
-        return Section("Sync") {
-            Toggle("Sync media", isOn: $sync.syncMediaEnabled).listRowBackground(Theme.surface)
-            Toggle("Sync when the app opens", isOn: $sync.syncOnOpen).listRowBackground(Theme.surface)
-            Button("Sync now") { if let backend { Task { await sync.sync(backend: backend) } } }
-                .disabled(!sync.isSignedIn || sync.isSyncing || backend == nil)
-                .frame(minHeight: Theme.minTarget).listRowBackground(Theme.surface)
-            LabeledContent("Status", value: sync.statusText).listRowBackground(Theme.surface)
+    @ViewBuilder private var syncSection: some View {
+        if sync.isSignedIn {
+            @Bindable var sync = sync
+            Section {
+                Toggle("Sync media", isOn: $sync.syncMediaEnabled).listRowBackground(Theme.surface)
+                Toggle("Sync when the app opens", isOn: $sync.syncOnOpen).listRowBackground(Theme.surface)
+                Button {
+                    if let backend { Task { await sync.sync(backend: backend) } }
+                } label: {
+                    HStack {
+                        Text("Sync now")
+                        Spacer()
+                        if sync.isSyncing {
+                            ProgressView()
+                        } else if !sync.hasFailed {
+                            Text(sync.statusText).font(.footnote).foregroundStyle(Theme.text2)
+                        }
+                    }
+                }
+                .disabled(sync.isSyncing || backend == nil)
+                .listRowBackground(Theme.surface)
+                .accessibilityIdentifier("settings-sync-now")
+            } header: {
+                Text("Sync")
+            } footer: {
+                if sync.isSyncing {
+                    Text(sync.statusText)
+                } else if sync.hasFailed {
+                    Text(sync.statusText).foregroundStyle(Theme.again)
+                }
+            }
         }
     }
 
@@ -94,7 +122,7 @@ struct SettingsScreen: View {
         Section {
             Button("Back up now") { if let backend { Task { await sync.backupNow(backend) } } }
                 .disabled(backend == nil || sync.isSyncing)
-                .frame(minHeight: Theme.minTarget).listRowBackground(Theme.surface)
+                .listRowBackground(Theme.surface)
             if let last = sync.lastBackup {
                 LabeledContent("Last backup", value: last.formatted(.relative(presentation: .named)))
                     .listRowBackground(Theme.surface)
@@ -112,18 +140,18 @@ struct SettingsScreen: View {
                 Stepper(
                     "Learn ahead: \(prefs.learnAheadMinutes) min", value: prefs.learnAheadBinding(backend), in: 0...60
                 )
-                .frame(minHeight: Theme.minTarget).listRowBackground(Theme.surface)
+                .listRowBackground(Theme.surface)
                 .accessibilityIdentifier("pref-learn-ahead")
                 Stepper(
                     "Next day starts at \(prefs.rolloverHour):00", value: prefs.rolloverBinding(backend), in: 0...23
                 )
-                .frame(minHeight: Theme.minTarget).listRowBackground(Theme.surface)
+                .listRowBackground(Theme.surface)
                 Picker("New / review order", selection: prefs.mixBinding(backend)) {
                     Text("Mix").tag(Anki_Config_Preferences.Scheduling.NewReviewMix.distribute)
                     Text("Reviews first").tag(Anki_Config_Preferences.Scheduling.NewReviewMix.reviewsFirst)
                     Text("New first").tag(Anki_Config_Preferences.Scheduling.NewReviewMix.newFirst)
                 }
-                .frame(minHeight: Theme.minTarget).listRowBackground(Theme.surface)
+                .listRowBackground(Theme.surface)
             }
         }
     }
@@ -143,7 +171,7 @@ struct SettingsScreen: View {
                     prefs.timeLimitMinutes == 0 ? "Study time limit: off" : "Study time limit: \(prefs.timeLimitMinutes) min",
                     value: prefs.timeLimitBinding(backend), in: 0...120, step: 5
                 )
-                .frame(minHeight: Theme.minTarget).listRowBackground(Theme.surface)
+                .listRowBackground(Theme.surface)
             }
             Section("Editing and search") {
                 Toggle("Add to the current deck", isOn: prefs.editingBinding(backend, \.addingDefaultsToCurrentDeck))
