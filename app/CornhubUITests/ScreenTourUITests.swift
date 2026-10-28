@@ -101,13 +101,22 @@ final class ScreenTourUITests: XCTestCase {
 
     /// The tab bar slides away while scrolling down a deck overview and the last row clears it at the end.
     func testTabBarMinimizesOnScroll() {
+        app.launchArguments += ["--seed-many-subdecks"]
         app.launch()
         let tile = app.descendants(matching: .any).matching(identifier: "deck-tile").firstMatch
         XCTAssertTrue(tile.waitForExistence(timeout: 30), "deck tiles show")
-        tile.tap()
+        let parent = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'HSK 2'")).matching(identifier: "deck-tile").firstMatch
+        XCTAssertTrue(parent.exists, "the HSK 2 tile shows")
+        parent.tap()
         let tabBar = app.descendants(matching: .any)["tab-settings"]
         let study = app.buttons["study-button"]
         XCTAssertTrue(study.waitForExistence(timeout: 10), "overview shows")
+        let expand = app.buttons.matching(NSPredicate(format: "label == 'Expand subdecks'")).firstMatch
+        if expand.waitForExistence(timeout: 3) {
+            expand.tap()
+            sleep(1)
+        }
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "deck-tile").count > 6, "subdeck tiles show")
         XCTAssertTrue(tabBar.isHittable, "tab bar shows before scrolling")
         shot("tabbar-01-before")
         app.swipeUp()
@@ -172,7 +181,9 @@ final class ScreenTourUITests: XCTestCase {
         let cardFrame = card.frame
         // Light fixture first, then the dark one (its CSS sets img { width: 100%; height: 600px }).
         for round in 0..<2 {
-            let picture = app.images.firstMatch
+            // The card is one accessibility element, so only an image inside it is the card's picture
+            // (images elsewhere on screen, such as grade icons, are not).
+            let picture = card.images.firstMatch
             if picture.exists {
                 XCTAssertLessThanOrEqual(picture.frame.height, 220.5, "picture is at most the cap (round \(round))")
                 XCTAssertLessThanOrEqual(picture.frame.maxY, cardFrame.maxY, "picture bottom is inside the card")
@@ -196,10 +207,13 @@ final class ScreenTourUITests: XCTestCase {
         sleep(3)
         card.tap()
         sleep(3)
-        // The picture sits in the lower part of the answer; tap there.
-        card.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.85)).tap()
+        // The answer is centred in the card (sentence, then the picture); tap down the middle until the picture is hit.
         let viewer = app.descendants(matching: .any)["image-viewer"]
-        XCTAssertTrue(viewer.waitForExistence(timeout: 5), "tapping the picture opens the viewer")
+        for dy in [0.55, 0.62, 0.7, 0.48, 0.78, 0.4] where !viewer.exists {
+            card.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: dy)).tap()
+            _ = viewer.waitForExistence(timeout: 2)
+        }
+        XCTAssertTrue(viewer.exists, "tapping the picture opens the viewer")
         shot("23-picture-viewer")
         app.buttons["image-viewer-close"].tap()
         XCTAssertTrue(app.descendants(matching: .any)["grade-good"].waitForExistence(timeout: 5), "card is unchanged")
@@ -320,12 +334,19 @@ final class ScreenTourUITests: XCTestCase {
             field.typeText("7")
         }
         app.buttons["web-done"].tap()
-        let save = app.buttons["Save"]
+        // The page's own Save button also reads "Save"; the prompt's one lives in its action sheet.
+        let save = app.sheets.buttons["Save"].firstMatch
         if save.waitForExistence(timeout: 5) {
             shot("04c-deck-options-save-prompt")
             save.tap()
         }
         XCTAssertTrue(options.waitForExistence(timeout: 15), "the sheet closes after Done / Save")
+        options.tap()
+        XCTAssertTrue(
+            app.descendants(matching: .any)["anki-web-deck-options"].waitForExistence(timeout: 30), "options reopen")
+        let again = app.webViews.textFields.firstMatch
+        XCTAssertTrue(again.waitForExistence(timeout: 15), "the options field shows again")
+        XCTAssertTrue(((again.value as? String) ?? "").contains("7"), "the saved edit persisted")
     }
 
     func testCongratsUndoBringsCardBack() {
@@ -377,6 +398,15 @@ final class ScreenTourUITests: XCTestCase {
         add.tap()
         sleep(2)
         shot("20-add-card")
+        // Auto-pinyin only runs on the Chinese note type; pick it if the collection defaults to another.
+        let typeChip = app.descendants(matching: .any)["editor-notetype-chip"]
+        if typeChip.waitForExistence(timeout: 5), !typeChip.label.contains("Chinese") {
+            typeChip.tap()
+            let chinese = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Chinese'")).firstMatch
+            XCTAssertTrue(chinese.waitForExistence(timeout: 5), "picker lists the Chinese note type")
+            chinese.tap()
+            sleep(1)
+        }
         let field = app.descendants(matching: .any)["editor-field-0"]
         if field.waitForExistence(timeout: 5) {
             field.tap()
@@ -465,7 +495,11 @@ final class ScreenTourUITests: XCTestCase {
         let restored = NSPredicate { _, _ in self.browseCount() == full }
         wait(for: [XCTNSPredicateExpectation(predicate: restored, object: nil)], timeout: 10)
         XCTAssertEqual(browseCount(), full, "clearing the field restores the full count")
-        if app.buttons["Cancel"].exists { app.buttons["Cancel"].tap() }
+        if app.buttons["Cancel"].exists {
+            app.buttons["Cancel"].tap()
+        } else if app.keyboards.buttons["Search"].exists {
+            app.keyboards.buttons["Search"].tap()
+        }
         let back = NSPredicate { _, _ in settings.isHittable }
         wait(for: [XCTNSPredicateExpectation(predicate: back, object: nil)], timeout: 10)
         XCTAssertTrue(settings.isHittable, "tab bar returns after the keyboard closes")

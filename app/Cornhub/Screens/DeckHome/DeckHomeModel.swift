@@ -58,6 +58,9 @@ final class DeckHomeModel {
             if launch.seedSample {
                 try await seedSampleDecks(backend)
                 try await backend.seedSampleNotes(deckNames: DeckHomeModel.sampleDecks)
+                if launch.seedManySubdecks {
+                    for index in 1...12 { _ = try await backend.addDeck(name: "HSK 2::Topic \(index)") }
+                }
                 if launch.seedBuried { try await backend.buryCards(deckName: DeckHomeModel.sampleDecks[0], limit: 2) }
             } else if launch.seedImported {
                 try await seedSampleDecks(backend)

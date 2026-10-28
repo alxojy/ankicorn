@@ -51,6 +51,7 @@ struct AppShell: View {
                 .offset(y: tabBarHidden && !reduceMotion ? Theme.tabBarHeight + Theme.tabBarBottomInset + 40 : 0)
                 .opacity(tabBarHidden ? 0 : 1)
                 .allowsHitTesting(!tabBarHidden)
+                .accessibilityHidden(tabBarHidden)
                 .animation(.spring(duration: 0.3), value: tabBarHidden)
         }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in appState.visibility.keyboardUp = true }

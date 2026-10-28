@@ -21,6 +21,8 @@ struct LaunchOptions: Equatable {
     var dropFixtureImage = false
     /// With the sample seed, bury two cards of the first deck. Tests only.
     var seedBuried = false
+    /// With the sample seed, add twelve empty subdecks under HSK 2 so its overview scrolls. Tests only.
+    var seedManySubdecks = false
 
     init(
         seedSample: Bool = false, resetCollection: Bool = false, showFullSyncChoice: Bool = false, stubLogin: Bool = false,
@@ -48,5 +50,6 @@ struct LaunchOptions: Equatable {
         seedImported = arguments.contains("--seed-imported")
         dropFixtureImage = arguments.contains("--drop-fixture-image")
         seedBuried = arguments.contains("--seed-buried")
+        seedManySubdecks = arguments.contains("--seed-many-subdecks")
     }
 }
