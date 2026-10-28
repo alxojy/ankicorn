@@ -55,7 +55,10 @@ final class SyncModel {
 
     init(stubLogin: Bool = false) {
         self.stubLogin = stubLogin
-        if stubLogin { store.clear() }
+        if stubLogin {
+            store.clear()
+            defaults.removeObject(forKey: Keys.last)
+        }
         username = store.username
         isSignedIn = store.hkey != nil
         lastSynced = defaults.object(forKey: Keys.last) as? Date

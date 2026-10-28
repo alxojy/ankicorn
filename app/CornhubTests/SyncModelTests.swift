@@ -29,6 +29,14 @@ final class FakeSyncEngine: SyncEngine, @unchecked Sendable {
     func latestProgress() throws -> Anki_Collection_Progress { Anki_Collection_Progress() }
 }
 
+/// Set from `withObservationTracking`'s Sendable onChange.
+final class Flag: @unchecked Sendable {
+    private let lock = NSLock()
+    private var flag = false
+    var value: Bool { lock.withLock { flag } }
+    func set() { lock.withLock { flag = true } }
+}
+
 @MainActor
 final class SyncModelTests: XCTestCase {
     /// A signed-in model that has just been told a full transfer is needed.
@@ -121,21 +129,21 @@ final class SyncModelTests: XCTestCase {
     func testSignInStateNotifiesObservers() async throws {
         AccountStore().clear()
         defer { AccountStore().clear() }
-        let model = SyncModel(stubLogin: true)
+        let model = SyncModel(stubLogin: true)  // also clears the saved last-sync time
         XCTAssertFalse(model.isSignedIn)
         XCTAssertEqual(model.statusText, "Not signed in")
 
-        var signedInChanged = false
-        withObservationTracking { _ = model.isSignedIn; _ = model.statusText } onChange: { signedInChanged = true }
+        let signedInChanged = Flag()
+        withObservationTracking { _ = model.isSignedIn; _ = model.statusText } onChange: { signedInChanged.set() }
         try await model.login(backend: try Backend(), username: "testuser", password: "x")
-        XCTAssertTrue(signedInChanged, "login notifies observers of isSignedIn and statusText")
+        XCTAssertTrue(signedInChanged.value, "login notifies observers of isSignedIn and statusText")
         XCTAssertTrue(model.isSignedIn)
         XCTAssertEqual(model.statusText, "Not synced yet")
 
-        var signedOutChanged = false
-        withObservationTracking { _ = model.isSignedIn; _ = model.statusText } onChange: { signedOutChanged = true }
+        let signedOutChanged = Flag()
+        withObservationTracking { _ = model.isSignedIn; _ = model.statusText } onChange: { signedOutChanged.set() }
         model.logout()
-        XCTAssertTrue(signedOutChanged, "logout notifies observers")
+        XCTAssertTrue(signedOutChanged.value, "logout notifies observers")
         XCTAssertFalse(model.isSignedIn)
     }
 }
