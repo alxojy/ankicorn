@@ -14,6 +14,7 @@ struct FloatingTabBar: View {
                     VStack(spacing: 2) {
                         Image(systemName: tab.symbol)
                             .font(.title3)
+                            .frame(height: 28)
                         Text(tab.title)
                             .font(.caption2.weight(selected ? .semibold : .medium))
                             .lineLimit(1)
