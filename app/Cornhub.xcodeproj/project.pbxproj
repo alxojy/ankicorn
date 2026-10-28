@@ -59,10 +59,12 @@
 		720CFCEF3309798AA532C628 /* LaunchOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0089ECA89C3A87E17E5E8E1 /* LaunchOptions.swift */; };
 		77F56A9A749F66849ED494C4 /* CongratsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A383C1B52B40F46B4BDB873B /* CongratsScreen.swift */; };
 		788CD9B30840C5C8F03DBC04 /* anki_image_occlusion.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6D628608AFCFA63CBF61E5A /* anki_image_occlusion.pb.swift */; };
+		7AA8C108BD511C14A641EF25 /* Pinyin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92DA9B6C00025F9E8FC7A7BD /* Pinyin.swift */; };
 		7C8EDF24EE0A7177E9CDE9B3 /* ExplanationCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAB116638455D7A62B1A481D /* ExplanationCache.swift */; };
 		7D2769DED681ABF8E55633B8 /* ReviewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23A467C14E77ED5C9B569CA7 /* ReviewModel.swift */; };
 		7D87A4E7210E19AB5B79E286 /* CustomStudySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42EF404E6DB6C5BBBFCE7FC2 /* CustomStudySheet.swift */; };
 		7F898A4FF6CD3C11267249A3 /* AppShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1FCFDC0A388DFA27A5739E2 /* AppShell.swift */; };
+		8345538C497CBA60878A7C2F /* PinyinTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E99F77DEDF9FBAB1C831DE4 /* PinyinTests.swift */; };
 		864331708DBCCD952857D94A /* anki_import_export.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0267591B68056B5388CDCB39 /* anki_import_export.pb.swift */; };
 		87C3047317CE0827434D769A /* DeckTileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95DC6AD44718C614BF888AE9 /* DeckTileView.swift */; };
 		8B713F888F9A1830D18442A1 /* ClaudeKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EB0223318734756CF60109E /* ClaudeKeychain.swift */; };
@@ -185,6 +187,7 @@
 		4AAAB40A05DFF033871A81AF /* ToolsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolsScreen.swift; sourceTree = "<group>"; };
 		4B6D1300E695557297337EBA /* anki_i18n.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = anki_i18n.pb.swift; sourceTree = "<group>"; };
 		4E02EFEC706049C10E1C1BD2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		4E99F77DEDF9FBAB1C831DE4 /* PinyinTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinyinTests.swift; sourceTree = "<group>"; };
 		51624CE28D64FC390D62E829 /* ReviewTarget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewTarget.swift; sourceTree = "<group>"; };
 		5426EF6D5DFAB26CAD876455 /* PlaceholderScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceholderScreen.swift; sourceTree = "<group>"; };
 		57C8DA191A977DC9018BA6FE /* AccountStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountStore.swift; sourceTree = "<group>"; };
@@ -224,6 +227,7 @@
 		8D57FB31D1B83AEF3EA9BE0C /* ImportSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportSheet.swift; sourceTree = "<group>"; };
 		8F8BC41D28CABFDA69F780A1 /* DeckHomeModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckHomeModelTests.swift; sourceTree = "<group>"; };
 		90A435CF2D3C7A381AA0A1CA /* DeckOverviewScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckOverviewScreen.swift; sourceTree = "<group>"; };
+		92DA9B6C00025F9E8FC7A7BD /* Pinyin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pinyin.swift; sourceTree = "<group>"; };
 		92DDBCEB3CCF4A8C711BA4E5 /* anki_github.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = anki_github.pb.swift; sourceTree = "<group>"; };
 		956284626F44EF7FBEC50FC2 /* LoginSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginSheet.swift; sourceTree = "<group>"; };
 		95DC6AD44718C614BF888AE9 /* DeckTileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckTileView.swift; sourceTree = "<group>"; };
@@ -346,6 +350,7 @@
 				BAB116638455D7A62B1A481D /* ExplanationCache.swift */,
 				1D318DFB0F3B401B72709B2D /* ExtrasModel.swift */,
 				DB13B46EA27C44DA0EB1E25F /* ExtrasPanel.swift */,
+				92DA9B6C00025F9E8FC7A7BD /* Pinyin.swift */,
 				A390E5B118ED80ABB809F7CD /* SpeechAndAISection.swift */,
 				63797BF5E281AB857501E360 /* SpeechSettings.swift */,
 				C6C0C2CFC8B165559447D0AC /* StrokeOrderView.swift */,
@@ -604,6 +609,7 @@
 				7FFB421172750110C6C06DCF /* FieldHTMLTests.swift */,
 				A31C0AF21B4465F9B466EED3 /* FontTests.swift */,
 				226E22F58EA430493F064D54 /* ImportedMediaTests.swift */,
+				4E99F77DEDF9FBAB1C831DE4 /* PinyinTests.swift */,
 				45682C7D3642E127D1836490 /* ProtobufTests.swift */,
 				B24E62803C0C84A7CBA3836B /* SpeechTargetTests.swift */,
 				BF6A05C02CE6D4432F912531 /* StudyStreakTests.swift */,
@@ -759,6 +765,7 @@
 				9C627A7CC4E13A73A9A8DD8D /* FieldHTMLTests.swift in Sources */,
 				2B9B75EA6937160A9A188F51 /* FontTests.swift in Sources */,
 				D782247F720AB71CBE9DABCB /* ImportedMediaTests.swift in Sources */,
+				8345538C497CBA60878A7C2F /* PinyinTests.swift in Sources */,
 				CBDD637589D23F8F4B6B8F03 /* ProtobufTests.swift in Sources */,
 				D3E725D5A5D8CD543B878A58 /* SpeechTargetTests.swift in Sources */,
 				F3FAB948F046D02B9F4B1C16 /* StudyStreakTests.swift in Sources */,
@@ -831,6 +838,7 @@
 				A87B828AD85C5E1BE49BC00D /* NoteEditorModel.swift in Sources */,
 				C1E0253DC66AA9A51139A26E /* NoteEditorScreen.swift in Sources */,
 				D772D2591A20E1094A348A4B /* NotetypesScreen.swift in Sources */,
+				7AA8C108BD511C14A641EF25 /* Pinyin.swift in Sources */,
 				0C25164688496B7B8881BD59 /* PlaceholderScreen.swift in Sources */,
 				7D2769DED681ABF8E55633B8 /* ReviewModel.swift in Sources */,
 				DBEC35D0E8FE3E1B17719804 /* ReviewScreen.swift in Sources */,

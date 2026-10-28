@@ -16,7 +16,9 @@ final class NoteEditorModel {
     var deckID: Int64 = 0
     private(set) var notetypeID: Int64 = 0
     private(set) var fieldNames: [String] = []
-    var fields: [String] = []
+    var fields: [String] = [] {
+        didSet { if fields != oldValue { scheduleAutoFill() } }
+    }
     var tags: [String] = []
     var knownTags: [String] = []
     /// Field indices that keep their value after adding, per note type.
@@ -26,6 +28,13 @@ final class NoteEditorModel {
     /// Bumped after each successful add, for haptics.
     private(set) var addedCount = 0
     private(set) var isAutoFilling = false
+    /// Last value the app wrote into each field; a field still holding it (or empty) may be refilled.
+    private(set) var autoValues: [Int: String] = [:]
+    /// Hanzi text waiting for the Translation framework, and a counter the screen watches to start a request.
+    private(set) var translationSource: String?
+    private(set) var translationRequest = 0
+    private var autoFillTask: Task<Void, Never>?
+    private var lastSources: [Int: String] = [:]
 
     init(backend: Backend, mode: Mode) {
         self.backend = backend
@@ -36,6 +45,79 @@ final class NoteEditorModel {
     var deckName: String { decks.first { $0.id == deckID }?.name ?? "Deck" }
     var notetypeName: String { notetypes.first { $0.id == notetypeID }?.name ?? "Note type" }
     var isChinese: Bool { notetypeName == ChineseNotetype.name }
+    private func fieldIndex(_ name: String) -> Int? {
+        fieldNames.firstIndex { $0.caseInsensitiveCompare(name) == .orderedSame }
+    }
+
+    /// Add card on a note type with Hanzi, Pinyin and English fields (the bundled Chinese type or a lookalike).
+    var autoFillsPinyin: Bool {
+        !isEditing && fieldIndex("Hanzi") != nil && fieldIndex("Pinyin") != nil && fieldIndex("English") != nil
+    }
+
+    func isAutoFilled(_ index: Int) -> Bool {
+        guard let value = autoValues[index], fields.indices.contains(index) else { return false }
+        return !value.isEmpty && fields[index] == value
+    }
+
+    private func scheduleAutoFill() {
+        guard autoFillsPinyin, isLoaded || !fields.isEmpty else { return }
+        autoFillTask?.cancel()
+        autoFillTask = Task {
+            try? await Task.sleep(for: .milliseconds(300))
+            guard !Task.isCancelled else { return }
+            applyAutoFill()
+        }
+    }
+
+    /// Sets `index` to `value` unless the user has typed their own text there.
+    private func setAuto(_ index: Int, _ value: String) {
+        guard fields.indices.contains(index) else { return }
+        let owned = fields[index].isEmpty || fields[index] == autoValues[index]
+        guard owned else { return }
+        if value.isEmpty { autoValues[index] = nil } else { autoValues[index] = value }
+        if fields[index] != value { fields[index] = value }
+    }
+
+    /// Fills Pinyin (and Example pinyin) now, then asks for English. Skips sources that did not change.
+    func applyAutoFill() {
+        guard autoFillsPinyin, let hanzi = fieldIndex("Hanzi"), let pinyin = fieldIndex("Pinyin"),
+            let english = fieldIndex("English")
+        else { return }
+        let source = CardText.plain(fields[hanzi])
+        if lastSources[hanzi] != source {
+            lastSources[hanzi] = source
+            setAuto(pinyin, Pinyin.from(source))
+            if source.isEmpty {
+                setAuto(english, "")
+                translationSource = nil
+            } else if fields[english].isEmpty || fields[english] == autoValues[english] {
+                translationSource = source
+                translationRequest += 1
+            }
+        }
+        if let example = fieldIndex("Example"), let examplePinyin = fieldIndex("Example pinyin") {
+            let text = CardText.plain(fields[example])
+            if lastSources[example] != text {
+                lastSources[example] = text
+                setAuto(examplePinyin, Pinyin.from(text))
+            }
+        }
+    }
+
+    /// Called by the screen with Translation's result, or nil when it is unavailable; falls back to `TextGenerator`.
+    func finishTranslation(source: String, result: String?) async {
+        var english = result?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if english.isEmpty, TextGenerator.isAvailable {
+            english = ((try? await TextGenerator.generate(
+                instructions: "You give the English meaning of a Chinese word in 1 to 4 words. Reply with only those words.",
+                prompt: source)) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        guard !english.isEmpty, let hanzi = fieldIndex("Hanzi"), let target = fieldIndex("English"),
+            CardText.plain(fields[hanzi]) == source
+        else { return }
+        setAuto(target, english)
+    }
+
     /// Adding needs some text in the first field, as the engine requires.
     var canSubmit: Bool { !(fields.first ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
 
@@ -68,6 +150,8 @@ final class NoteEditorModel {
         let keep = sticky[notetypeID] ?? []
         fieldNames = try await backend.fieldNames(notetypeID: id)
         notetypeID = id
+        autoValues = [:]
+        lastSources = [:]
         fields = fieldNames.indices.map { keep.contains($0) && $0 < old.count ? old[$0] : "" }
     }
 
@@ -98,6 +182,8 @@ final class NoteEditorModel {
             try await backend.addNote(notetypeID: notetypeID, deckID: deckID, fields: fields, tags: tags)
             let keep = sticky[notetypeID] ?? []
             for index in fields.indices where !keep.contains(index) { fields[index] = "" }
+            autoValues = [:]
+            lastSources = [:]
             addedCount += 1
             return true
         } catch {

@@ -1,8 +1,8 @@
 ## 1. Auto-fill as you type
-- [ ] 1.1 A pinyin helper turns hanzi (with markup stripped) into tone-marked pinyin on the device; Pinyin fills from Hanzi and Example pinyin from Example
-- [ ] 1.2 English fills from the hanzi through on-device Translation, falling back to TextGenerator, and stays empty and quiet when neither is available
-- [ ] 1.3 A field the user has edited is never overwritten; clearing the hanzi clears the values it produced; auto values show an "auto" marker
-- [ ] 1.4 Only Chinese-style note types on Add card; Edit note doesn't auto-fill
+- [x] 1.1 A pinyin helper turns hanzi (with markup stripped) into tone-marked pinyin on the device; Pinyin fills from Hanzi and Example pinyin from Example
+- [x] 1.2 English fills from the hanzi through on-device Translation, falling back to TextGenerator, and stays empty and quiet when neither is available
+- [x] 1.3 A field the user has edited is never overwritten; clearing the hanzi clears the values it produced; auto values show an "auto" marker
+- [x] 1.4 Only Chinese-style note types on Add card; Edit note doesn't auto-fill
 
 ## 2. Proof
 - [ ] 2.1 Unit tests: `Pinyin.from("你好")` == "nǐ hǎo"; markup is stripped; the model doesn't overwrite an edited Pinyin; clearing the hanzi clears the auto values
