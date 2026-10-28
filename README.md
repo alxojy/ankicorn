@@ -72,4 +72,4 @@ cargo test -p rslib-bridge -j2                    # bridge tests; always -j2 on 
 
 ## License
 
-Anki is AGPL-3.0-or-later, and this project builds on it, so it is AGPL-3.0-or-later too if it is ever distributed. Anki is a trademark of its owners; Cornhub is an independent project and is not affiliated with Anki or AnkiWeb.
+Anki is AGPL-3.0-or-later, and this project builds on it, so it is AGPL-3.0-or-later too: see [LICENSE](LICENSE). The Anki engine under `third_party/anki` keeps its own [LICENSE](third_party/anki/LICENSE), including the parts it lists under other licenses. Anki is a trademark of its owners; Cornhub is an independent project and is not affiliated with Anki or AnkiWeb.
