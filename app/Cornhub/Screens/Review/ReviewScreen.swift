@@ -150,7 +150,8 @@ struct ReviewScreen: View {
                         Button("Edit note", systemImage: "pencil") {
                             Task { editingNote = await model.loadNote() }
                         }
-                        if let css = model.rendered?.css, NotetypeStyle.setsOwnBackground(css: css) {
+                        if let css = model.rendered?.css, NotetypeStyle.setsOwnBackground(css: css),
+                           CardColours.current == .note {
                             Button("Restyle this note type…", systemImage: "paintbrush") {
                                 Task {
                                     if let note = await model.loadNote() { restylingNotetype = RestyleTarget(id: note.notetypeID) }

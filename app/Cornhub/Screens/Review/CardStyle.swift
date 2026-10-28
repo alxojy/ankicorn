@@ -9,6 +9,8 @@ enum CardStyle: Equatable {
     /// The note sets an opaque dark background; the Ink light text reads fine on it.
     case dark(background: String)
 
+    var isLight: Bool { if case .light = self { return true } else { return false } }
+
     private static let blockPattern = try? NSRegularExpression(
         pattern: #"([^{}]+)\{([^}]*)\}"#, options: [])
     private static let backgroundPattern = try? NSRegularExpression(
@@ -94,5 +96,18 @@ enum CardStyle: Equatable {
             return RGB(red: Int(numbers[0]), green: Int(numbers[1]), blue: Int(numbers[2]))
         }
         return nil
+    }
+}
+
+/// Whether a note type with a light `.card` background shows on the Ink card (`app`) or as its own CSS says (`note`).
+enum CardColours: String, CaseIterable, Identifiable {
+    case app, note
+    static let defaultsKey = "cardColours"
+    var id: String { rawValue }
+    var label: String { self == .app ? "App (dark)" : "Note type's own" }
+
+    static var current: CardColours {
+        get { UserDefaults.standard.string(forKey: defaultsKey).flatMap(CardColours.init) ?? .app }
+        set { UserDefaults.standard.set(newValue.rawValue, forKey: defaultsKey) }
     }
 }

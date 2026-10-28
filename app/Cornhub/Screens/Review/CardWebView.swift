@@ -61,11 +61,12 @@ struct CardWebView: UIViewRepresentable {
         }
     }
 
-    static func document(body: String, css: String) -> String {
+    static func document(body: String, css: String, colours: CardColours = .current) -> String {
         let style = CardStyle.decide(css: css)
+        let inverts = colours == .app && style.isLight
         return """
             <!doctype html><html class="night_mode"><head><meta name="viewport" content="width=device-width, initial-scale=1">
-            <style>\(fontAliases)\n\(baseCSS(style))\n\(css)</style><style>\(imageCSS)</style>\(missingImageScript)\(mathScript)</head>
+            <style>\(fontAliases)\n\(baseCSS(style, colours: colours))\n\(css)</style><style>\(imageCSS)</style>\(inverts ? "<style>\(reinvertMediaCSS)</style>" : "")\(missingImageScript)\(inverts ? contrastScript : "")\(mathScript)</head>
             <body class="nightMode night_mode"><div class="card nightMode night_mode">\(body)</div></body></html>
             """
     }
@@ -128,7 +129,8 @@ struct CardWebView: UIViewRepresentable {
 
     /// Ink look for card bodies; colours are resolved from the theme tokens. A note type with an opaque light
     /// `.card` background and no text colour gets dark text (desktop's light default) on its own background.
-    static func baseCSS(_ style: CardStyle = .ink) -> String {
+    static func baseCSS(_ style: CardStyle = .ink, colours: CardColours = .note) -> String {
+        if colours == .app, case .light = style { return invertedLightCSS }
         var text = hex(Theme.text)
         var strong = hex(Theme.accent)
         var box = ""
@@ -155,6 +157,60 @@ struct CardWebView: UIViewRepresentable {
             .typeMissed { color: \(hex(Theme.muted)); } code#typeans { font-size: 20px; }
             #typeans { font-family: monospace; }
             img { max-width: 100%; border-radius: 20px; }
+            """
+    }
+
+    /// App colours for a light card: Ink card colour behind the content, the content inverted with hues kept.
+    /// The note's own `.card` background is inverted with the rest, so it is made transparent first.
+    static var invertedLightCSS: String {
+        """
+        html, body { margin: 0; background: \(hex(Theme.card)); }
+        body { color: #222222; font: -apple-system-body; font-size: 20px; text-align: center;
+               display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+        .card { width: 100%; padding: 8px; box-sizing: border-box; color: #222222; min-height: 100vh;
+                overflow-wrap: anywhere; background: transparent !important;
+                filter: invert(1) hue-rotate(180deg); }
+        hr { border: 0; border-top: 1px solid \(hex(Theme.muted)); opacity: 0.4; margin: 16px 0; }
+        .typeGood { color: \(hex(Theme.accent)); } .typeBad { color: \(hex(Theme.again)); }
+        .typeMissed { color: \(hex(Theme.muted)); } code#typeans { font-size: 20px; }
+        #typeans { font-family: monospace; }
+        """
+    }
+
+    /// Pictures and other media are inverted back, so they show their real colours inside the inverted card.
+    static let reinvertMediaCSS = """
+        img, video, canvas, svg image, [style*="background-image"] { filter: invert(1) hue-rotate(180deg); }
+        """
+
+    /// WCAG AA floor for text colour after inversion: raises the lightness of any text darker than 4.5:1
+    /// against the Ink card colour. Applies the same invert + hue-rotate(180deg) the filter does.
+    static var contrastScript: String {
+        let card = hex(Theme.card)
+        return """
+            <script>window.addEventListener('load', function () {
+              var bg = '\(card)';
+              function lum(c) { return c.map(function (v) { v /= 255;
+                return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); })
+                .reduce(function (a, v, i) { return a + v * [0.2126, 0.7152, 0.0722][i]; }, 0); }
+              function ratio(a, b) { var x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
+              function shown(c) { var r = 255 - c[0], g = 255 - c[1], b = 255 - c[2], k = Math.PI;
+                var cs = Math.cos(k), sn = Math.sin(k);
+                var m = [[0.213 + cs * 0.787 - sn * 0.213, 0.715 - cs * 0.715 - sn * 0.715, 0.072 - cs * 0.072 + sn * 0.928],
+                         [0.213 - cs * 0.213 + sn * 0.143, 0.715 + cs * 0.285 + sn * 0.140, 0.072 - cs * 0.072 - sn * 0.283],
+                         [0.213 - cs * 0.213 - sn * 0.787, 0.715 - cs * 0.715 + sn * 0.715, 0.072 + cs * 0.928 + sn * 0.072]];
+                return m.map(function (row) { return Math.max(0, Math.min(255, row[0] * r + row[1] * g + row[2] * b)); }); }
+              var back = [parseInt(bg.slice(1, 3), 16), parseInt(bg.slice(3, 5), 16), parseInt(bg.slice(5, 7), 16)];
+              document.querySelectorAll('.card *').forEach(function (el) {
+                if (!el.textContent.trim()) { return; }
+                var m = getComputedStyle(el).color.match(/\\d+(\\.\\d+)?/g);
+                if (!m) { return; }
+                var c = m.slice(0, 3).map(Number), t = 0;
+                while (ratio(shown(c), back) < 4.5 && t++ < 40) {
+                  c = c.map(function (v) { return Math.max(0, v - 6); });
+                }
+                el.style.setProperty('color', 'rgb(' + c.map(Math.round).join(',') + ')', 'important');
+              });
+            });</script>
             """
     }
 

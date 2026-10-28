@@ -63,3 +63,31 @@ final class CardImageSizeTests: XCTestCase {
         XCTAssertNil(ZoomedImage(url: URL(string: "cornhub://media/missing-picture.jpg")!).uiImage)
     }
 }
+
+final class CardColoursTests: XCTestCase {
+    private let cream = ".card { background-color: #fdf6e3; }"
+
+    func testAppModeInvertsLightCardAndReinvertsMedia() {
+        let html = CardWebView.document(body: "<img src=\"a.jpg\">", css: cream, colours: .app)
+        XCTAssertTrue(html.contains("filter: invert(1) hue-rotate(180deg)"))
+        XCTAssertTrue(html.contains("img, video, canvas, svg image, [style*=\"background-image\"]"))
+        XCTAssertTrue(html.contains("background: \(CardWebView.hex(Theme.card))"))
+        XCTAssertTrue(html.contains("4.5"), "contrast floor script is present")
+    }
+
+    func testNoteModeKeepsLightRendering() {
+        let html = CardWebView.document(body: "x", css: cream, colours: .note)
+        XCTAssertFalse(html.contains("invert(1)"))
+        XCTAssertTrue(html.contains("color: #222222"))
+    }
+
+    func testInkAndDarkUnchangedInBothModes() {
+        for css in ["", ".card { background: #111111; }"] {
+            for mode in CardColours.allCases {
+                XCTAssertFalse(CardWebView.document(body: "x", css: css, colours: mode).contains("invert(1)"))
+            }
+            XCTAssertEqual(CardWebView.document(body: "x", css: css, colours: .app),
+                           CardWebView.document(body: "x", css: css, colours: .note))
+        }
+    }
+}

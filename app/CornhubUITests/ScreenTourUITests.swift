@@ -263,9 +263,26 @@ final class ScreenTourUITests: XCTestCase {
         XCTAssertFalse(app.descendants(matching: .any)["grade-good"].exists, "answered: back on a question")
     }
 
+    /// Card colours: App shows the cream fixture card dark; Note type's own keeps it cream.
+    func testCardColoursAppAndNoteTypesOwn() {
+        for (mode, name) in [("app", "26-card-colours-app"), ("note", "26-card-colours-note")] {
+            app.launchArguments = ["--seed-imported", "--reset-collection", "-cardColours", mode]
+            app.launch()
+            app.buttons["Start review"].firstMatch.tap()
+            XCTAssertTrue(app.descendants(matching: .any)["review-card"].waitForExistence(timeout: 15), "review card shows")
+            sleep(3)
+            shot(name)
+            XCTAssertEqual(app.buttons["Restyle this note type…"].exists, false)
+            app.buttons["More"].tap()
+            XCTAssertEqual(app.buttons["Restyle this note type…"].waitForExistence(timeout: 2), mode == "note",
+                           "the restyle entry is only pushed in Note type's own mode")
+            app.terminate()
+        }
+    }
+
     /// Review ⋯ › Restyle this note type…, preview, apply: the card turns into the Ink card.
     func testRestyleNotetypeFromReviewMenu() {
-        app.launchArguments = ["--seed-imported", "--reset-collection"]
+        app.launchArguments = ["--seed-imported", "--reset-collection", "-cardColours", "note"]
         app.launch()
         app.buttons["Start review"].firstMatch.tap()
         let card = app.descendants(matching: .any)["review-card"]
