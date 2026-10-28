@@ -157,6 +157,55 @@ final class ScreenTourUITests: XCTestCase {
         reviewImportedCards(arguments: [], prefix: "20-imported", imageMissing: false)
     }
 
+    /// Opens the first imported card's answer (sentence plus picture) and checks the picture's size.
+    func testCardPictureIsStandardSizeAndOpensFullScreen() {
+        app.launchArguments = ["--seed-imported", "--reset-collection"]
+        app.launch()
+        let start = app.buttons["Start review"].firstMatch
+        XCTAssertTrue(start.waitForExistence(timeout: 30), "Start review exists")
+        start.tap()
+        let card = app.descendants(matching: .any)["review-card"]
+        XCTAssertTrue(card.waitForExistence(timeout: 15), "review card shows")
+        sleep(3)
+        card.tap()
+        sleep(3)
+        let cardFrame = card.frame
+        // Light fixture first, then the dark one (its CSS sets img { width: 100%; height: 600px }).
+        for round in 0..<2 {
+            let picture = app.images.firstMatch
+            if picture.exists {
+                XCTAssertLessThanOrEqual(picture.frame.height, 220.5, "picture is at most the cap (round \(round))")
+                XCTAssertLessThanOrEqual(picture.frame.maxY, cardFrame.maxY, "picture bottom is inside the card")
+            }
+            shot("22-picture-size-\(round)")
+            if round == 0 {
+                app.descendants(matching: .any)["grade-good"].tap()
+                sleep(3)
+                card.tap()
+                sleep(3)
+            }
+        }
+    }
+
+    func testTappingCardPictureShowsViewerAndCloseKeepsCard() {
+        app.launchArguments = ["--seed-imported", "--reset-collection"]
+        app.launch()
+        app.buttons["Start review"].firstMatch.tap()
+        let card = app.descendants(matching: .any)["review-card"]
+        XCTAssertTrue(card.waitForExistence(timeout: 15), "review card shows")
+        sleep(3)
+        card.tap()
+        sleep(3)
+        // The picture sits in the lower part of the answer; tap there.
+        card.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.85)).tap()
+        let viewer = app.descendants(matching: .any)["image-viewer"]
+        XCTAssertTrue(viewer.waitForExistence(timeout: 5), "tapping the picture opens the viewer")
+        shot("23-picture-viewer")
+        app.buttons["image-viewer-close"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)["grade-good"].waitForExistence(timeout: 5), "card is unchanged")
+        XCTAssertFalse(viewer.exists, "viewer closed")
+    }
+
     func testImportedDeckCardsShowPlaceholderForMissingImage() {
         reviewImportedCards(arguments: ["--drop-fixture-image"], prefix: "21-imported-no-image", imageMissing: true)
     }

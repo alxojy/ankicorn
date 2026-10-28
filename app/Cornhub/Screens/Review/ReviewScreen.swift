@@ -12,6 +12,8 @@ struct ReviewScreen: View {
     @State private var editingNote: Anki_Notes_Note?
     @State private var infoPage: AnkiWebPage?
     @State private var extras = ExtrasModel()
+    @State private var probe = CardImageProbe()
+    @State private var zoomedImage: ZoomedImage?
 
     private static let threshold: CGFloat = 110
     private static let flagNames = ["Red", "Orange", "Green", "Blue", "Pink", "Turquoise", "Purple"]
@@ -80,6 +82,9 @@ struct ReviewScreen: View {
             }
         }
         .sensoryFeedback(.impact, trigger: pastThreshold)
+        .fullScreenCover(item: $zoomedImage) { image in
+            ImageViewer(image: image)
+        }
         .fullScreenCover(item: Binding(get: { editingNote.map(IdentifiedNote.init) }, set: { editingNote = $0?.note })) { item in
             NoteEditorScreen(backend: model.backend, mode: .edit(item.note)) { saved in
                 Task { await model.save(note: saved) }
@@ -166,7 +171,7 @@ struct ReviewScreen: View {
         return ZStack {
             RoundedRectangle(cornerRadius: Theme.Radius.reviewCard).fill(Theme.card)
             CardWebView(
-                html: model.revealed ? model.answerHTML : model.questionHTML, css: model.rendered?.css ?? "")
+                html: model.revealed ? model.answerHTML : model.questionHTML, css: model.rendered?.css ?? "", probe: probe)
                 .padding(16)
             if !model.currentItems.isEmpty {
                 Button { model.replay() } label: {
@@ -205,7 +210,17 @@ struct ReviewScreen: View {
         .offset(x: drag)
         .rotationEffect(.degrees(Double(drag) / 20))
         .contentShape(Rectangle())
-        .onTapGesture { withAnimation(.snappy) { model.reveal() } }
+        .onTapGesture { location in
+            Task {
+                // The card padding (16) sits between this view and the web view.
+                if let source = await probe.imageSource(at: CGPoint(x: location.x - 16, y: location.y - 16)),
+                    let url = URL(string: source) {
+                    zoomedImage = ZoomedImage(url: url)
+                } else {
+                    withAnimation(.snappy) { model.reveal() }
+                }
+            }
+        }
         .gesture(swipe)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(model.revealed ? "Answer side. Double tap a grade below." : "Question. Double tap to show answer.")

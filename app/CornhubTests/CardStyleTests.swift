@@ -42,3 +42,23 @@ final class CardStyleTests: XCTestCase {
         XCTAssertTrue(html.contains("Image missing"))
     }
 }
+
+final class CardImageSizeTests: XCTestCase {
+    func testImageRuleComesAfterNoteCSSAndCapsHeight() {
+        let document = CardWebView.document(body: "<img src=\"a.jpg\">", css: "img { height: 600px; }")
+        let note = document.range(of: "img { height: 600px; }")!, rule = document.range(of: CardWebView.imageCSS)!
+        XCTAssertLessThan(note.lowerBound, rule.lowerBound, "the standard size is injected after the note's CSS")
+        XCTAssertTrue(CardWebView.imageCSS.contains("max-height: min(220px, 33vh) !important"))
+        XCTAssertTrue(CardWebView.imageCSS.contains("object-fit: contain"))
+    }
+
+    func testAppAssetsAreExcludedFromTheRule() {
+        XCTAssertTrue(CardWebView.imageCSS.contains("img:not([src^=\"cornhub://app/\"])"))
+    }
+
+    func testZoomedImageResolvesMediaURL() throws {
+        let url = URL(string: "cornhub://media/\(ImportedFixtures.imageFile)")!
+        XCTAssertEqual(MediaSchemeHandler.fileURL(for: url)?.lastPathComponent, ImportedFixtures.imageFile)
+        XCTAssertNil(ZoomedImage(url: URL(string: "cornhub://media/missing-picture.jpg")!).uiImage)
+    }
+}

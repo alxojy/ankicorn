@@ -66,6 +66,7 @@
 		7F898A4FF6CD3C11267249A3 /* AppShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1FCFDC0A388DFA27A5739E2 /* AppShell.swift */; };
 		8345538C497CBA60878A7C2F /* PinyinTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E99F77DEDF9FBAB1C831DE4 /* PinyinTests.swift */; };
 		864331708DBCCD952857D94A /* anki_import_export.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0267591B68056B5388CDCB39 /* anki_import_export.pb.swift */; };
+		87027E40A17DC0889E8B4A48 /* ImageViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26223AAC3F1F0AD527272866 /* ImageViewer.swift */; };
 		87C3047317CE0827434D769A /* DeckTileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95DC6AD44718C614BF888AE9 /* DeckTileView.swift */; };
 		8B713F888F9A1830D18442A1 /* ClaudeKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EB0223318734756CF60109E /* ClaudeKeychain.swift */; };
 		8CAE1AE6F7F89388D046B28E /* SettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0265733D038EF95004AF1F /* SettingsScreen.swift */; };
@@ -176,6 +177,7 @@
 		2378BE059E6667C9F82401C0 /* CornhubUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = CornhubUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		239981CED4D38CCB2B60F7CA /* NotetypesScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotetypesScreen.swift; sourceTree = "<group>"; };
 		23A467C14E77ED5C9B569CA7 /* ReviewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewModel.swift; sourceTree = "<group>"; };
+		26223AAC3F1F0AD527272866 /* ImageViewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageViewer.swift; sourceTree = "<group>"; };
 		2923CE460854517B7E06AA88 /* TabBarVisibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBarVisibility.swift; sourceTree = "<group>"; };
 		2CE83DD044631565F8AD7DE9 /* anki_deck_config.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = anki_deck_config.pb.swift; sourceTree = "<group>"; };
 		2F7B967CCB872A03FD6950E1 /* FieldHTML.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldHTML.swift; sourceTree = "<group>"; };
@@ -580,6 +582,7 @@
 				60940FF0744F87C35072E76A /* CardStyle.swift */,
 				20E5B00FA332B65105E42797 /* CardWebView.swift */,
 				A383C1B52B40F46B4BDB873B /* CongratsScreen.swift */,
+				26223AAC3F1F0AD527272866 /* ImageViewer.swift */,
 				6B69C768730F7EF195149CD7 /* MediaScheme.swift */,
 				23A467C14E77ED5C9B569CA7 /* ReviewModel.swift */,
 				D46CC9EB1A6A9D9AAF6ED5B1 /* ReviewScreen.swift */,
@@ -838,6 +841,7 @@
 				91FF647F2E1E932D71B83794 /* FindReplaceSheet.swift in Sources */,
 				24F2D8A18C3C73C94F0E3C66 /* FloatingTabBar.swift in Sources */,
 				6685A7B0FC3B5AF62EFDD3A2 /* FontRegistration.swift in Sources */,
+				87027E40A17DC0889E8B4A48 /* ImageViewer.swift in Sources */,
 				066634D9CEC5682518ECC9A9 /* ImportExportScreen.swift in Sources */,
 				D323EA5995F0AF070E850C60 /* ImportSheet.swift in Sources */,
 				C56DE5E003ED888939297B39 /* ImportedFixtures.swift in Sources */,

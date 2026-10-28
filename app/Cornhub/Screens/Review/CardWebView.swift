@@ -5,6 +5,8 @@ import WebKit
 struct CardWebView: UIViewRepresentable {
     let html: String
     let css: String
+    /// Lets the card's SwiftUI tap ask which picture, if any, sits under a point.
+    var probe: CardImageProbe?
 
     func makeUIView(context: Context) -> WKWebView {
         let configuration = WKWebViewConfiguration()
@@ -16,10 +18,12 @@ struct CardWebView: UIViewRepresentable {
         view.scrollView.bounces = false
         // Taps and drags belong to the SwiftUI card around it.
         view.isUserInteractionEnabled = false
+        probe?.webView = view
         return view
     }
 
     func updateUIView(_ view: WKWebView, context: Context) {
+        probe?.webView = view
         let document = Self.document(body: html, css: css)
         guard context.coordinator.last != document else { return }
         context.coordinator.last = document
@@ -36,9 +40,23 @@ struct CardWebView: UIViewRepresentable {
         let style = CardStyle.decide(css: css)
         return """
             <!doctype html><html class="night_mode"><head><meta name="viewport" content="width=device-width, initial-scale=1">
-            <style>\(fontAliases)\n\(baseCSS(style))\n\(css)</style>\(missingImageScript)\(mathScript)</head>
+            <style>\(fontAliases)\n\(baseCSS(style))\n\(css)</style><style>\(imageCSS)</style>\(missingImageScript)\(mathScript)</head>
             <body class="nightMode night_mode"><div class="card nightMode night_mode">\(body)</div></body></html>
             """
+    }
+
+    /// One standard picture size, injected after the note type's CSS (and `!important`) so a deck cannot enlarge
+    /// pictures. About a third of the visible card, at most 220 pt; `cornhub://app/` assets are left alone.
+    static let imageMaxHeight = 220
+    static var imageCSS: String {
+        """
+        img:not([src^="cornhub://app/"]) {
+          display: block !important; margin: 8px auto !important;
+          width: auto !important; height: auto !important;
+          max-width: 100% !important; max-height: min(\(imageMaxHeight)px, 33vh) !important;
+          object-fit: contain !important; border-radius: 20px;
+        }
+        """
     }
 
     /// MathJax 3 (bundled) typesets Anki's `\\(..\\)` and `\\[..\\]` math.
@@ -114,5 +132,23 @@ struct CardWebView: UIViewRepresentable {
         var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
         resolved.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
         return String(format: "#%02X%02X%02X", Int(red * 255), Int(green * 255), Int(blue * 255))
+    }
+}
+
+/// Finds the card picture under a point in the card's web view, for tap-to-zoom.
+@MainActor
+final class CardImageProbe {
+    weak var webView: WKWebView?
+
+    /// The `src` of the picture at `point` (web view coordinates), or nil when the tap landed elsewhere.
+    func imageSource(at point: CGPoint) async -> String? {
+        guard let webView else { return nil }
+        let script = """
+            (function () {
+              var e = document.elementFromPoint(\(point.x), \(point.y));
+              return e && e.tagName === 'IMG' && e.src.indexOf('cornhub://app/') !== 0 ? e.src : null;
+            })()
+            """
+        return try? await webView.evaluateJavaScript(script) as? String
     }
 }

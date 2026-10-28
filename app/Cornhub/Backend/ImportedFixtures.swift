@@ -29,6 +29,7 @@ enum ImportedFixtures {
         .card {font-family: arial; font-size: 16px; text-align: center; color: #eeeeee; background-color: #1b2a3a;}
         .hanzi {font-size: 64px;}
         .pinyin {color: #7fd1ae; font-size: 22px;}
+        img {width: 100%; height: 600px;}
         """
 
     static let front = "<div class=\"hanzi\">{{Simplified}}</div><div class=\"pinyin\">{{Pinyin.1}}</div>{{Audio}}"
