@@ -1,6 +1,6 @@
 ## 1. Unbury
 - [ ] 1.1 Confirm whether `unburyDeck` unburies (a test with a buried card) and fix it if not
-- [ ] 1.2 Unbury shows only when the deck has buried cards; afterwards the counts refresh, "Unburied N cards" shows, and errors show
+- [ ] 1.2 Unbury shows only when the deck has buried cards; afterwards the counts refresh, "Unburied N cards" shows, and errors show. With no buried cards the button is gone and Custom study takes the full row width (no empty half)
 
 ## 2. Deck options page
 - [ ] 2.1 Phone layout for the header via injected CSS: margins, equal 44 pt heights, accent Save split button, no overflow, truncating preset name
