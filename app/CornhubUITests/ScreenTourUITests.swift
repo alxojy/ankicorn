@@ -659,6 +659,27 @@ final class ScreenTourUITests: XCTestCase {
         if more.waitForExistence(timeout: 5) { more.tap(); sleep(5); shot("42-more-stats-web") }
     }
 
+    func testStatsRangeChangesEveryCard() {
+        app.launch()
+        tab("Stats")
+        let hero = app.descendants(matching: .any)["stats-hero"].firstMatch
+        XCTAssertTrue(hero.waitForExistence(timeout: 15))
+        let activity = app.descendants(matching: .any)["stats-activity"].firstMatch
+        let forecast = app.descendants(matching: .any)["stats-forecast"].firstMatch
+        for (chip, phrase, activityText, forecastText) in [
+            ("Week", "7 days", "last 7 days", "next 7 days"),
+            ("Month", "30 days", "last 30 days", "next 30 days"),
+            ("Year", "12 months", "last 52 weeks", "next 12 months"),
+        ] {
+            app.buttons[chip].tap()
+            sleep(1)
+            XCTAssertTrue(hero.label.contains(phrase), "\(chip): retention names the range, got \(hero.label)")
+            XCTAssertTrue(activity.label.contains(activityText), "\(chip): activity title, got \(activity.label)")
+            XCTAssertTrue(forecast.label.contains(forecastText), "\(chip): forecast title, got \(forecast.label)")
+            shot("44-stats-\(chip.lowercased())")
+        }
+    }
+
     func testStatsSubdeckHeaderFitsScreen() {
         app.launch()
         tab("Stats")

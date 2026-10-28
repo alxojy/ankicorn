@@ -1,5 +1,6 @@
 import Charts
 import SwiftUI
+import UIKit
 
 /// Stats tab: native charts from the engine's `graphs` method; Anki's own page is one tap away as "More stats".
 struct StatsScreen: View {
@@ -44,9 +45,13 @@ private struct StatsContent: View {
                                 .frame(minHeight: Theme.minTarget)
                         }
                     case .ready:
-                        hero
-                        heatmap
-                        forecast
+                        Group {
+                            hero
+                            activity
+                            forecast
+                        }
+                        .id(model.range)
+                        .transition(.opacity)
                     }
                     moreStats
                 }
@@ -111,7 +116,10 @@ private struct StatsContent: View {
         HStack(spacing: 8) {
             ForEach(StatsRange.allCases) { range in
                 let selected = model.range == range
-                Button(range.rawValue) { model.range = range }
+                Button(range.rawValue) {
+                    withAnimation(.easeInOut(duration: 0.2)) { model.range = range }
+                    UIAccessibility.post(notification: .announcement, argument: "Showing \(range.phrase)")
+                }
                     .font(.subheadline.weight(.semibold))
                     .padding(.horizontal, 16)
                     .frame(minHeight: Theme.minTarget)
@@ -126,24 +134,26 @@ private struct StatsContent: View {
     private var hero: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("True retention").inkLabel()
+                Text("True retention · last \(model.range.phrase)").inkLabel()
                 if let retention = model.retention {
                     Text(retention, format: .percent.precision(.fractionLength(0)))
                         .font(.display(DisplaySize.retention))
                         .foregroundStyle(Theme.accent)
-                    Text(retention >= 0.9 ? "Above your 90% target" : "Below your 90% target")
+                    Text("from \(model.retentionReviews) reviews")
                         .font(.subheadline).foregroundStyle(Theme.text2)
                 } else {
                     Text("–")
                         .font(.display(DisplaySize.retention)).foregroundStyle(Theme.muted)
-                    Text("No answers in this range").font(.subheadline).foregroundStyle(Theme.text2)
+                    Text("No reviews in this range").font(.subheadline).foregroundStyle(Theme.text2)
                 }
             }
             Spacer(minLength: 12)
             VStack(alignment: .trailing, spacing: 6) {
                 Label("\(model.streak) day streak", systemImage: "flame")
-                Label("\(model.todayCount) cards today", systemImage: "rectangle.stack")
-                Label("\(model.todayMinutes) min today", systemImage: "clock")
+                let totals = model.totals
+                Label("\(totals.reviews) reviews", systemImage: "rectangle.stack")
+                Label("\(totals.minutes) min", systemImage: "clock")
+                Label("\(totals.daysStudied) of \(model.range.days) days", systemImage: "calendar")
             }
             .font(.footnote)
             .foregroundStyle(Theme.text2)
@@ -152,62 +162,135 @@ private struct StatsContent: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.Radius.panel))
         .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("stats-hero")
     }
 
-    private var heatmap: some View {
-        let counts = model.heatmap
-        let peak = max(counts.max() ?? 1, 1)
+    private var activityTitle: String {
+        switch model.range {
+        case .week: "Reviews, last 7 days"
+        case .month: "Reviews, last 30 days"
+        case .year: "Reviews, last 52 weeks"
+        }
+    }
+
+    private var activity: some View {
+        let counts = model.activity
         return VStack(alignment: .leading, spacing: 12) {
-            Text("Last 16 weeks").inkLabel()
-            Grid(horizontalSpacing: 3, verticalSpacing: 3) {
-                ForEach(0..<7, id: \.self) { row in
-                    GridRow {
-                        ForEach(0..<16, id: \.self) { column in
-                            let value = counts[column * 7 + row]
-                            RoundedRectangle(cornerRadius: 3)
-                                .fill(Theme.heatmap[Self.step(value, peak: peak)])
-                                .aspectRatio(1, contentMode: .fit)
+            Text(activityTitle).inkLabel()
+            if model.range == .year {
+                yearHeatmap(counts)
+            } else {
+                dailyBars(counts)
+            }
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.Radius.panel))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(activityTitle), \(counts.reduce(0, +)) in total")
+        .accessibilityIdentifier("stats-activity")
+    }
+
+    private func dailyBars(_ counts: [Int]) -> some View {
+        let calendar = Calendar.current
+        let last = counts.count - 1
+        return Chart(counts.indices, id: \.self) { index in
+            let date = calendar.date(byAdding: .day, value: index - last, to: .now) ?? .now
+            BarMark(x: .value("Day", date, unit: .day), y: .value("Reviews", counts[index]))
+                .foregroundStyle(index == last ? Theme.accent : Theme.raised)
+                .cornerRadius(4)
+        }
+        .chartXAxis {
+            if model.range == .week {
+                AxisMarks(values: .stride(by: .day)) { _ in AxisValueLabel(format: .dateTime.weekday(.narrow)) }
+            } else {
+                AxisMarks(values: .stride(by: .day, count: 7)) { _ in AxisValueLabel(format: .dateTime.day().month(.abbreviated)) }
+            }
+        }
+        .chartYAxis(.hidden)
+        .frame(height: 160)
+    }
+
+    private func yearHeatmap(_ counts: [Int]) -> some View {
+        let peak = max(counts.max() ?? 1, 1)
+        let columns = counts.count / 7
+        let calendar = Calendar.current
+        let cell: CGFloat = 12
+        return VStack(alignment: .leading, spacing: 8) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(alignment: .top, spacing: 3) {
+                    ForEach(0..<columns, id: \.self) { column in
+                        let start = calendar.date(byAdding: .day, value: column * 7 - (counts.count - 1), to: .now) ?? .now
+                        let newMonth = column == 0 || calendar.component(.month, from: start) != calendar.component(
+                            .month, from: calendar.date(byAdding: .day, value: -7, to: start) ?? start)
+                        VStack(spacing: 3) {
+                            Text(newMonth ? start.formatted(.dateTime.month(.abbreviated)) : " ")
+                                .font(.caption2).foregroundStyle(Theme.muted)
+                                .fixedSize()
+                                .frame(width: cell, alignment: .leading)
+                            ForEach(0..<7, id: \.self) { row in
+                                RoundedRectangle(cornerRadius: 3)
+                                    .fill(Theme.heatmap[Self.step(counts[column * 7 + row], peak: peak)])
+                                    .frame(width: cell, height: cell)
+                            }
                         }
                     }
                 }
             }
+            .defaultScrollAnchor(.trailing)
             HStack(spacing: 4) {
                 Text("Less").font(.caption2).foregroundStyle(Theme.muted)
                 ForEach(0..<5, id: \.self) { RoundedRectangle(cornerRadius: 2).fill(Theme.heatmap[$0]).frame(width: 12, height: 12) }
                 Text("More").font(.caption2).foregroundStyle(Theme.muted)
             }
         }
-        .padding(20)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.Radius.panel))
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Reviews over the last 16 weeks, \(counts.reduce(0, +)) in total")
     }
 
     private static func step(_ value: Int, peak: Int) -> Int {
         value == 0 ? 0 : min(4, 1 + value * 4 / (peak + 1))
     }
 
+    private var forecastTitle: String {
+        switch model.range {
+        case .week: "Forecast, next 7 days"
+        case .month: "Forecast, next 30 days"
+        case .year: "Forecast, next 12 months"
+        }
+    }
+
     private var forecast: some View {
         let due = model.forecast
         let calendar = Calendar.current
+        let unit: Calendar.Component = model.range == .year ? .month : .day
+        let step = model.range.forecastBucketDays
         return VStack(alignment: .leading, spacing: 12) {
-            Text("Forecast, next 7 days").inkLabel()
-            Chart(0..<7, id: \.self) { day in
+            Text(forecastTitle).inkLabel()
+            Chart(due.indices, id: \.self) { bucket in
                 BarMark(
-                    x: .value("Day", calendar.date(byAdding: .day, value: day, to: .now) ?? .now, unit: .day),
-                    y: .value("Due", due[day])
+                    x: .value("Day", calendar.date(byAdding: .day, value: bucket * step, to: .now) ?? .now, unit: unit),
+                    y: .value("Due", due[bucket])
                 )
-                .foregroundStyle(day == 0 ? Theme.accent : Theme.raised)
+                .foregroundStyle(bucket == 0 ? Theme.accent : Theme.raised)
                 .cornerRadius(6)
             }
-            .chartXAxis { AxisMarks(values: .stride(by: .day)) { _ in AxisValueLabel(format: .dateTime.weekday(.narrow)) } }
+            .chartXAxis {
+                switch model.range {
+                case .week:
+                    AxisMarks(values: .stride(by: .day)) { _ in AxisValueLabel(format: .dateTime.weekday(.narrow)) }
+                case .month:
+                    AxisMarks(values: .stride(by: .day, count: 7)) { _ in AxisValueLabel(format: .dateTime.day().month(.abbreviated)) }
+                case .year:
+                    AxisMarks(values: .stride(by: .month, count: 2)) { _ in AxisValueLabel(format: .dateTime.month(.abbreviated)) }
+                }
+            }
             .chartYAxis(.hidden)
             .frame(height: 160)
         }
         .padding(20)
         .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.Radius.panel))
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Forecast: \(due.map(String.init).joined(separator: ", ")) cards due over the next 7 days")
+        .accessibilityLabel("\(forecastTitle): \(due.reduce(0, +)) cards due")
+        .accessibilityIdentifier("stats-forecast")
     }
 
     private var moreStats: some View {

@@ -10,6 +10,7 @@
 		059F59699AFF77B2DD8B9BB4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 89E36D8E238EB0EC1CA5EB7F /* Assets.xcassets */; };
 		066634D9CEC5682518ECC9A9 /* ImportExportScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18A8F75BF69FE9CF41FBA9E6 /* ImportExportScreen.swift */; };
 		08154AB171FF72A79E22D88A /* anki_tags.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 340BABD4CB1155D2C6A9BBDE /* anki_tags.pb.swift */; };
+		0A9A6569382DF22A091295A2 /* StatsRangeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E584F248E545D8342B87B8D0 /* StatsRangeTests.swift */; };
 		0AFDD8F396A2FA0F7143A111 /* Backend+Media.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0F5120DC1259F650157965C /* Backend+Media.swift */; };
 		0B075161D5BA4A92DC6344B4 /* CardWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20E5B00FA332B65105E42797 /* CardWebView.swift */; };
 		0C25164688496B7B8881BD59 /* PlaceholderScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5426EF6D5DFAB26CAD876455 /* PlaceholderScreen.swift */; };
@@ -281,6 +282,7 @@
 		DB13B46EA27C44DA0EB1E25F /* ExtrasPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtrasPanel.swift; sourceTree = "<group>"; };
 		E0089ECA89C3A87E17E5E8E1 /* LaunchOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchOptions.swift; sourceTree = "<group>"; };
 		E043227E68D6749CF8FB475E /* BackendError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackendError.swift; sourceTree = "<group>"; };
+		E584F248E545D8342B87B8D0 /* StatsRangeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsRangeTests.swift; sourceTree = "<group>"; };
 		E5E171B97FC5C58F7D5586D4 /* ManageScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManageScreen.swift; sourceTree = "<group>"; };
 		E6F1CB7B19369F577917B2FF /* CornhubApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CornhubApp.swift; sourceTree = "<group>"; };
 		E865C789DE38261BBC7FE644 /* anki_ankiweb.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = anki_ankiweb.pb.swift; sourceTree = "<group>"; };
@@ -632,6 +634,7 @@
 				45682C7D3642E127D1836490 /* ProtobufTests.swift */,
 				B24E62803C0C84A7CBA3836B /* SpeechTargetTests.swift */,
 				10D1848A668214A5BFD1F7D5 /* StatsDeckNameTests.swift */,
+				E584F248E545D8342B87B8D0 /* StatsRangeTests.swift */,
 				BF6A05C02CE6D4432F912531 /* StudyStreakTests.swift */,
 				8225D66E7AAD24F34AAD4EB7 /* SyncModelTests.swift */,
 				87CD36BADC8736BB55481B72 /* TabBarVisibilityTests.swift */,
@@ -792,6 +795,7 @@
 				CBDD637589D23F8F4B6B8F03 /* ProtobufTests.swift in Sources */,
 				D3E725D5A5D8CD543B878A58 /* SpeechTargetTests.swift in Sources */,
 				8DA9507758D9011D87068D92 /* StatsDeckNameTests.swift in Sources */,
+				0A9A6569382DF22A091295A2 /* StatsRangeTests.swift in Sources */,
 				F3FAB948F046D02B9F4B1C16 /* StudyStreakTests.swift in Sources */,
 				4AFB3CD13C711C4EE0B08557 /* SyncModelTests.swift in Sources */,
 				DAA066AF6FCEA7CC55277A8E /* TabBarVisibilityTests.swift in Sources */,

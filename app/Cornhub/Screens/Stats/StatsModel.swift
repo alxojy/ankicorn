@@ -6,6 +6,28 @@ enum StatsRange: String, CaseIterable, Identifiable {
     case month = "Month"
     case year = "Year"
     var id: String { rawValue }
+
+    /// Days the range covers; also the length of the activity window.
+    var days: Int {
+        switch self {
+        case .week: 7
+        case .month: 30
+        case .year: 364
+        }
+    }
+
+    /// "7 days", "30 days", "12 months": how the range reads in labels.
+    var phrase: String {
+        switch self {
+        case .week: "7 days"
+        case .month: "30 days"
+        case .year: "12 months"
+        }
+    }
+
+    /// Forecast buckets: daily for week and month, 30-day buckets (about months) for year.
+    var forecastBuckets: Int { self == .year ? 12 : days }
+    var forecastBucketDays: Int { self == .year ? 30 : 1 }
 }
 
 struct StatsDeck: Identifiable, Hashable {
@@ -41,39 +63,65 @@ final class StatsModel {
         self.backend = backend
     }
 
-    /// True retention for the selected range as a 0...1 fraction, or nil when nothing was answered.
-    var retention: Double? {
+    private var retentionBucket: Anki_Stats_GraphsResponse.TrueRetentionStats.TrueRetention? {
         guard let response else { return nil }
         let stats = response.trueRetention
-        let value =
-            switch range {
-            case .week: stats.week
-            case .month: stats.month
-            case .year: stats.year
-            }
-        let passed = Double(value.youngPassed + value.maturePassed)
-        let total = passed + Double(value.youngFailed + value.matureFailed)
-        return total > 0 ? passed / total : nil
+        return switch range {
+        case .week: stats.week
+        case .month: stats.month
+        case .year: stats.year
+        }
     }
 
-    /// Reviews per day for the last 16 weeks, oldest first (112 values, last is today).
-    var heatmap: [Int] {
-        StudyStreak.dailyCounts(response?.reviews.count ?? [:], days: 112)
+    /// Answers the retention figure is based on (passed + failed) in the selected range.
+    var retentionReviews: Int {
+        guard let value = retentionBucket else { return 0 }
+        return Int(value.youngPassed + value.maturePassed + value.youngFailed + value.matureFailed)
     }
 
-    /// Cards due today and on each of the next six days.
+    /// True retention for the selected range as a 0...1 fraction, or nil when nothing was answered.
+    var retention: Double? {
+        guard let value = retentionBucket, retentionReviews > 0 else { return nil }
+        return Double(value.youngPassed + value.maturePassed) / Double(retentionReviews)
+    }
+
+    /// Reviews per day for the selected range, oldest first (last is today).
+    var activity: [Int] {
+        StudyStreak.dailyCounts(response?.reviews.count ?? [:], days: range.days)
+    }
+
+    /// A year of reviews per day; the streak looks back through it.
+    private var streakWindow: [Int] {
+        StudyStreak.dailyCounts(response?.reviews.count ?? [:], days: 365)
+    }
+
+    /// Cards due per forecast bucket for the selected range (daily, or 30-day buckets for the year).
     var forecast: [Int] {
         let due = response?.futureDue.futureDue ?? [:]
-        return (0..<7).map { Int(due[Int32($0)] ?? 0) }
+        let size = range.forecastBucketDays
+        return (0..<range.forecastBuckets).map { bucket in
+            (0..<size).reduce(0) { $0 + Int(due[Int32(bucket * size + $1)] ?? 0) }
+        }
+    }
+
+    /// Reviews, minutes and days studied across the selected range.
+    var totals: (reviews: Int, minutes: Int, daysStudied: Int) {
+        let counts = activity
+        let millis = StudyStreak.dailyCounts(response?.reviews.time ?? [:], days: range.days)
+        return (counts.reduce(0, +), Int((Double(millis.reduce(0, +)) / 60000).rounded()), counts.filter { $0 > 0 }.count)
     }
 
     /// Consecutive days with reviews, counting back from today (or yesterday if today has none yet).
     var streak: Int {
-        StudyStreak.days(heatmap)
+        StudyStreak.days(streakWindow)
     }
 
-    var todayCount: Int { Int(response?.today.answerCount ?? 0) }
-    var todayMinutes: Int { Int((Double(response?.today.answerMillis ?? 0) / 60000).rounded()) }
+    /// Uses a response directly; `load()` does this after the engine call.
+    func apply(_ result: Anki_Stats_GraphsResponse) {
+        response = result
+        let hasReviews = result.reviews.count.values.contains { $0.learn + $0.relearn + $0.young + $0.mature + $0.filtered > 0 }
+        phase = hasReviews || !result.futureDue.futureDue.isEmpty ? .ready : .empty
+    }
 
     func load() async {
         if decks.isEmpty, let tree = try? await backend.deckTree() {
@@ -82,9 +130,7 @@ final class StatsModel {
         do {
             let search = deck.map { "deck:\"\($0.name)\"" } ?? ""
             let result = try await backend.graphs(search: search, days: 365)
-            response = result
-            let hasReviews = result.reviews.count.values.contains { $0.learn + $0.relearn + $0.young + $0.mature + $0.filtered > 0 }
-            phase = hasReviews || !result.futureDue.futureDue.isEmpty ? .ready : .empty
+            apply(result)
         } catch {
             phase = .failed(error.localizedDescription)
         }
