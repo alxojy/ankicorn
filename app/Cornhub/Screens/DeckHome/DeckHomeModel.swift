@@ -146,6 +146,18 @@ final class DeckHomeModel {
         return find(decks)
     }
 
+    /// The deck's tile by full "Parent::Child" name.
+    func tile(fullName: String) -> DeckTile? {
+        func find(_ tiles: [DeckTile]) -> DeckTile? {
+            for tile in tiles {
+                if tile.fullName == fullName { return tile }
+                if let hit = find(tile.children) { return hit }
+            }
+            return nil
+        }
+        return find(decks)
+    }
+
     func setCollapsed(_ deckID: Int64, _ collapsed: Bool) async {
         guard let backend else { return }
         try? await backend.setDeckCollapsed(deckID: deckID, collapsed: collapsed)

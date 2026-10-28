@@ -7,6 +7,8 @@ final class AppState {
     var selection: AppTab = .decks
     /// Deck id Browse should scope to; Browse consumes it and keeps its own scope afterwards.
     var browseDeckID: Int64?
+    /// Deck id Stats should filter to; Stats consumes it and keeps its own filter afterwards.
+    var statsDeckID: Int64?
     var visibility = TabBarVisibility(voiceOverRunning: UIAccessibility.isVoiceOverRunning)
     /// Browse selection mode and toasts hide the bar.
     var hideTabBar: Bool {
@@ -15,6 +17,11 @@ final class AppState {
     }
     /// The deck name Browse was last scoped to, kept while the app runs.
     var lastBrowseDeck: String?
+
+    func openStats(deckID: Int64) {
+        statsDeckID = deckID
+        selection = .stats
+    }
 
     func openBrowse(deckID: Int64) {
         browseDeckID = deckID

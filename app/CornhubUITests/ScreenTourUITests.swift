@@ -78,11 +78,12 @@ final class ScreenTourUITests: XCTestCase {
         tile.tap()
         sleep(2)
         shot("03-deck-overview")
-        let summary = app.descendants(matching: .any)["deck-summary"]
-        XCTAssertTrue(summary.waitForExistence(timeout: 5), "overview shows the summary line")
-        XCTAssertTrue(summary.label.contains("20 new"), "overview shows 20 new (daily limit of the 45 cards), got \(summary.label)")
-        XCTAssertTrue(summary.label.contains("45 cards"), "overview shows 45 cards, got \(summary.label)")
-        let options = deckMenuItem("deck-options-button")
+        let newTile = app.descendants(matching: .any)["today-new"]
+        XCTAssertTrue(newTile.waitForExistence(timeout: 5), "overview shows the Today tiles")
+        XCTAssertTrue(newTile.label.hasPrefix("New: 20"), "overview shows 20 new (daily limit of the 45 cards), got \(newTile.label)")
+        let collection = app.descendants(matching: .any)["collection-card"]
+        XCTAssertTrue(collection.label.contains("45 cards"), "overview shows 45 cards, got \(collection.label)")
+        let options = deckRow("deck-options-button")
         if options.waitForExistence(timeout: 5) {
             options.tap()
             XCTAssertTrue(
@@ -92,7 +93,7 @@ final class ScreenTourUITests: XCTestCase {
             shot("04-deck-options-web")
             dismissSheet()
         }
-        let custom = deckMenuItem("custom-study-button")
+        let custom = deckRow("custom-study-button")
         if custom.waitForExistence(timeout: 5) {
             custom.tap()
             sleep(1)
@@ -113,7 +114,7 @@ final class ScreenTourUITests: XCTestCase {
         let tabBar = app.descendants(matching: .any)["tab-settings"]
         let study = app.buttons["study-button"]
         XCTAssertTrue(study.waitForExistence(timeout: 10), "overview shows")
-        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "subdeck-row").count > 6, "subdeck rows show")
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "level-row").count > 6, "subdeck rows show")
         XCTAssertTrue(tabBar.isHittable, "tab bar shows before scrolling")
         shot("tabbar-01-before")
         app.swipeUp()
@@ -126,8 +127,7 @@ final class ScreenTourUITests: XCTestCase {
         for _ in 0..<4 { app.swipeUp(velocity: .fast) }
         sleep(1)
         XCTAssertTrue(tabBar.isHittable, "tab bar is back at the end of the content")
-        let lastRow = app.descendants(matching: .any).matching(identifier: "subdeck-row").allElementsBoundByIndex.last
-        let last = lastRow?.exists == true ? lastRow! : study
+        let last = app.buttons["deck-options-button"]
         XCTAssertLessThanOrEqual(last.frame.maxY, tabBar.frame.minY, "the last row sits above the tab bar")
         shot("tabbar-03-end")
     }
@@ -409,7 +409,7 @@ final class ScreenTourUITests: XCTestCase {
         XCTAssertTrue(
             app.staticTexts["Unburied 2 cards"].waitForExistence(timeout: 10), "confirmation shows the count")
         app.buttons["deck-actions-menu"].tap()
-        XCTAssertTrue(app.buttons["custom-study-button"].waitForExistence(timeout: 5), "menu reopens")
+        XCTAssertTrue(app.buttons["deck-action-rename"].waitForExistence(timeout: 5), "menu reopens")
         XCTAssertFalse(app.buttons["unbury-button"].exists, "Unbury disappears afterwards")
         app.buttons["deck-actions-menu"].tap()
         shot("03c-deck-overview-unburied")
@@ -421,7 +421,7 @@ final class ScreenTourUITests: XCTestCase {
         XCTAssertTrue(tile.waitForExistence(timeout: 30), "deck tiles show")
         tile.tap()
         XCTAssertTrue(app.buttons["study-button"].waitForExistence(timeout: 10), "overview shows")
-        XCTAssertTrue(deckMenuItem("custom-study-button").waitForExistence(timeout: 5), "menu shows")
+        XCTAssertTrue(deckMenuItem("deck-action-rename").waitForExistence(timeout: 5), "menu shows")
         XCTAssertFalse(app.buttons["unbury-button"].exists, "no Unbury without buried cards")
     }
 
@@ -430,7 +430,7 @@ final class ScreenTourUITests: XCTestCase {
         let tile = app.descendants(matching: .any).matching(identifier: "deck-tile").firstMatch
         XCTAssertTrue(tile.waitForExistence(timeout: 30), "deck tiles show")
         tile.tap()
-        let options = deckMenuItem("deck-options-button")
+        let options = deckRow("deck-options-button")
         XCTAssertTrue(options.waitForExistence(timeout: 10), "Deck options menu item")
         options.tap()
         XCTAssertTrue(
@@ -464,7 +464,7 @@ final class ScreenTourUITests: XCTestCase {
         let tile = app.descendants(matching: .any).matching(identifier: "deck-tile").firstMatch
         XCTAssertTrue(tile.waitForExistence(timeout: 30), "deck tiles show")
         tile.tap()
-        let options = deckMenuItem("deck-options-button")
+        let options = deckRow("deck-options-button")
         XCTAssertTrue(options.waitForExistence(timeout: 10), "Deck options menu item")
         options.tap()
         XCTAssertTrue(
@@ -713,8 +713,16 @@ final class ScreenTourUITests: XCTestCase {
         return app.buttons[id]
     }
 
-    /// A parent deck with 4 subdecks shows Study and every subdeck row without scrolling; the menu lists the actions.
-    func testDeckOverviewFitsOnOneScreen() {
+    /// Scrolls the deck screen until the row with this identifier is hittable and returns it.
+    private func deckRow(_ id: String) -> XCUIElement {
+        let row = app.buttons[id]
+        _ = row.waitForExistence(timeout: 10)
+        for _ in 0..<5 where !row.isHittable { app.swipeUp() }
+        return row
+    }
+
+    /// A parent deck with 4 subdecks shows Today, Study and a Levels list; the menu lists the actions.
+    func testDeckOverviewParentShowsLevels() {
         app.launchArguments += ["--seed-four-subdecks"]
         app.launch()
         let parent = deckTile("HSK 2")
@@ -722,17 +730,75 @@ final class ScreenTourUITests: XCTestCase {
         parent.tap()
         let study = app.buttons["study-button"]
         XCTAssertTrue(study.waitForExistence(timeout: 10), "overview shows")
-        let rows = app.descendants(matching: .any).matching(identifier: "subdeck-row")
-        XCTAssertEqual(rows.count, 4, "four subdeck rows")
-        XCTAssertTrue(study.isHittable, "Study visible without scrolling")
-        for row in rows.allElementsBoundByIndex { XCTAssertTrue(row.isHittable, "row \(row.label) visible without scrolling") }
-        XCTAssertFalse(app.buttons["browse-cards-button"].exists, "no full-width Browse button")
-        shot("03d-deck-overview-compact")
+        XCTAssertTrue(study.label.hasPrefix("Study all"), "parent button reads Study all, got \(study.label)")
+        XCTAssertTrue(app.staticTexts["Today, across all levels"].exists || app.staticTexts["TODAY, ACROSS ALL LEVELS"].exists, "parent Today title")
+        XCTAssertTrue(app.descendants(matching: .any)["deck-subtitle"].label.contains("4 levels"), "subtitle counts levels")
+        shot("03d-deck-overview-parent")
+        for _ in 0..<2 { app.swipeUp() }
+        let rows = app.descendants(matching: .any).matching(identifier: "level-row")
+        XCTAssertEqual(rows.count, 4, "four level rows")
+        app.swipeDown(velocity: .fast)
+        app.swipeDown(velocity: .fast)
         app.buttons["deck-actions-menu"].tap()
-        for id in ["custom-study-button", "browse-cards-button", "deck-options-button", "deck-action-rename", "deck-action-delete"] {
+        for id in ["deck-action-rename", "deck-new-subdeck", "deck-action-delete"] {
             XCTAssertTrue(app.buttons[id].waitForExistence(timeout: 5), "menu lists \(id)")
         }
         shot("03e-deck-overview-menu")
+    }
+
+    /// Open a leaf subdeck from its parent, see the breadcrumb, tap it to go back, and tap a level row.
+    func testDeckOverviewLeafBreadcrumbAndLevelRow() {
+        app.launch()
+        let parent = deckTile("HSK 2")
+        XCTAssertTrue(parent.waitForExistence(timeout: 30), "HSK 2 tile exists")
+        parent.tap()
+        XCTAssertTrue(app.buttons["study-button"].waitForExistence(timeout: 10), "parent overview shows")
+        for _ in 0..<2 { app.swipeUp() }
+        let level = app.descendants(matching: .any).matching(identifier: "level-row").firstMatch
+        XCTAssertTrue(level.waitForExistence(timeout: 5), "a level row shows")
+        level.tap()
+        let crumb = app.buttons["deck-breadcrumb"]
+        XCTAssertTrue(crumb.waitForExistence(timeout: 10), "leaf shows the breadcrumb")
+        XCTAssertTrue(crumb.label.contains("HSK 2"), "breadcrumb names the parent, got \(crumb.label)")
+        XCTAssertFalse(app.descendants(matching: .any)["level-row"].exists, "a leaf has no Levels list")
+        XCTAssertTrue(app.descendants(matching: .any)["coming-up"].exists, "leaf shows Coming up")
+        XCTAssertTrue(app.descendants(matching: .any)["collection-card"].exists, "leaf shows the collection card")
+        shot("03f-deck-overview-leaf")
+        crumb.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["deck-subtitle"].waitForExistence(timeout: 10), "the parent screen opens")
+    }
+
+    /// HSK 1 has 45 new cards but a daily limit of 20: the New tile says so and explains it.
+    func testDeckOverviewCappedExplanation() {
+        app.launch()
+        let tile = app.descendants(matching: .any).matching(identifier: "deck-tile").firstMatch
+        XCTAssertTrue(tile.waitForExistence(timeout: 30), "deck tiles show")
+        tile.tap()
+        let newTile = app.descendants(matching: .any)["today-new"]
+        XCTAssertTrue(newTile.waitForExistence(timeout: 10), "New tile shows")
+        XCTAssertTrue(
+            app.descendants(matching: .any).matching(identifier: "today-new").matching(NSPredicate(format: "label CONTAINS 'capped'")).firstMatch
+                .waitForExistence(timeout: 10),
+            "New tile says it is capped, got \(newTile.label)")
+        newTile.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["limit-sheet"].waitForExistence(timeout: 5), "explanation sheet opens")
+        shot("03g-deck-limit-sheet")
+        XCTAssertTrue(app.buttons["limit-sheet-options"].exists, "sheet links to Daily limits & options")
+    }
+
+    /// Nothing due: the Study button is disabled and Custom study sits right below, also at large Dynamic Type.
+    func testDeckOverviewNothingDueAtLargeType() {
+        app.launchArguments = ["--seed-no-due", "--reset-collection", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityL"]
+        app.launch()
+        let tile = app.descendants(matching: .any).matching(identifier: "deck-tile").firstMatch
+        XCTAssertTrue(tile.waitForExistence(timeout: 30), "deck tiles show")
+        tile.tap()
+        let study = app.buttons["study-button"]
+        XCTAssertTrue(study.waitForExistence(timeout: 10), "overview shows")
+        XCTAssertEqual(study.label, "Nothing due today")
+        XCTAssertFalse(study.isEnabled, "Study is disabled")
+        XCTAssertTrue(app.buttons["custom-study-link"].exists, "Custom study is right below")
+        shot("03h-deck-overview-nothing-due-large-type")
     }
 
     private func deckTile(_ name: String) -> XCUIElement {
@@ -786,7 +852,7 @@ final class ScreenTourUITests: XCTestCase {
         let tile = app.descendants(matching: .any).matching(identifier: "deck-tile").firstMatch
         XCTAssertTrue(tile.waitForExistence(timeout: 30), "deck tiles show")
         tile.tap()
-        let browse = deckMenuItem("browse-cards-button")
+        let browse = deckRow("browse-cards-button")
         XCTAssertTrue(browse.waitForExistence(timeout: 10), "menu has Browse cards")
         browse.tap()
         let count = app.descendants(matching: .any)["browse-count"].firstMatch

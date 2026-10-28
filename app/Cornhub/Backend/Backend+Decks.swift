@@ -24,6 +24,13 @@ extension Backend {
         return result.id
     }
 
+    /// `get_deck`: the deck with this id; throws when it does not exist.
+    func getDeck(id: Int64) throws -> Anki_Decks_Deck {
+        var request = Anki_Decks_DeckId()
+        request.did = id
+        return try call(service: ServiceIndex.Decks.service, method: ServiceIndex.Decks.getDeck, request)
+    }
+
     /// `deck_tree`: the synthetic root node whose `children` are the top-level decks. A non-zero `now`
     /// includes due counts for that timestamp.
     func deckTree(now: Int64 = 0) throws -> Anki_Decks_DeckTreeNode {

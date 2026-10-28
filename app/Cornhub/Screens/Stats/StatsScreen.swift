@@ -19,6 +19,7 @@ private struct StatsContent: View {
     @State var model: StatsModel
     let backend: Backend
     @State private var showMore = false
+    @Environment(AppState.self) private var appState
 
     var body: some View {
         NavigationStack {
@@ -63,8 +64,18 @@ private struct StatsContent: View {
             .navigationTitle("Stats")
             .navigationBarTitleDisplayMode(.inline)
         }
-        .task { await model.load() }
+        .task {
+            await model.load()
+            consumeDeckRequest()
+        }
         .sheet(isPresented: $showMore) { AnkiWebSheet(page: .graphs, backend: backend) }
+    }
+
+    /// Applies the deck a screen asked Stats to filter to (the deck overview's Coming up card).
+    private func consumeDeckRequest() {
+        guard let id = appState.statsDeckID else { return }
+        appState.statsDeckID = nil
+        if let match = model.decks.first(where: { $0.id == id }) { model.deck = match }
     }
 
     private var deckPicker: some View {
