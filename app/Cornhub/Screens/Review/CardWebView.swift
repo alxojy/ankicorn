@@ -61,14 +61,23 @@ struct CardWebView: UIViewRepresentable {
         }
     }
 
-    static func document(body: String, css: String, colours: CardColours = .current) -> String {
-        let style = CardStyle.decide(css: css)
-        let inverts = colours == .app && style.isLight
-        return """
-            <!doctype html><html class="night_mode"><head><meta name="viewport" content="width=device-width, initial-scale=1">
-            <style>\(fontAliases)\n\(baseCSS(style, colours: colours))\n\(css)</style><style>\(imageCSS)</style>\(inverts ? "<style>\(reinvertMediaCSS)</style>" : "")\(missingImageScript)\(inverts ? contrastScript : "")\(mathScript)</head>
-            <body class="nightMode night_mode"><div class="card nightMode night_mode">\(body)</div></body></html>
-            """
+    static func document(body: String, css: String) -> String {
+        """
+        <!doctype html><html class="night_mode"><head><meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>\(fontAliases)\n\(baseCSS())\n\(css)</style><style>\(backgroundOverrideCSS)\n\(imageCSS)</style>\(missingImageScript)\(contrastScript)\(mathScript)</head>
+        <body class="nightMode night_mode"><div class="card nightMode night_mode">\(body)</div></body></html>
+        """
+    }
+
+    /// Whatever the note type says, only the Ink card colour shows: its background colours and images on
+    /// `html`, `body` and `.card` are overridden after its CSS. Nothing in the collection changes.
+    static var backgroundOverrideCSS: String {
+        """
+        html, body, .card, .nightMode, .nightMode.card, .night_mode, .night_mode.card, .nightMode .card, .night_mode .card {
+          background: \(hex(Theme.card)) !important; background-color: \(hex(Theme.card)) !important;
+          background-image: none !important;
+        }
+        """
     }
 
     /// One standard picture size, injected after the note type's CSS (and `!important`) so a deck cannot enlarge
@@ -127,32 +136,18 @@ struct CardWebView: UIViewRepresentable {
         return "@font-face { font-family: \"\(family)\"; src: \(sources); }"
     }
 
-    /// Ink look for card bodies; colours are resolved from the theme tokens. A note type with an opaque light
-    /// `.card` background and no text colour gets dark text (desktop's light default) on its own background.
-    static func baseCSS(_ style: CardStyle = .ink, colours: CardColours = .note) -> String {
-        if colours == .app, case .light = style { return invertedLightCSS }
-        var text = hex(Theme.text)
-        var strong = hex(Theme.accent)
-        var box = ""
-        switch style {
-        case .ink:
-            break
-        case .light(let background):
-            text = "#222222"
-            strong = "inherit"
-            box = ".card { background-color: \(background); }"
-        case .dark(let background):
-            box = ".card { background-color: \(background); }"
-        }
+    /// Ink look for card bodies; colours are resolved from the theme tokens. Fonts, sizes and layout come from
+    /// the note type's own CSS.
+    static func baseCSS() -> String {
+        let text = hex(Theme.text)
         return """
-            html, body { margin: 0; background: transparent; }
+            html, body { margin: 0; background: \(hex(Theme.card)); }
             body { color: \(text); font: -apple-system-body; font-size: 20px; text-align: center;
                    display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-            .card { width: 100%; padding: 8px; box-sizing: border-box; color: \(text); }
-            \(style == .ink ? "" : ".card { min-height: 100vh; border-radius: 16px; overflow-wrap: anywhere; }")
-            \(box)
+            .card { width: 100%; padding: 8px; box-sizing: border-box; color: \(text); min-height: 100vh;
+                    overflow-wrap: anywhere; }
             hr { border: 0; border-top: 1px solid \(hex(Theme.muted)); opacity: 0.4; margin: 16px 0; }
-            b, strong { color: \(strong); }
+            b, strong { color: \(hex(Theme.accent)); }
             .typeGood { color: \(hex(Theme.accent)); } .typeBad { color: \(hex(Theme.again)); }
             .typeMissed { color: \(hex(Theme.muted)); } code#typeans { font-size: 20px; }
             #typeans { font-family: monospace; }
@@ -160,58 +155,47 @@ struct CardWebView: UIViewRepresentable {
             """
     }
 
-    /// App colours for a light card: Ink card colour behind the content, the content inverted with hues kept.
-    /// The note's own `.card` background is inverted with the rest, so it is made transparent first.
-    static var invertedLightCSS: String {
-        """
-        html, body { margin: 0; background: \(hex(Theme.card)); }
-        body { color: #222222; font: -apple-system-body; font-size: 20px; text-align: center;
-               display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-        .card { width: 100%; padding: 8px; box-sizing: border-box; color: #222222; min-height: 100vh;
-                overflow-wrap: anywhere; background: transparent !important;
-                filter: invert(1) hue-rotate(180deg); }
-        hr { border: 0; border-top: 1px solid \(hex(Theme.muted)); opacity: 0.4; margin: 16px 0; }
-        .typeGood { color: \(hex(Theme.accent)); } .typeBad { color: \(hex(Theme.again)); }
-        .typeMissed { color: \(hex(Theme.muted)); } code#typeans { font-size: 20px; }
-        #typeans { font-family: monospace; }
-        """
-    }
-
-    /// Pictures and other media are inverted back, so they show their real colours inside the inverted card.
-    static let reinvertMediaCSS = """
-        img, video, canvas, svg image, [style*="background-image"] { filter: invert(1) hue-rotate(180deg); }
-        """
-
-    /// WCAG AA floor for text colour after inversion: raises the lightness of any text darker than 4.5:1
-    /// against the Ink card colour. Applies the same invert + hue-rotate(180deg) the filter does.
+    /// WCAG AA floor for text on the Ink card, run on computed colours after load (the answer side is a new
+    /// document, so it runs again on reveal). Greys and near-black become the Ink `text` or `muted` colour;
+    /// coloured text keeps its hue and is lightened until it reaches 4.5:1. No CSS is rewritten.
     static var contrastScript: String {
-        let card = hex(Theme.card)
-        return """
-            <script>window.addEventListener('load', function () {
-              var bg = '\(card)';
-              function lum(c) { return c.map(function (v) { v /= 255;
-                return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); })
-                .reduce(function (a, v, i) { return a + v * [0.2126, 0.7152, 0.0722][i]; }, 0); }
-              function ratio(a, b) { var x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
-              function shown(c) { var r = 255 - c[0], g = 255 - c[1], b = 255 - c[2], k = Math.PI;
-                var cs = Math.cos(k), sn = Math.sin(k);
-                var m = [[0.213 + cs * 0.787 - sn * 0.213, 0.715 - cs * 0.715 - sn * 0.715, 0.072 - cs * 0.072 + sn * 0.928],
-                         [0.213 - cs * 0.213 + sn * 0.143, 0.715 + cs * 0.285 + sn * 0.140, 0.072 - cs * 0.072 - sn * 0.283],
-                         [0.213 - cs * 0.213 - sn * 0.787, 0.715 - cs * 0.715 + sn * 0.715, 0.072 + cs * 0.928 + sn * 0.072]];
-                return m.map(function (row) { return Math.max(0, Math.min(255, row[0] * r + row[1] * g + row[2] * b)); }); }
-              var back = [parseInt(bg.slice(1, 3), 16), parseInt(bg.slice(3, 5), 16), parseInt(bg.slice(5, 7), 16)];
-              document.querySelectorAll('.card *').forEach(function (el) {
-                if (!el.textContent.trim()) { return; }
-                var m = getComputedStyle(el).color.match(/\\d+(\\.\\d+)?/g);
-                if (!m) { return; }
-                var c = m.slice(0, 3).map(Number), t = 0;
-                while (ratio(shown(c), back) < 4.5 && t++ < 40) {
-                  c = c.map(function (v) { return Math.max(0, v - 6); });
-                }
-                el.style.setProperty('color', 'rgb(' + c.map(Math.round).join(',') + ')', 'important');
-              });
-            });</script>
-            """
+        """
+        <script>window.addEventListener('load', function () {
+          var BG = '\(hex(Theme.card))', TEXT = '\(hex(Theme.text))', MUTED = '\(hex(Theme.muted))';
+          function parse(h) { return [1, 3, 5].map(function (i) { return parseInt(h.slice(i, i + 2), 16); }); }
+          function lum(c) { return c.map(function (v) { v /= 255;
+            return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); })
+            .reduce(function (a, v, i) { return a + v * [0.2126, 0.7152, 0.0722][i]; }, 0); }
+          function ratio(a, b) { var x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
+          function toHsl(c) { var r = c[0] / 255, g = c[1] / 255, b = c[2] / 255;
+            var mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, h = 0, s = 0, d = mx - mn;
+            if (d) { s = d / (1 - Math.abs(2 * l - 1));
+              h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; }
+            return [(h * 60 + 360) % 360, s, l]; }
+          function fromHsl(h, s, l) { var k = (1 - Math.abs(2 * l - 1)) * s, x = k * (1 - Math.abs((h / 60) % 2 - 1)), m = l - k / 2;
+            var p = h < 60 ? [k, x, 0] : h < 120 ? [x, k, 0] : h < 180 ? [0, k, x] : h < 240 ? [0, x, k] : h < 300 ? [x, 0, k] : [k, 0, x];
+            return p.map(function (v) { return Math.round((v + m) * 255); }); }
+          var back = parse(BG), text = parse(TEXT), muted = parse(MUTED);
+          document.querySelectorAll('.card *').forEach(function (el) {
+            var own = Array.prototype.some.call(el.childNodes, function (n) { return n.nodeType === 3 && n.textContent.trim(); });
+            if (!own) { return; }
+            var m = getComputedStyle(el).color.match(/[\\d.]+/g);
+            if (!m) { return; }
+            var c = m.slice(0, 3).map(Number);
+            if (ratio(c, back) >= 4.5) { return; }
+            var hsl = toHsl(c), out;
+            if (hsl[1] < 0.15) {
+              out = lum(c) < 0.05 || ratio(muted, back) < 4.5 ? text : muted;
+            } else {
+              var l = hsl[2], t = 0;
+              out = c;
+              while (ratio(out, back) < 4.5 && t++ < 100) { l = Math.min(1, l + 0.01); out = fromHsl(hsl[0], hsl[1], l); }
+            }
+            el.style.setProperty('color', 'rgb(' + out.join(',') + ')', 'important');
+            el.setAttribute('data-ink-color', out.join(','));
+          });
+        });</script>
+        """
     }
 
     static func hex(_ color: Color) -> String {

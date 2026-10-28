@@ -6,7 +6,6 @@ final class CardStyleTests: XCTestCase {
     func testLightBackgroundWithoutColourGetsDarkText() {
         let style = CardStyle.decide(css: ImportedFixtures.lightCSS)
         XCTAssertEqual(style, .light(background: "#FDF6E3"))
-        XCTAssertTrue(CardWebView.baseCSS(style).contains("color: #222222"))
         let text = CardStyle.rgb(of: "#222222")!, box = CardStyle.rgb(of: "#fdf6e3")!
         XCTAssertGreaterThanOrEqual(CardStyle.contrast(text, box), 3, "default text reads on the deck's own background")
     }
@@ -14,7 +13,6 @@ final class CardStyleTests: XCTestCase {
     func testDarkBackgroundKeepsLightInkText() {
         let style = CardStyle.decide(css: ImportedFixtures.darkCSS)
         XCTAssertEqual(style, .dark(background: "#1B2A3A"))
-        XCTAssertTrue(CardWebView.baseCSS(style).contains("color: \(CardWebView.hex(Theme.text))"))
         let text = CardStyle.rgb(of: CardWebView.hex(Theme.text))!, box = CardStyle.rgb(of: "#1b2a3a")!
         XCTAssertGreaterThanOrEqual(CardStyle.contrast(text, box), 3)
     }
@@ -64,30 +62,33 @@ final class CardImageSizeTests: XCTestCase {
     }
 }
 
-final class CardColoursTests: XCTestCase {
-    private let cream = ".card { background-color: #fdf6e3; }"
+final class CardInkColoursTests: XCTestCase {
+    private let cream = ".card { background-color: #fdf6e3; color: #222222; }"
+    private var card: String { CardWebView.hex(Theme.card) }
 
-    func testAppModeInvertsLightCardAndReinvertsMedia() {
-        let html = CardWebView.document(body: "<img src=\"a.jpg\">", css: cream, colours: .app)
-        XCTAssertTrue(html.contains("filter: invert(1) hue-rotate(180deg)"))
-        XCTAssertTrue(html.contains("img, video, canvas, svg image, [style*=\"background-image\"]"))
-        XCTAssertTrue(html.contains("background: \(CardWebView.hex(Theme.card))"))
-        XCTAssertTrue(html.contains("4.5"), "contrast floor script is present")
+    func testCreamNoteTypeIsOverriddenToTheInkCard() {
+        let html = CardWebView.document(body: "<img src=\"a.jpg\">", css: cream)
+        let override = CardWebView.backgroundOverrideCSS
+        XCTAssertTrue(html.contains(override), "override present")
+        XCTAssertTrue(override.contains("background-color: \(card) !important"))
+        XCTAssertTrue(override.contains("background-image: none !important"))
+        XCTAssertTrue(html.range(of: cream)!.upperBound < html.range(of: override)!.lowerBound, "override comes after the note CSS")
     }
 
-    func testNoteModeKeepsLightRendering() {
-        let html = CardWebView.document(body: "x", css: cream, colours: .note)
-        XCTAssertFalse(html.contains("invert(1)"))
-        XCTAssertTrue(html.contains("color: #222222"))
-    }
-
-    func testInkAndDarkUnchangedInBothModes() {
-        for css in ["", ".card { background: #111111; }"] {
-            for mode in CardColours.allCases {
-                XCTAssertFalse(CardWebView.document(body: "x", css: css, colours: mode).contains("invert(1)"))
-            }
-            XCTAssertEqual(CardWebView.document(body: "x", css: css, colours: .app),
-                           CardWebView.document(body: "x", css: css, colours: .note))
+    func testNoFilterAnywhereAndInkTextDefault() {
+        for css in ["", cream, ".card { background: #111111; }"] {
+            let html = CardWebView.document(body: "<img src=\"a.jpg\">", css: css)
+            XCTAssertFalse(html.contains("filter:"), "no CSS filter")
+            XCTAssertFalse(html.contains("invert("))
+            XCTAssertTrue(html.contains("color: \(CardWebView.hex(Theme.text))"), "Ink text default")
+            XCTAssertTrue(html.contains("4.5"), "contrast pass present")
         }
+    }
+
+    func testInkAndDarkDocumentsUseTheSameInkCard() {
+        let ink = CardWebView.document(body: "x", css: "")
+        let dark = CardWebView.document(body: "x", css: "")
+        XCTAssertEqual(ink, dark)
+        XCTAssertTrue(CardWebView.document(body: "x", css: ".card { background: #111111; }").contains(CardWebView.backgroundOverrideCSS))
     }
 }

@@ -6,7 +6,6 @@ struct SettingsScreen: View {
     let backend: Backend?
     var importDeck: (URL) -> Void = { _ in }
     @State private var prefs = PreferencesModel()
-    @AppStorage(CardColours.defaultsKey) private var cardColours = CardColours.app.rawValue
     @State private var showLogin = false
     @State private var confirmLogout = false
 
@@ -163,12 +162,6 @@ struct SettingsScreen: View {
     @ViewBuilder private var reviewSection: some View {
         if prefs.loaded {
             Section("Review") {
-                Picker("Card colours", selection: $cardColours) {
-                    ForEach(CardColours.allCases) { Text($0.label).tag($0.rawValue) }
-                }
-                .frame(minHeight: Theme.minTarget)
-                .accessibilityIdentifier("card-colours")
-                .listRowBackground(Theme.surface)
                 Toggle("Show remaining card counts", isOn: prefs.toggleBinding(backend, \.showRemainingDueCounts))
                     .listRowBackground(Theme.surface)
                 Toggle("Show intervals on buttons", isOn: prefs.toggleBinding(backend, \.showIntervalsOnButtons))

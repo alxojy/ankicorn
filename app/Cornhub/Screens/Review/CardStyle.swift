@@ -98,16 +98,3 @@ enum CardStyle: Equatable {
         return nil
     }
 }
-
-/// Whether a note type with a light `.card` background shows on the Ink card (`app`) or as its own CSS says (`note`).
-enum CardColours: String, CaseIterable, Identifiable {
-    case app, note
-    static let defaultsKey = "cardColours"
-    var id: String { rawValue }
-    var label: String { self == .app ? "App (dark)" : "Note type's own" }
-
-    static var current: CardColours {
-        get { UserDefaults.standard.string(forKey: defaultsKey).flatMap(CardColours.init) ?? .app }
-        set { UserDefaults.standard.set(newValue.rawValue, forKey: defaultsKey) }
-    }
-}

@@ -26,12 +26,6 @@ struct ReviewScreen: View {
     }
 
     private let sync: SyncModel?
-    @State private var restylingNotetype: RestyleTarget?
-
-    private struct RestyleTarget: Identifiable {
-        let id: Int64
-    }
-
     init(backend: Backend, deckID: Int64?, sync: SyncModel? = nil) {
         self.sync = sync
         _model = State(initialValue: ReviewModel(backend: backend, deckID: deckID))
@@ -104,11 +98,6 @@ struct ReviewScreen: View {
                 Task { await model.save(note: saved) }
             }
         }
-        .sheet(item: $restylingNotetype) { target in
-            NotetypeRestyleSheet(backend: model.backend, notetypeID: target.id, sync: sync) {
-                Task { await model.refreshRendered() }
-            }
-        }
         .sheet(item: $infoPage) { page in
             AnkiWebSheet(page: page, backend: model.backend)
         }
@@ -149,14 +138,6 @@ struct ReviewScreen: View {
                         Button("Suspend", systemImage: "pause.circle") { Task { await model.suspend() } }
                         Button("Edit note", systemImage: "pencil") {
                             Task { editingNote = await model.loadNote() }
-                        }
-                        if let css = model.rendered?.css, NotetypeStyle.setsOwnBackground(css: css),
-                           CardColours.current == .note {
-                            Button("Restyle this note type…", systemImage: "paintbrush") {
-                                Task {
-                                    if let note = await model.loadNote() { restylingNotetype = RestyleTarget(id: note.notetypeID) }
-                                }
-                            }
                         }
                         Button("Card info", systemImage: "info.circle") {
                             if let card = model.queued?.card.id { infoPage = .cardInfo(cardID: card) }

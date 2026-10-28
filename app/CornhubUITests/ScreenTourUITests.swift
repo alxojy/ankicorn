@@ -263,49 +263,20 @@ final class ScreenTourUITests: XCTestCase {
         XCTAssertFalse(app.descendants(matching: .any)["grade-good"].exists, "answered: back on a question")
     }
 
-    /// Card colours: App shows the cream fixture card dark; Note type's own keeps it cream.
-    func testCardColoursAppAndNoteTypesOwn() {
-        for (mode, name) in [("app", "26-card-colours-app"), ("note", "26-card-colours-note")] {
-            app.launchArguments = ["--seed-imported", "--reset-collection", "-cardColours", mode]
-            app.launch()
-            app.buttons["Start review"].firstMatch.tap()
-            XCTAssertTrue(app.descendants(matching: .any)["review-card"].waitForExistence(timeout: 15), "review card shows")
-            sleep(3)
-            shot(name)
-            XCTAssertEqual(app.buttons["Restyle this note type…"].exists, false)
-            app.buttons["More"].tap()
-            XCTAssertEqual(app.buttons["Restyle this note type…"].waitForExistence(timeout: 2), mode == "note",
-                           "the restyle entry is only pushed in Note type's own mode")
-            app.terminate()
-        }
-    }
-
-    /// Review ⋯ › Restyle this note type…, preview, apply: the card turns into the Ink card.
-    func testRestyleNotetypeFromReviewMenu() {
-        app.launchArguments = ["--seed-imported", "--reset-collection", "-cardColours", "note"]
+    /// The cream fixture note type shows on the dark Ink card, with no restyle prompt in the review menu.
+    func testCreamNoteTypeShowsOnInkCard() {
+        app.launchArguments = ["--seed-imported", "--reset-collection"]
         app.launch()
         app.buttons["Start review"].firstMatch.tap()
         let card = app.descendants(matching: .any)["review-card"]
         XCTAssertTrue(card.waitForExistence(timeout: 15), "review card shows")
         sleep(3)
-        shot("24-restyle-before")
-        app.buttons["More"].tap()
-        let restyle = app.buttons["Restyle this note type…"]
-        XCTAssertTrue(restyle.waitForExistence(timeout: 5), "menu offers the restyle for a cream card")
-        restyle.tap()
+        shot("26-ink-card-question")
+        card.tap()
         sleep(3)
-        shot("24-restyle-preview")
-        let apply = app.buttons["restyle-apply"]
-        XCTAssertTrue(apply.waitForExistence(timeout: 5), "Use Cornhub style button shows")
-        apply.tap()
-        XCTAssertTrue(app.buttons["restyle-undo"].waitForExistence(timeout: 5), "applied: undo is offered")
-        XCTAssertTrue(app.staticTexts["Saved. Sync to update desktop."].exists, "tells the user to sync")
-        shot("24-restyle-applied")
-        app.buttons["restyle-done"].tap()
-        sleep(3)
-        shot("24-restyle-after")
+        shot("26-ink-card-answer")
         app.buttons["More"].tap()
-        XCTAssertFalse(app.buttons["Restyle this note type…"].waitForExistence(timeout: 2), "no longer offered once styled")
+        XCTAssertFalse(app.buttons["Restyle this note type…"].waitForExistence(timeout: 2), "no restyle prompt")
     }
 
     func testTappingCardPictureShowsViewerAndCloseKeepsCard() {
