@@ -18,6 +18,7 @@
 		13481FB30501C54CF70A4B95 /* Backend+CardActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 978458C24D9B486E1AEB46F4 /* Backend+CardActions.swift */; };
 		1486FDC1C0D77BB0126E7AAE /* DeckHomeScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = F205D8E7E310CDE43B0B71F3 /* DeckHomeScreen.swift */; };
 		15A0813F7A24DC2C771D9249 /* Backend+Scheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3D6F429CF624CDFD569FFC0 /* Backend+Scheduler.swift */; };
+		18F8AD9688E00CE217F3FC20 /* CardStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60940FF0744F87C35072E76A /* CardStyle.swift */; };
 		1B2E9A660CB46534CB157024 /* Backend+Sync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ED297D489B393F03E410F65 /* Backend+Sync.swift */; };
 		1E9AB6B10771FF09A75669CE /* anki_stats.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 762B64AE7AB6D93584C587B9 /* anki_stats.pb.swift */; };
 		20F600E7EBFA08C636C039E5 /* Backend+NoteEditing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59955AFCEE7B6D4FA128B050 /* Backend+NoteEditing.swift */; };
@@ -50,6 +51,7 @@
 		61623BAB2063D52BAED3673F /* SpaceGrotesk-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 370F70FBC4409FCA056F3707 /* SpaceGrotesk-SemiBold.ttf */; };
 		62623F38B6B090385B9B4E15 /* BackendTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7E863D0EE1310F2E838E2F2 /* BackendTests.swift */; };
 		6685A7B0FC3B5AF62EFDD3A2 /* FontRegistration.swift in Sources */ = {isa = PBXBuildFile; fileRef = D21DFFB1C2B7E349E4F71A8D /* FontRegistration.swift */; };
+		66E52B1903AD16A60ED3C19D /* CardStyleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0759933FF86E586334F233EE /* CardStyleTests.swift */; };
 		69857AE5F50A0A8805947FED /* anki_search.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5DF20CDA3D9CECD4E408E53 /* anki_search.pb.swift */; };
 		6ECF969B61F5FB33859B9E86 /* AppTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECC61461470440E946436A41 /* AppTab.swift */; };
 		70A2EE0B69B9BFC27FA2C8CE /* anki_sync.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 881F0DBCB83EE88C356552D4 /* anki_sync.pb.swift */; };
@@ -97,6 +99,7 @@
 		BFFCCC1BCD24A958DD22B003 /* anki_links.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = F18F0F11FA2077F791915F2E /* anki_links.pb.swift */; };
 		C088A06F571045E239DAED59 /* RslibBridge.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 72061DF379B676AD66400AE7 /* RslibBridge.xcframework */; };
 		C1E0253DC66AA9A51139A26E /* NoteEditorScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F2D7EB07B06DAF424F78110 /* NoteEditorScreen.swift */; };
+		C56DE5E003ED888939297B39 /* ImportedFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43FA74ADF64A71E68D4F9190 /* ImportedFixtures.swift */; };
 		C57EC24EF946433A2A8E9801 /* anki_card_rendering.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FE695072E2AD56D73CFDF36 /* anki_card_rendering.pb.swift */; };
 		C60E861CA54B9B7149F5CB67 /* StatsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5C72B03A14512A45631F26E /* StatsModel.swift */; };
 		CBDD637589D23F8F4B6B8F03 /* ProtobufTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45682C7D3642E127D1836490 /* ProtobufTests.swift */; };
@@ -106,6 +109,7 @@
 		D3E725D5A5D8CD543B878A58 /* SpeechTargetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B24E62803C0C84A7CBA3836B /* SpeechTargetTests.swift */; };
 		D61D008335BB552E60B44CD3 /* anki_github.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92DDBCEB3CCF4A8C711BA4E5 /* anki_github.pb.swift */; };
 		D772D2591A20E1094A348A4B /* NotetypesScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 239981CED4D38CCB2B60F7CA /* NotetypesScreen.swift */; };
+		D782247F720AB71CBE9DABCB /* ImportedMediaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 226E22F58EA430493F064D54 /* ImportedMediaTests.swift */; };
 		D98381DB267E375BCF580183 /* anki_backend.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7939F359E7332700817C1F63 /* anki_backend.pb.swift */; };
 		D9E54E8C641A8EE463009DA9 /* anki_config.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F91A86445EE66B9435A3B1 /* anki_config.pb.swift */; };
 		DBEC35D0E8FE3E1B17719804 /* ReviewScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46CC9EB1A6A9D9AAF6ED5B1 /* ReviewScreen.swift */; };
@@ -148,6 +152,7 @@
 
 /* Begin PBXFileReference section */
 		0267591B68056B5388CDCB39 /* anki_import_export.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = anki_import_export.pb.swift; sourceTree = "<group>"; };
+		0759933FF86E586334F233EE /* CardStyleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardStyleTests.swift; sourceTree = "<group>"; };
 		083577F706765FA2C7B2AFDF /* CardAudio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardAudio.swift; sourceTree = "<group>"; };
 		0AC1A3E30F1FD4A8252D3476 /* DeckWrapperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckWrapperTests.swift; sourceTree = "<group>"; };
 		0E60BF4E50A60CFE1718C62B /* Backend+Manage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Backend+Manage.swift"; sourceTree = "<group>"; };
@@ -162,6 +167,7 @@
 		1A53FF95B5B0E833D093BA15 /* MediaCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaCapture.swift; sourceTree = "<group>"; };
 		1D318DFB0F3B401B72709B2D /* ExtrasModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtrasModel.swift; sourceTree = "<group>"; };
 		20E5B00FA332B65105E42797 /* CardWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardWebView.swift; sourceTree = "<group>"; };
+		226E22F58EA430493F064D54 /* ImportedMediaTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportedMediaTests.swift; sourceTree = "<group>"; };
 		2378BE059E6667C9F82401C0 /* CornhubUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = CornhubUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		239981CED4D38CCB2B60F7CA /* NotetypesScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotetypesScreen.swift; sourceTree = "<group>"; };
 		23A467C14E77ED5C9B569CA7 /* ReviewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewModel.swift; sourceTree = "<group>"; };
@@ -173,6 +179,7 @@
 		3A98BCE610B2E2C8D4BD4968 /* Backend+Collection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Backend+Collection.swift"; sourceTree = "<group>"; };
 		3B533216E7CF6CEBBB111521 /* StatsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsScreen.swift; sourceTree = "<group>"; };
 		42EF404E6DB6C5BBBFCE7FC2 /* CustomStudySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomStudySheet.swift; sourceTree = "<group>"; };
+		43FA74ADF64A71E68D4F9190 /* ImportedFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportedFixtures.swift; sourceTree = "<group>"; };
 		45682C7D3642E127D1836490 /* ProtobufTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProtobufTests.swift; sourceTree = "<group>"; };
 		4917DBEAF1C7A99F7ABA2904 /* AnkiWebInkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnkiWebInkTests.swift; sourceTree = "<group>"; };
 		4AAAB40A05DFF033871A81AF /* ToolsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolsScreen.swift; sourceTree = "<group>"; };
@@ -187,6 +194,7 @@
 		5B3FB773E1512B63890C6D97 /* ChineseNotetype.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChineseNotetype.swift; sourceTree = "<group>"; };
 		5FE695072E2AD56D73CFDF36 /* anki_card_rendering.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = anki_card_rendering.pb.swift; sourceTree = "<group>"; };
 		60929A6FE3547718739BDC2F /* anki_notetypes.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = anki_notetypes.pb.swift; sourceTree = "<group>"; };
+		60940FF0744F87C35072E76A /* CardStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardStyle.swift; sourceTree = "<group>"; };
 		63688E8FA2BF721FB1720927 /* anki_decks.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = anki_decks.pb.swift; sourceTree = "<group>"; };
 		63797BF5E281AB857501E360 /* SpeechSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechSettings.swift; sourceTree = "<group>"; };
 		6930B18961FDA5A86E8698C6 /* BrowseSheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowseSheets.swift; sourceTree = "<group>"; };
@@ -421,6 +429,7 @@
 				72FF94692A3EDB50C30F3FD6 /* Backend+Tools.swift */,
 				E043227E68D6749CF8FB475E /* BackendError.swift */,
 				5B3FB773E1512B63890C6D97 /* ChineseNotetype.swift */,
+				43FA74ADF64A71E68D4F9190 /* ImportedFixtures.swift */,
 				F9ED73DCD435B2252D9C2AFD /* SampleNotes.swift */,
 				C7793C9E66B7FF9D7372A152 /* ServiceIndex.swift */,
 				D705EDEEC025C9A93DD7EC50 /* Generated */,
@@ -556,6 +565,7 @@
 			isa = PBXGroup;
 			children = (
 				083577F706765FA2C7B2AFDF /* CardAudio.swift */,
+				60940FF0744F87C35072E76A /* CardStyle.swift */,
 				20E5B00FA332B65105E42797 /* CardWebView.swift */,
 				A383C1B52B40F46B4BDB873B /* CongratsScreen.swift */,
 				6B69C768730F7EF195149CD7 /* MediaScheme.swift */,
@@ -588,10 +598,12 @@
 			children = (
 				4917DBEAF1C7A99F7ABA2904 /* AnkiWebInkTests.swift */,
 				B7E863D0EE1310F2E838E2F2 /* BackendTests.swift */,
+				0759933FF86E586334F233EE /* CardStyleTests.swift */,
 				8F8BC41D28CABFDA69F780A1 /* DeckHomeModelTests.swift */,
 				0AC1A3E30F1FD4A8252D3476 /* DeckWrapperTests.swift */,
 				7FFB421172750110C6C06DCF /* FieldHTMLTests.swift */,
 				A31C0AF21B4465F9B466EED3 /* FontTests.swift */,
+				226E22F58EA430493F064D54 /* ImportedMediaTests.swift */,
 				45682C7D3642E127D1836490 /* ProtobufTests.swift */,
 				B24E62803C0C84A7CBA3836B /* SpeechTargetTests.swift */,
 				BF6A05C02CE6D4432F912531 /* StudyStreakTests.swift */,
@@ -741,10 +753,12 @@
 			files = (
 				D04C12A47C2D52938AFEAE45 /* AnkiWebInkTests.swift in Sources */,
 				62623F38B6B090385B9B4E15 /* BackendTests.swift in Sources */,
+				66E52B1903AD16A60ED3C19D /* CardStyleTests.swift in Sources */,
 				2B373C22C414A88E5EA64360 /* DeckHomeModelTests.swift in Sources */,
 				3054E5BC33A7D8D1660016AB /* DeckWrapperTests.swift in Sources */,
 				9C627A7CC4E13A73A9A8DD8D /* FieldHTMLTests.swift in Sources */,
 				2B9B75EA6937160A9A188F51 /* FontTests.swift in Sources */,
+				D782247F720AB71CBE9DABCB /* ImportedMediaTests.swift in Sources */,
 				CBDD637589D23F8F4B6B8F03 /* ProtobufTests.swift in Sources */,
 				D3E725D5A5D8CD543B878A58 /* SpeechTargetTests.swift in Sources */,
 				F3FAB948F046D02B9F4B1C16 /* StudyStreakTests.swift in Sources */,
@@ -782,6 +796,7 @@
 				F77F2A0FF52DA5057FDF139B /* BrowseScreen.swift in Sources */,
 				DD346FFC66F330D1C06E78AD /* BrowseSheets.swift in Sources */,
 				5760F47ACDBC882249BE912D /* CardAudio.swift in Sources */,
+				18F8AD9688E00CE217F3FC20 /* CardStyle.swift in Sources */,
 				5AF41C448D6B00EF3E2D2443 /* CardText.swift in Sources */,
 				0B075161D5BA4A92DC6344B4 /* CardWebView.swift in Sources */,
 				BC39EF6BE3C73472F6113BA9 /* ChineseNotetype.swift in Sources */,
@@ -807,6 +822,7 @@
 				6685A7B0FC3B5AF62EFDD3A2 /* FontRegistration.swift in Sources */,
 				066634D9CEC5682518ECC9A9 /* ImportExportScreen.swift in Sources */,
 				D323EA5995F0AF070E850C60 /* ImportSheet.swift in Sources */,
+				C56DE5E003ED888939297B39 /* ImportedFixtures.swift in Sources */,
 				720CFCEF3309798AA532C628 /* LaunchOptions.swift in Sources */,
 				716FB2586FA7062FF0F0D139 /* LoginSheet.swift in Sources */,
 				601916C26C0B21DBB8B3A0A6 /* ManageScreen.swift in Sources */,

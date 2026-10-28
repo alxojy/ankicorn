@@ -7,11 +7,15 @@ final class CardAudio: NSObject, AVAudioPlayerDelegate {
     private var player: AVAudioPlayer?
     private let synthesizer = AVSpeechSynthesizer()
     private var queue: [AVItem] = []
+    /// The headword to say when a note's sound file is missing from the media folder.
+    var fallback: (text: String, lang: String)?
+    private var fallbackUsed = false
 
     func play(_ items: [AVItem]) {
         stop()
         try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio)
         queue = items
+        fallbackUsed = false
         next()
     }
 
@@ -27,7 +31,13 @@ final class CardAudio: NSObject, AVAudioPlayerDelegate {
         switch queue.removeFirst() {
         case .file(let name):
             let url = MediaSchemeHandler.mediaFolder.appending(path: name)
-            guard let audio = try? AVAudioPlayer(contentsOf: url) else { return next() }
+            guard let audio = try? AVAudioPlayer(contentsOf: url) else {
+                if let fallback, !fallbackUsed, !fallback.text.isEmpty {
+                    fallbackUsed = true
+                    queue.insert(.tts(text: fallback.text, lang: fallback.lang, voices: [], speed: 0), at: 0)
+                }
+                return next()
+            }
             audio.delegate = self
             player = audio
             audio.play()

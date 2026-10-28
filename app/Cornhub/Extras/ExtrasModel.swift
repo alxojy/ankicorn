@@ -44,7 +44,8 @@ final class ExtrasModel {
 
     func speak() {
         switch speech {
-        case .audio(let file): playFile?(file)
+        case .audio(let file, let fallback):
+            if MediaSchemeHandler.exists(file) { playFile?(file) } else { speaker.speak(fallback, language: language) }
         case .text(let word): speaker.speak(word, language: language)
         }
     }

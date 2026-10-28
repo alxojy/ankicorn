@@ -252,14 +252,27 @@ extension ReviewModel {
             ?? (rendered.answer, [])
         questionItems = question.1
         answerItems = answer.1
-        questionBody = question.0
-        answerBody = answer.0
+        questionBody = Self.withoutPlayTags(question.0)
+        answerBody = Self.withoutPlayTags(answer.0)
         typeExpected = nil
         if let name = Self.typeFieldName(in: question.0) {
             typeExpected = await expectedAnswer(field: name, card: card)
-            questionBody = Self.replaceType(in: question.0, with: "")
+            questionBody = Self.replaceType(in: questionBody, with: "")
         }
+        await prepareFallback(card: card)
         audio.play(questionItems)
+    }
+
+    /// The headword to speak when a sound file of the card's note is not in the media folder.
+    private func prepareFallback(card: Anki_Cards_Card) async {
+        audio.fallback = nil
+        guard let note = try? await backend.getNote(id: card.noteID),
+            let names = try? await backend.fieldNames(notetypeID: note.notetypeID)
+        else { return }
+        let language = SpeechSettings.language(deckID: card.deckID)
+        let word = SpeechTarget.headword(
+            names: names, fields: note.fields, question: questionBody, language: language)
+        audio.fallback = (word, language)
     }
 
     /// Swaps the answer's type placeholder for the engine's diff once the card is revealed.
@@ -269,6 +282,12 @@ extension ReviewModel {
             answerBody = Self.replaceType(in: answerBody, with: "<div id=\"typeans\">\(diff)</div>")
         }
         audio.play(answerItems)
+    }
+
+    /// `extract_av_tags` leaves `[anki:play:q:0]` markers where sounds were; the replay button plays them, so
+    /// the markers must not show as text.
+    static func withoutPlayTags(_ html: String) -> String {
+        html.replacingOccurrences(of: #"\[anki:play:[qa]:\d+\]"#, with: "", options: .regularExpression)
     }
 
     private static func typeFieldName(in html: String) -> String? {

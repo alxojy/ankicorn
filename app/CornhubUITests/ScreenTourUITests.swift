@@ -99,6 +99,41 @@ final class ScreenTourUITests: XCTestCase {
         }
     }
 
+    /// Cards of invented shared-deck note types: a light deck background with no text colour, and a dark one.
+    private func reviewImportedCards(arguments: [String], prefix: String, imageMissing: Bool) {
+        app.launchArguments = ["--seed-imported", "--reset-collection"] + arguments
+        app.launch()
+        let start = app.buttons["Start review"].firstMatch
+        XCTAssertTrue(start.waitForExistence(timeout: 30), "Start review exists")
+        start.tap()
+        let card = app.descendants(matching: .any)["review-card"]
+        XCTAssertTrue(card.waitForExistence(timeout: 15), "review card shows")
+        sleep(3)
+        shot("\(prefix)-light-question")
+        card.tap()
+        sleep(3)
+        shot("\(prefix)-light-answer")
+        XCTAssertEqual(
+            app.staticTexts["Image missing"].exists, imageMissing,
+            imageMissing ? "placeholder shows for the missing image" : "no placeholder: the image loaded")
+        let good = app.descendants(matching: .any)["grade-good"]
+        XCTAssertTrue(good.waitForExistence(timeout: 5), "Good button shows")
+        good.tap()
+        sleep(3)
+        shot("\(prefix)-dark-question")
+        card.tap()
+        sleep(3)
+        shot("\(prefix)-dark-answer")
+    }
+
+    func testImportedDeckCardsAreReadableWithMedia() {
+        reviewImportedCards(arguments: [], prefix: "20-imported", imageMissing: false)
+    }
+
+    func testImportedDeckCardsShowPlaceholderForMissingImage() {
+        reviewImportedCards(arguments: ["--drop-fixture-image"], prefix: "21-imported-no-image", imageMissing: true)
+    }
+
     func testFullSyncChoiceDialog() {
         app.launchArguments += ["--show-full-sync-choice"]
         app.launch()
@@ -417,6 +452,13 @@ final class ScreenTourUITests: XCTestCase {
             XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 5), "back on Settings after \(id)")
         }
         for _ in 0..<6 { app.collectionViews.firstMatch.swipeDown(velocity: .fast) }
+        // A stub sign-in from an earlier test can survive in the simulator's keychain: sign out first.
+        let logout = app.buttons["Log out"].firstMatch
+        if logout.waitForExistence(timeout: 2) {
+            logout.tap()
+            app.buttons.matching(identifier: "Log out").allElementsBoundByIndex.last?.tap()
+            sleep(1)
+        }
         let login = app.descendants(matching: .any)["settings-login"]
         scrollTo(login)
         XCTAssertTrue(login.exists, "login row exists")

@@ -58,6 +58,10 @@ final class DeckHomeModel {
             if launch.seedSample {
                 try await seedSampleDecks(backend)
                 try await backend.seedSampleNotes(deckNames: DeckHomeModel.sampleDecks)
+            } else if launch.seedImported {
+                try await seedSampleDecks(backend)
+                try await backend.seedImportedFixtures(
+                    deckName: DeckHomeModel.sampleDecks[0], withImage: !launch.dropFixtureImage)
             } else if launch.seedOneDue || launch.seedNoDue {
                 try await seedSampleDecks(backend)
                 if launch.seedOneDue { try await backend.seedOneDueNote(deckName: DeckHomeModel.sampleDecks[0]) }

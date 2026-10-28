@@ -33,10 +33,12 @@ struct CardWebView: UIViewRepresentable {
     }
 
     static func document(body: String, css: String) -> String {
-        """
-        <!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1">
-        <style>\(baseCSS)\n\(css)</style>\(mathScript)</head><body><div class="card">\(body)</div></body></html>
-        """
+        let style = CardStyle.decide(css: css)
+        return """
+            <!doctype html><html class="night_mode"><head><meta name="viewport" content="width=device-width, initial-scale=1">
+            <style>\(fontAliases)\n\(baseCSS(style))\n\(css)</style>\(missingImageScript)\(mathScript)</head>
+            <body class="nightMode night_mode"><div class="card nightMode night_mode">\(body)</div></body></html>
+            """
     }
 
     /// MathJax 3 (bundled) typesets Anki's `\\(..\\)` and `\\[..\\]` math.
@@ -46,20 +48,65 @@ struct CardWebView: UIViewRepresentable {
         <script src="cornhub://app/mathjax.js" async></script>
         """
 
-    /// Ink look for card bodies; colours are resolved from the theme tokens.
-    static var baseCSS: String {
+    /// Swaps an image that fails to load (WebKit would draw a "?" icon) for a small Ink placeholder.
+    static let missingImageScript = """
+        <script>document.addEventListener('error', function (event) {
+          var image = event.target;
+          if (!image || image.tagName !== 'IMG') { return; }
+          var note = document.createElement('span');
+          note.className = 'image-missing';
+          note.textContent = 'Image missing';
+          image.replaceWith(note);
+        }, true);</script>
         """
-        html, body { margin: 0; background: transparent; }
-        body { color: \(hex(Theme.text)); font: -apple-system-body; font-size: 20px; text-align: center;
-               display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-        .card { width: 100%; padding: 8px; box-sizing: border-box; color: \(hex(Theme.text)); }
-        hr { border: 0; border-top: 1px solid \(hex(Theme.muted)); opacity: 0.4; margin: 16px 0; }
-        b, strong { color: \(hex(Theme.accent)); }
-        .typeGood { color: \(hex(Theme.accent)); } .typeBad { color: \(hex(Theme.again)); }
-        .typeMissed { color: \(hex(Theme.muted)); } code#typeans { font-size: 20px; }
-        #typeans { font-family: monospace; }
-        img { max-width: 100%; border-radius: 20px; }
-        """
+
+    /// Faces common in shared decks that iOS lacks, mapped to installed equivalents (CJK faces to PingFang SC).
+    static var fontAliases: String {
+        let cjk = ["Kaiti", "KaiTi", "KaiTi_GB2312", "SimSun", "NSimSun", "SimHei", "FangSong", "STSong", "STKaiti",
+                   "Microsoft YaHei", "Songti", "Noto Sans CJK SC", "Noto Serif CJK SC"]
+        let western = ["Gentium Plus": "Georgia", "Gentium": "Georgia", "Times New Roman": "Times New Roman"]
+        var css = cjk.map { alias(family: $0, local: ["PingFangSC-Regular", "PingFang SC"]) }
+        css += western.filter { $0.key != $0.value }.map { alias(family: $0.key, local: [$0.value, "Georgia"]) }
+        return css.joined(separator: "\n")
+    }
+
+    private static func alias(family: String, local: [String]) -> String {
+        let sources = local.map { "local(\"\($0)\")" }.joined(separator: ", ")
+        return "@font-face { font-family: \"\(family)\"; src: \(sources); }"
+    }
+
+    /// Ink look for card bodies; colours are resolved from the theme tokens. A note type with an opaque light
+    /// `.card` background and no text colour gets dark text (desktop's light default) on its own background.
+    static func baseCSS(_ style: CardStyle = .ink) -> String {
+        var text = hex(Theme.text)
+        var strong = hex(Theme.accent)
+        var box = ""
+        switch style {
+        case .ink:
+            break
+        case .light(let background):
+            text = "#222222"
+            strong = "inherit"
+            box = ".card { background-color: \(background); }"
+        case .dark(let background):
+            box = ".card { background-color: \(background); }"
+        }
+        return """
+            html, body { margin: 0; background: transparent; }
+            body { color: \(text); font: -apple-system-body; font-size: 20px; text-align: center;
+                   display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+            .card { width: 100%; padding: 8px; box-sizing: border-box; color: \(text); }
+            \(style == .ink ? "" : ".card { min-height: 100vh; border-radius: 16px; overflow-wrap: anywhere; }")
+            \(box)
+            hr { border: 0; border-top: 1px solid \(hex(Theme.muted)); opacity: 0.4; margin: 16px 0; }
+            b, strong { color: \(strong); }
+            .typeGood { color: \(hex(Theme.accent)); } .typeBad { color: \(hex(Theme.again)); }
+            .typeMissed { color: \(hex(Theme.muted)); } code#typeans { font-size: 20px; }
+            #typeans { font-family: monospace; }
+            img { max-width: 100%; border-radius: 20px; }
+            .image-missing { display: inline-block; padding: 6px 12px; border-radius: 12px; font-size: 14px;
+                             color: \(hex(Theme.muted)); background: \(hex(Theme.raised)); }
+            """
     }
 
     static func hex(_ color: Color) -> String {

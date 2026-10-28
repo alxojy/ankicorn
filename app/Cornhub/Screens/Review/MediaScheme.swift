@@ -6,6 +6,10 @@ final class MediaSchemeHandler: NSObject, WKURLSchemeHandler {
     static let scheme = "cornhub"
     static let mediaFolder = URL.documentsDirectory.appending(path: "collection.media")
 
+    static func exists(_ name: String) -> Bool {
+        FileManager.default.fileExists(atPath: mediaFolder.appending(path: name).path)
+    }
+
     func webView(_ webView: WKWebView, start task: WKURLSchemeTask) {
         guard let url = task.request.url, let file = Self.fileURL(for: url),
             let data = try? Data(contentsOf: file)
