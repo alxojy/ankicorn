@@ -68,3 +68,14 @@ The full-sync prompt SHALL use short, equally sized standard buttons ("Download 
 #### Scenario: Prompt layout
 - **WHEN** the prompt shows
 - **THEN** all buttons use the same system text size with no parenthetical text, and the message says which side each choice replaces
+
+### Requirement: Sign-in state updates immediately
+Every screen that shows the AnkiWeb account state SHALL update as soon as the user logs in or out, without leaving the screen.
+
+#### Scenario: Logging in from Settings
+- **WHEN** the user logs in successfully from Settings
+- **THEN** the login sheet closes and Settings shows "Signed in as <username>" and a Log out button straight away
+
+#### Scenario: Logging out
+- **WHEN** the user logs out
+- **THEN** Settings shows "Log in to AnkiWeb" and the Decks header shows "Not signed in" straight away
