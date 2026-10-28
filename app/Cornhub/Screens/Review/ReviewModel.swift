@@ -42,6 +42,8 @@ final class ReviewModel {
     fileprivate(set) var queued: Anki_Scheduler_QueuedCards.QueuedCard?
     private var shownAt = Date()
     private var startTotal = 0
+    /// Deck of the last card graded, so Undo from congrats can make it current again in all-decks mode.
+    private var lastAnsweredDeck: Int64?
     /// Decks already studied this session when no deck was chosen.
     private var visitedDecks: Set<Int64> = []
 
@@ -58,6 +60,13 @@ final class ReviewModel {
 
     var answerHTML: String { answerBody }
     var questionHTML: String { questionBody }
+    var canUndo: Bool { !undoLabel.isEmpty }
+    /// On congrats, Undo is only for taking back an answer given in this session (the engine's undo stack
+    /// can also hold setup operations that the user never did in review).
+    var showsUndo: Bool { phase == .card || (canUndo && lastAnsweredDeck != nil) }
+    var canRedo: Bool { !redoLabel.isEmpty }
+    /// The ⋯ menu only holds card actions; on other screens it would hold nothing but a dead Redo.
+    var showsMoreMenu: Bool { phase == .card }
     var hasTypeField: Bool { typeExpected != nil }
     var currentItems: [AVItem] { revealed ? answerItems : questionItems }
 
@@ -88,6 +97,7 @@ final class ReviewModel {
         let taken = UInt32(max(0, min(60, Date().timeIntervalSince(shownAt))) * 1000)
         do {
             try await backend.answerCard(queued, rating: rating, millisecondsTaken: taken)
+            lastAnsweredDeck = queued.card.deckID
             try await loadNext()
         } catch {
             phase = .failed(error.localizedDescription)
@@ -97,6 +107,9 @@ final class ReviewModel {
     func undo() async {
         do {
             try await backend.undo()
+            if phase == .congrats, deckID == nil, let lastAnsweredDeck {
+                try await backend.setCurrentDeck(lastAnsweredDeck)
+            }
             try await loadNext()
         } catch {
             phase = .failed(error.localizedDescription)
