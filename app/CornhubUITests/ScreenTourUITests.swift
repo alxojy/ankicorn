@@ -317,6 +317,52 @@ final class ScreenTourUITests: XCTestCase {
         XCTAssertEqual(browseCount(), before, "undo brings the cards back")
     }
 
+    private func deckTile(_ name: String) -> XCUIElement {
+        app.descendants(matching: .any).matching(NSPredicate(format: "identifier == 'deck-tile' AND label BEGINSWITH %@", "\(name):")).firstMatch
+    }
+
+    func testDeckRenameAndDelete() {
+        app.launch()
+        let tile = deckTile("HSK 2")
+        XCTAssertTrue(tile.waitForExistence(timeout: 30), "HSK 2 tile exists")
+        tile.press(forDuration: 1.2)
+        let delete = app.buttons["deck-action-delete"]
+        XCTAssertTrue(delete.waitForExistence(timeout: 5), "long press shows Delete")
+        XCTAssertTrue(app.buttons["deck-action-rename"].exists, "menu offers Rename")
+        XCTAssertTrue(app.buttons["deck-action-options"].exists, "menu offers Options")
+        shot("40-deck-menu")
+        delete.tap()
+        let confirm = app.buttons["deck-delete-confirm"].firstMatch
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5), "delete asks for confirmation")
+        XCTAssertTrue(
+            app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'cards and any subdecks will be deleted'")).firstMatch.exists,
+            "confirmation states the card count")
+        shot("41-deck-delete-confirm")
+        confirm.tap()
+        let undo = app.buttons["deck-undo"]
+        XCTAssertTrue(undo.waitForExistence(timeout: 5), "undo toast shows")
+        shot("42-deck-undo-toast")
+        let tabBar = app.descendants(matching: .any)["tab-settings"]
+        XCTAssertFalse(tabBar.exists && tabBar.isHittable && tabBar.frame.intersects(undo.frame), "toast does not overlap the tab bar")
+        XCTAssertFalse(deckTile("HSK 2").exists, "tile is gone after delete")
+        undo.tap()
+        XCTAssertTrue(deckTile("HSK 2").waitForExistence(timeout: 10), "undo brings the tile back")
+
+        deckTile("HSK 2").press(forDuration: 1.2)
+        let rename = app.buttons["deck-action-rename"]
+        XCTAssertTrue(rename.waitForExistence(timeout: 5), "menu offers Rename again")
+        rename.tap()
+        let field = app.alerts.textFields.firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: 5), "rename field shows")
+        XCTAssertEqual(field.value as? String, "HSK 2", "field is prefilled with the full name")
+        shot("43-deck-rename")
+        field.tap()
+        field.typeText("b")
+        app.alerts.buttons["Rename"].firstMatch.tap()
+        XCTAssertTrue(deckTile("HSK 2b").waitForExistence(timeout: 10), "tile shows the new name")
+        shot("44-deck-renamed")
+    }
+
     func testBrowseFromDeckOverview() {
         app.launch()
         let tile = app.descendants(matching: .any).matching(identifier: "deck-tile").firstMatch

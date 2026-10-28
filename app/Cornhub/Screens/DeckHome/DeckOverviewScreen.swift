@@ -8,6 +8,8 @@ struct DeckOverviewScreen: View {
     @State private var reviewTarget: ReviewTarget?
     @State private var showCustomStudy = false
     @State private var optionsPage: AnkiWebPage?
+    @State private var actions = DeckActionState()
+    @Environment(\.dismiss) private var dismiss
 
     private var current: DeckTile { model.tile(for: deck.id) ?? deck }
 
@@ -72,8 +74,20 @@ struct DeckOverviewScreen: View {
             .padding(.horizontal, 16)
         }
         .background(Theme.bg)
-        .navigationTitle(deck.name)
+        .navigationTitle(current.name)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu { DeckActionItems(model: model, deck: current, state: $actions) } label: {
+                    Image(systemName: "ellipsis.circle").frame(minWidth: Theme.minTarget, minHeight: Theme.minTarget)
+                }
+                .accessibilityLabel("Deck actions")
+                .accessibilityIdentifier("deck-actions-menu")
+            }
+        }
+        .deckActionDialogs(model: model, state: $actions) {
+            if model.deletedNotice != nil { dismiss() }
+        }
         .fullScreenCover(item: $reviewTarget, onDismiss: { Task { await model.refresh() } }) { target in
             if let backend = model.backend { ReviewScreen(backend: backend, deckID: target.deckID) }
         }
@@ -104,7 +118,7 @@ struct DeckOverviewScreen: View {
             .frame(minHeight: Theme.minTarget)
         }
         .accessibilityLabel(deck.collapsed ? "Expand subdecks" : "Collapse subdecks")
-        if !deck.collapsed { DeckGrid(decks: deck.children) }
+        if !deck.collapsed { DeckGrid(decks: deck.children, model: model, actions: $actions) }
     }
 
     private func stat(_ label: String, _ value: Int, _ color: Color) -> some View {

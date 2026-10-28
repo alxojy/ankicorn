@@ -109,6 +109,7 @@
 		D98381DB267E375BCF580183 /* anki_backend.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7939F359E7332700817C1F63 /* anki_backend.pb.swift */; };
 		D9E54E8C641A8EE463009DA9 /* anki_config.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F91A86445EE66B9435A3B1 /* anki_config.pb.swift */; };
 		DBEC35D0E8FE3E1B17719804 /* ReviewScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46CC9EB1A6A9D9AAF6ED5B1 /* ReviewScreen.swift */; };
+		DCBB4A4F17AD763708FE6567 /* DeckActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AAE5238FE212032B0F69281 /* DeckActions.swift */; };
 		DD346FFC66F330D1C06E78AD /* BrowseSheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6930B18961FDA5A86E8698C6 /* BrowseSheets.swift */; };
 		DDDA8EDE7000073797939A7F /* ExtrasPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB13B46EA27C44DA0EB1E25F /* ExtrasPanel.swift */; };
 		DF8A74517291B371844D4109 /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = 8424185EAA298C83E646D810 /* SwiftProtobuf */; };
@@ -182,6 +183,7 @@
 		57C8DA191A977DC9018BA6FE /* AccountStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountStore.swift; sourceTree = "<group>"; };
 		596F4C94F8C7E3BC7265B68A /* AnkiWebAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnkiWebAPI.swift; sourceTree = "<group>"; };
 		59955AFCEE7B6D4FA128B050 /* Backend+NoteEditing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Backend+NoteEditing.swift"; sourceTree = "<group>"; };
+		5AAE5238FE212032B0F69281 /* DeckActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckActions.swift; sourceTree = "<group>"; };
 		5B3FB773E1512B63890C6D97 /* ChineseNotetype.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChineseNotetype.swift; sourceTree = "<group>"; };
 		5FE695072E2AD56D73CFDF36 /* anki_card_rendering.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = anki_card_rendering.pb.swift; sourceTree = "<group>"; };
 		60929A6FE3547718739BDC2F /* anki_notetypes.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = anki_notetypes.pb.swift; sourceTree = "<group>"; };
@@ -462,6 +464,7 @@
 			isa = PBXGroup;
 			children = (
 				42EF404E6DB6C5BBBFCE7FC2 /* CustomStudySheet.swift */,
+				5AAE5238FE212032B0F69281 /* DeckActions.swift */,
 				D8330B61D08CBF395F3FB3A6 /* DeckHomeModel.swift */,
 				F205D8E7E310CDE43B0B71F3 /* DeckHomeScreen.swift */,
 				90A435CF2D3C7A381AA0A1CA /* DeckOverviewScreen.swift */,
@@ -786,6 +789,7 @@
 				77F56A9A749F66849ED494C4 /* CongratsScreen.swift in Sources */,
 				EC2B283A4BDF0A68455762CD /* CornhubApp.swift in Sources */,
 				7D87A4E7210E19AB5B79E286 /* CustomStudySheet.swift in Sources */,
+				DCBB4A4F17AD763708FE6567 /* DeckActions.swift in Sources */,
 				994DD42912E0570DB7ABCC1E /* DeckHomeModel.swift in Sources */,
 				1486FDC1C0D77BB0126E7AAE /* DeckHomeScreen.swift in Sources */,
 				BA35915C78D072067349FC61 /* DeckOverviewScreen.swift in Sources */,

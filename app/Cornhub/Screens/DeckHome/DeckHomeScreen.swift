@@ -10,12 +10,34 @@ struct DeckHomeScreen: View {
     @State private var reviewTarget: ReviewTarget?
     @State private var pickingFile = false
     @State private var showLogin = false
+    @State private var deckActions = DeckActionState()
+    @State private var toastVisible = false
+    @Environment(AppState.self) private var appState
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         NavigationStack {
             content
                 .background(Theme.bg)
+                .safeAreaInset(edge: .bottom) {
+                    if toastVisible, let notice = model.deletedNotice {
+                        DeckUndoToast(notice: notice) {
+                            toastVisible = false
+                            Task { await model.undoDelete() }
+                        }
+                    }
+                }
+                .onChange(of: toastVisible) { _, visible in appState.hideTabBar = visible }
+                .onChange(of: model.deletedNotice) { _, notice in
+                    guard notice != nil else { return toastVisible = false }
+                    toastVisible = true
+                    Task {
+                        try? await Task.sleep(for: .seconds(8))
+                        toastVisible = false
+                        model.dismissDeletedNotice()
+                    }
+                }
+                .deckActionDialogs(model: model, state: $deckActions)
                 .navigationDestination(for: DeckTile.self) { DeckOverviewScreen(deck: $0, model: model) }
                 .toolbar(.hidden, for: .navigationBar)
         }
@@ -94,7 +116,7 @@ struct DeckHomeScreen: View {
                     .accessibilityIdentifier("start-review")
                     Text("Decks").font(.display(DisplaySize.sectionHeading, relativeTo: .title2)).foregroundStyle(Theme.text)
                         .accessibilityAddTraits(.isHeader)
-                    DeckGrid(decks: model.decks)
+                    DeckGrid(decks: model.decks, model: model, actions: $deckActions)
                 }
                 .padding(.horizontal, Theme.margin)
             }
