@@ -71,6 +71,7 @@
 		8B713F888F9A1830D18442A1 /* ClaudeKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EB0223318734756CF60109E /* ClaudeKeychain.swift */; };
 		8CAE1AE6F7F89388D046B28E /* SettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0265733D038EF95004AF1F /* SettingsScreen.swift */; };
 		8D680D0E3E7538500874F6E2 /* DeckRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE46999EEF6F1F904C09012B /* DeckRow.swift */; };
+		8DA9507758D9011D87068D92 /* StatsDeckNameTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10D1848A668214A5BFD1F7D5 /* StatsDeckNameTests.swift */; };
 		8E592D6ECC7578E5A997A89A /* SpeechSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63797BF5E281AB857501E360 /* SpeechSettings.swift */; };
 		8EBA77D0C9FF6C28E729E345 /* anki_generic.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DABF0AA446B19CB7BD8219C /* anki_generic.pb.swift */; };
 		8EE1D068418713DB6429E6A5 /* Backend+Browser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13FFD8A52C4103DA1914C831 /* Backend+Browser.swift */; };
@@ -165,6 +166,7 @@
 		0AC1A3E30F1FD4A8252D3476 /* DeckWrapperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckWrapperTests.swift; sourceTree = "<group>"; };
 		0E60BF4E50A60CFE1718C62B /* Backend+Manage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Backend+Manage.swift"; sourceTree = "<group>"; };
 		0EB0223318734756CF60109E /* ClaudeKeychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeKeychain.swift; sourceTree = "<group>"; };
+		10D1848A668214A5BFD1F7D5 /* StatsDeckNameTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsDeckNameTests.swift; sourceTree = "<group>"; };
 		121C555C90B42ED5F28C6E70 /* BrowseScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowseScreen.swift; sourceTree = "<group>"; };
 		13B682781DDF7906ACAC6304 /* FieldFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldFormatting.swift; sourceTree = "<group>"; };
 		13FFD8A52C4103DA1914C831 /* Backend+Browser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Backend+Browser.swift"; sourceTree = "<group>"; };
@@ -629,6 +631,7 @@
 				4E99F77DEDF9FBAB1C831DE4 /* PinyinTests.swift */,
 				45682C7D3642E127D1836490 /* ProtobufTests.swift */,
 				B24E62803C0C84A7CBA3836B /* SpeechTargetTests.swift */,
+				10D1848A668214A5BFD1F7D5 /* StatsDeckNameTests.swift */,
 				BF6A05C02CE6D4432F912531 /* StudyStreakTests.swift */,
 				8225D66E7AAD24F34AAD4EB7 /* SyncModelTests.swift */,
 				87CD36BADC8736BB55481B72 /* TabBarVisibilityTests.swift */,
@@ -788,6 +791,7 @@
 				8345538C497CBA60878A7C2F /* PinyinTests.swift in Sources */,
 				CBDD637589D23F8F4B6B8F03 /* ProtobufTests.swift in Sources */,
 				D3E725D5A5D8CD543B878A58 /* SpeechTargetTests.swift in Sources */,
+				8DA9507758D9011D87068D92 /* StatsDeckNameTests.swift in Sources */,
 				F3FAB948F046D02B9F4B1C16 /* StudyStreakTests.swift in Sources */,
 				4AFB3CD13C711C4EE0B08557 /* SyncModelTests.swift in Sources */,
 				DAA066AF6FCEA7CC55277A8E /* TabBarVisibilityTests.swift in Sources */,

@@ -659,6 +659,24 @@ final class ScreenTourUITests: XCTestCase {
         if more.waitForExistence(timeout: 5) { more.tap(); sleep(5); shot("42-more-stats-web") }
     }
 
+    func testStatsSubdeckHeaderFitsScreen() {
+        app.launch()
+        tab("Stats")
+        let picker = app.descendants(matching: .any)["stats-deck-picker"]
+        XCTAssertTrue(picker.waitForExistence(timeout: 10))
+        picker.tap()
+        // Pick the first indented (sub)deck entry, if the sample collection has one.
+        let sub = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\u{2003}")).firstMatch
+        guard sub.waitForExistence(timeout: 3) else { return shot("43-stats-no-subdeck") }
+        sub.tap()
+        sleep(2)
+        let screen = app.windows.firstMatch.frame
+        XCTAssertGreaterThanOrEqual(picker.frame.minX, 0)
+        XCTAssertLessThanOrEqual(picker.frame.maxX, screen.width)
+        XCTAssertTrue(picker.label.contains(","), "the label reads parent then deck: \(picker.label)")
+        shot("43-stats-subdeck-header")
+    }
+
     func testSettings() {
         app.launch()
         tab("Settings")

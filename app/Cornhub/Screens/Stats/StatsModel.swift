@@ -11,6 +11,16 @@ enum StatsRange: String, CaseIterable, Identifiable {
 struct StatsDeck: Identifiable, Hashable {
     let id: Int64
     let name: String
+
+    /// The deck's own name: the last `::` component of the full path.
+    var leafName: String { name.components(separatedBy: "::").last ?? name }
+    /// The path above the deck ("A::B" for "A::B::C"), or nil for a top-level deck.
+    var parentPath: String? {
+        let parts = name.components(separatedBy: "::")
+        return parts.count > 1 ? parts.dropLast().joined(separator: " › ") : nil
+    }
+    /// How many parents the deck has; the picker indents by this.
+    var depth: Int { name.components(separatedBy: "::").count - 1 }
 }
 
 /// Reads the engine's `graphs` response and reduces it to what the Stats tab shows. No statistics are computed

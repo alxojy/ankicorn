@@ -65,17 +65,45 @@ private struct StatsContent: View {
     private var deckPicker: some View {
         HStack {
             Menu {
-                Button("All decks") { model.deck = nil }
-                ForEach(model.decks) { deck in Button(deck.name) { model.deck = deck } }
+                Button { model.deck = nil } label: {
+                    if model.deck == nil { Label("All decks", systemImage: "checkmark") } else { Text("All decks") }
+                }
+                ForEach(model.decks) { deck in
+                    Button { model.deck = deck } label: {
+                        let indent = String(repeating: "\u{2003}", count: deck.depth)
+                        if model.deck == deck {
+                            Label(indent + deck.leafName, systemImage: "checkmark")
+                        } else {
+                            Text(indent + deck.leafName)
+                        }
+                    }
+                }
             } label: {
-                Label(model.deck?.name ?? "All decks", systemImage: "chevron.down")
-                    .labelStyle(.titleAndIcon)
-                    .font(.inkAnswer)
-                    .foregroundStyle(Theme.text)
-                    .frame(minHeight: Theme.minTarget)
+                VStack(alignment: .leading, spacing: 2) {
+                    if let parent = model.deck?.parentPath {
+                        Text(parent)
+                            .font(.caption)
+                            .foregroundStyle(Theme.muted)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                    }
+                    HStack(spacing: 6) {
+                        Text(model.deck?.leafName ?? "All decks")
+                            .font(.display(DisplaySize.sectionHeading, relativeTo: .title2))
+                            .foregroundStyle(Theme.text)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                        Image(systemName: "chevron.down")
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(Theme.text2)
+                            .accessibilityHidden(true)
+                    }
+                }
+                .frame(minHeight: Theme.minTarget, alignment: .leading)
             }
-            .accessibilityLabel("Deck: \(model.deck?.name ?? "All decks")")
-            Spacer()
+            .accessibilityIdentifier("stats-deck-picker")
+            .accessibilityLabel("Deck: \(model.deck?.name.replacingOccurrences(of: "::", with: ", ") ?? "All decks")")
+            Spacer(minLength: 0)
         }
     }
 

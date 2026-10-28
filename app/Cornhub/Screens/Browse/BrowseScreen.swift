@@ -157,6 +157,8 @@ private struct BrowseContent: View {
                 HStack(spacing: 6) {
                     Image(systemName: "square.stack").accessibilityHidden(true)
                     Text(model.deck.map { $0.components(separatedBy: "::").last ?? $0 } ?? "All decks")
+                        .lineLimit(1)
+                        .truncationMode(.tail)
                     Image(systemName: "chevron.down").font(.caption2).foregroundStyle(Theme.muted)
                         .accessibilityHidden(true)
                 }
