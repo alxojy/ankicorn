@@ -33,12 +33,15 @@ final class TabBarVisibilityTests: XCTestCase {
 
     func testSmallJittersDoNotToggle() {
         var v = TabBarVisibility()
-        v.scrolled(offset: 100, maxOffset: 1000)
-        v.scrolled(offset: 106, maxOffset: 1000)
-        XCTAssertFalse(v.hidden)
+        for offset: CGFloat in [5, 8, 6, 9, 7] {
+            v.scrolled(offset: offset, maxOffset: 1000)
+            XCTAssertFalse(v.hidden, "moves under the threshold from the top leave the bar shown")
+        }
         v.scrolled(offset: 150, maxOffset: 1000)
         XCTAssertTrue(v.hidden)
         v.scrolled(offset: 144, maxOffset: 1000)
+        XCTAssertTrue(v.hidden, "a small move back up leaves the bar minimized")
+        v.scrolled(offset: 152, maxOffset: 1000)
         XCTAssertTrue(v.hidden)
     }
 
