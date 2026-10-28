@@ -114,6 +114,7 @@
 		D782247F720AB71CBE9DABCB /* ImportedMediaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 226E22F58EA430493F064D54 /* ImportedMediaTests.swift */; };
 		D98381DB267E375BCF580183 /* anki_backend.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7939F359E7332700817C1F63 /* anki_backend.pb.swift */; };
 		D9E54E8C641A8EE463009DA9 /* anki_config.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F91A86445EE66B9435A3B1 /* anki_config.pb.swift */; };
+		DABFF8C3190949B643801262 /* BrowseLiveSearchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31371CEA9C1776AACB78F8ED /* BrowseLiveSearchTests.swift */; };
 		DBEC35D0E8FE3E1B17719804 /* ReviewScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46CC9EB1A6A9D9AAF6ED5B1 /* ReviewScreen.swift */; };
 		DCBB4A4F17AD763708FE6567 /* DeckActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AAE5238FE212032B0F69281 /* DeckActions.swift */; };
 		DD346FFC66F330D1C06E78AD /* BrowseSheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6930B18961FDA5A86E8698C6 /* BrowseSheets.swift */; };
@@ -175,6 +176,7 @@
 		23A467C14E77ED5C9B569CA7 /* ReviewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewModel.swift; sourceTree = "<group>"; };
 		2CE83DD044631565F8AD7DE9 /* anki_deck_config.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = anki_deck_config.pb.swift; sourceTree = "<group>"; };
 		2F7B967CCB872A03FD6950E1 /* FieldHTML.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldHTML.swift; sourceTree = "<group>"; };
+		31371CEA9C1776AACB78F8ED /* BrowseLiveSearchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowseLiveSearchTests.swift; sourceTree = "<group>"; };
 		340BABD4CB1155D2C6A9BBDE /* anki_tags.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = anki_tags.pb.swift; sourceTree = "<group>"; };
 		370F70FBC4409FCA056F3707 /* SpaceGrotesk-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SpaceGrotesk-SemiBold.ttf"; sourceTree = "<group>"; };
 		38ECA7D67E702B95B59A28D1 /* BrowseModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowseModel.swift; sourceTree = "<group>"; };
@@ -603,6 +605,7 @@
 			children = (
 				4917DBEAF1C7A99F7ABA2904 /* AnkiWebInkTests.swift */,
 				B7E863D0EE1310F2E838E2F2 /* BackendTests.swift */,
+				31371CEA9C1776AACB78F8ED /* BrowseLiveSearchTests.swift */,
 				0759933FF86E586334F233EE /* CardStyleTests.swift */,
 				8F8BC41D28CABFDA69F780A1 /* DeckHomeModelTests.swift */,
 				0AC1A3E30F1FD4A8252D3476 /* DeckWrapperTests.swift */,
@@ -759,6 +762,7 @@
 			files = (
 				D04C12A47C2D52938AFEAE45 /* AnkiWebInkTests.swift in Sources */,
 				62623F38B6B090385B9B4E15 /* BackendTests.swift in Sources */,
+				DABFF8C3190949B643801262 /* BrowseLiveSearchTests.swift in Sources */,
 				66E52B1903AD16A60ED3C19D /* CardStyleTests.swift in Sources */,
 				2B373C22C414A88E5EA64360 /* DeckHomeModelTests.swift in Sources */,
 				3054E5BC33A7D8D1660016AB /* DeckWrapperTests.swift in Sources */,

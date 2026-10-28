@@ -84,14 +84,49 @@ final class BrowseModel {
         await search()
     }
 
+    /// Wait after the last keystroke before a live search runs.
+    var debounce: Duration = .milliseconds(300)
+    /// Replaces the engine search (tests only).
+    var searchRunner: ((String) async throws -> [Int64])?
+    private var searchGeneration = 0
+    private var pendingSearch: Task<Void, Never>?
+
+    /// Called when the typed query changes: searches after a short pause, cancelling the pending one.
+    func queryDidChange() {
+        pendingSearch?.cancel()
+        let wait = debounce
+        pendingSearch = Task { [weak self] in
+            try? await Task.sleep(for: wait)
+            guard !Task.isCancelled else { return }
+            await self?.search()
+        }
+    }
+
+    /// Searches now (submit, filters, mode changes), dropping any pending debounced search.
+    func searchNow() async {
+        pendingSearch?.cancel()
+        await search()
+    }
+
     func search() async {
+        searchGeneration += 1
+        let generation = searchGeneration
         isLoading = true
-        defer { isLoading = false }
+        defer { if generation == searchGeneration { isLoading = false } }
+        let text = searchText
         do {
-            ids = try await backend.browserSearch(searchText, notes: notesMode, sortColumn: sortKey, reverse: reverse)
+            let found: [Int64]
+            if let searchRunner {
+                found = try await searchRunner(text)
+            } else {
+                found = try await backend.browserSearch(text, notes: notesMode, sortColumn: sortKey, reverse: reverse)
+            }
+            guard generation == searchGeneration else { return }
+            ids = found
             rows = [:]
             selection.formIntersection(ids)
         } catch {
+            guard generation == searchGeneration else { return }
             ids = []
             errorMessage = "\(error)"
         }

@@ -63,7 +63,8 @@ private struct BrowseContent: View {
             .navigationTitle("Browse")
             .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $model.query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search cards")
-            .onSubmit(of: .search) { Task { await model.search() } }
+            .onSubmit(of: .search) { Task { await model.searchNow() } }
+            .onChange(of: model.query) { _, _ in model.queryDidChange() }
             .toolbar { toolbar }
             .task {
                 model.deck = appState.lastBrowseDeck

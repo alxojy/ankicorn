@@ -23,6 +23,7 @@ struct AppShell: View {
     @State private var appState = AppState()
     @State private var deckModel: DeckHomeModel
     @State private var sync: SyncModel
+    @State private var keyboardUp = false
 
     init(launch: LaunchOptions) {
         self.launch = launch
@@ -36,11 +37,13 @@ struct AppShell: View {
             screen
                 .safeAreaPadding(.bottom, Theme.tabBarHeight + Theme.tabBarBottomInset + 8)
             FloatingTabBar(selection: $appState.selection)
-                .offset(y: appState.hideTabBar ? Theme.tabBarHeight + Theme.tabBarBottomInset + 40 : 0)
-                .opacity(appState.hideTabBar ? 0 : 1)
-                .allowsHitTesting(!appState.hideTabBar)
-                .animation(.spring(duration: 0.3), value: appState.hideTabBar)
+                .offset(y: tabBarHidden ? Theme.tabBarHeight + Theme.tabBarBottomInset + 40 : 0)
+                .opacity(tabBarHidden ? 0 : 1)
+                .allowsHitTesting(!tabBarHidden)
+                .animation(.spring(duration: 0.3), value: tabBarHidden)
         }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in keyboardUp = true }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in keyboardUp = false }
         .tint(Theme.accent)
         .environment(appState)
         .task {
@@ -60,6 +63,9 @@ struct AppShell: View {
         }
         .onOpenURL { url in Task { await deckModel.importPackage(url) } }
     }
+
+    /// Hidden while selecting in Browse (`hideTabBar`) and while the software keyboard is up.
+    private var tabBarHidden: Bool { appState.hideTabBar || keyboardUp }
 
     @ViewBuilder private var screen: some View {
         switch appState.selection {

@@ -365,6 +365,37 @@ final class ScreenTourUITests: XCTestCase {
         XCTAssertTrue(app.descendants(matching: .any)["editor-field-0"].waitForExistence(timeout: 5), "row opens the note editor")
     }
 
+    func testBrowseLiveSearchAndKeyboardHidesTabBar() {
+        app.launch()
+        tab("Browse")
+        let search = app.searchFields.firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 10), "browse has a search field")
+        let full = browseCount()
+        XCTAssertGreaterThan(full, 0, "full list shows cards")
+        search.tap()
+        let settings = app.descendants(matching: .any)["tab-settings"]
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "keyboard is up")
+        sleep(1)
+        shot("33-browse-keyboard-tabbar")
+        XCTAssertTrue(!settings.isHittable || settings.frame.minY >= app.keyboards.firstMatch.frame.minY,
+                      "tab bar is hidden or below the keyboard")
+        search.typeText("zzzqqqnomatch")
+        let filtered = NSPredicate { _, _ in self.browseCount() < full }
+        wait(for: [XCTNSPredicateExpectation(predicate: filtered, object: nil)], timeout: 10)
+        XCTAssertLessThan(browseCount(), full, "rows filter without pressing return")
+        shot("34-browse-live-filtered")
+        let clear = app.buttons["Clear text"]
+        if clear.waitForExistence(timeout: 3) { clear.tap() }
+        let restored = NSPredicate { _, _ in self.browseCount() == full }
+        wait(for: [XCTNSPredicateExpectation(predicate: restored, object: nil)], timeout: 10)
+        XCTAssertEqual(browseCount(), full, "clearing the field restores the full count")
+        if app.buttons["Cancel"].exists { app.buttons["Cancel"].tap() }
+        let back = NSPredicate { _, _ in settings.isHittable }
+        wait(for: [XCTNSPredicateExpectation(predicate: back, object: nil)], timeout: 10)
+        XCTAssertTrue(settings.isHittable, "tab bar returns after the keyboard closes")
+        shot("35-browse-keyboard-closed")
+    }
+
     private func browseCount() -> Int {
         let element = app.descendants(matching: .any)["browse-count"].firstMatch
         guard element.waitForExistence(timeout: 5) else { return -1 }
