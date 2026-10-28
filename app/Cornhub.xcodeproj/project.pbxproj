@@ -37,6 +37,7 @@
 		4040063FEC3959045F083C92 /* OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = B19647FC9B3D64D83BB3EECE /* OFL.txt */; };
 		4769AEDD42F99549BAA7F372 /* mathjax.js in Resources */ = {isa = PBXBuildFile; fileRef = 6D837C2531F5600DB81EF61F /* mathjax.js */; };
 		4A9AC59AC5C5B5CF23543436 /* anki_media.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A6EAE69F49109DF663CD5D3 /* anki_media.pb.swift */; };
+		4AFB3CD13C711C4EE0B08557 /* SyncModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8225D66E7AAD24F34AAD4EB7 /* SyncModelTests.swift */; };
 		4DF778A156D1AF9A1D956230 /* BackendError.swift in Sources */ = {isa = PBXBuildFile; fileRef = E043227E68D6749CF8FB475E /* BackendError.swift */; };
 		4F2C2447F88C11DD7BE24417 /* SpeechAndAISection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A390E5B118ED80ABB809F7CD /* SpeechAndAISection.swift */; };
 		52AB78B9E8AF0D6D8C591849 /* AccountStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57C8DA191A977DC9018BA6FE /* AccountStore.swift */; };
@@ -205,6 +206,7 @@
 		7F2D7EB07B06DAF424F78110 /* NoteEditorScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteEditorScreen.swift; sourceTree = "<group>"; };
 		7FFB421172750110C6C06DCF /* FieldHTMLTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldHTMLTests.swift; sourceTree = "<group>"; };
 		814FD4F05073973FBD616F71 /* anki_cards.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = anki_cards.pb.swift; sourceTree = "<group>"; };
+		8225D66E7AAD24F34AAD4EB7 /* SyncModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncModelTests.swift; sourceTree = "<group>"; };
 		86B6197F7289026210B6BC2C /* Backend+Decks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Backend+Decks.swift"; sourceTree = "<group>"; };
 		881F0DBCB83EE88C356552D4 /* anki_sync.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = anki_sync.pb.swift; sourceTree = "<group>"; };
 		89E36D8E238EB0EC1CA5EB7F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -590,6 +592,7 @@
 				45682C7D3642E127D1836490 /* ProtobufTests.swift */,
 				B24E62803C0C84A7CBA3836B /* SpeechTargetTests.swift */,
 				BF6A05C02CE6D4432F912531 /* StudyStreakTests.swift */,
+				8225D66E7AAD24F34AAD4EB7 /* SyncModelTests.swift */,
 			);
 			path = CornhubTests;
 			sourceTree = "<group>";
@@ -742,6 +745,7 @@
 				CBDD637589D23F8F4B6B8F03 /* ProtobufTests.swift in Sources */,
 				D3E725D5A5D8CD543B878A58 /* SpeechTargetTests.swift in Sources */,
 				F3FAB948F046D02B9F4B1C16 /* StudyStreakTests.swift in Sources */,
+				4AFB3CD13C711C4EE0B08557 /* SyncModelTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -8,6 +8,17 @@ struct FullSyncChoice: Equatable {
     var serverUsn: Int32
 }
 
+/// The engine calls a sync needs; `Backend` is the real one and tests substitute a fake.
+protocol SyncEngine: Sendable {
+    func syncCollection(auth: Anki_Sync_SyncAuth) async throws -> Anki_Sync_SyncCollectionResponse
+    func syncMedia(auth: Anki_Sync_SyncAuth) async throws
+    func fullUploadOrDownload(auth: Anki_Sync_SyncAuth, upload: Bool, serverUsn: Int32?) async throws
+    func createBackup(folder: URL, force: Bool, wait: Bool) async throws -> Bool
+    nonisolated func latestProgress() throws -> Anki_Collection_Progress
+}
+
+extension Backend: SyncEngine {}
+
 /// Drives login, sync, the full-sync choice and backups. Shared by the Decks tab and Settings.
 @MainActor
 @Observable
@@ -80,7 +91,7 @@ final class SyncModel {
     // MARK: Sync
 
     /// Runs only from the user's own action (button, pull to refresh) or the opt-in sync-on-open setting.
-    func sync(backend: Backend) async {
+    func sync(backend: any SyncEngine) async {
         guard !isSyncing, let hkey = store.hkey else { return }
         var auth = Anki_Sync_SyncAuth()
         auth.hkey = hkey
@@ -111,7 +122,7 @@ final class SyncModel {
     }
 
     /// The user's answer to the full-sync prompt. Takes a backup first, then transfers and reopens.
-    func resolveFullSync(upload: Bool, backend: Backend) async {
+    func resolveFullSync(upload: Bool, backend: any SyncEngine) async {
         guard let choice = fullSyncChoice, let auth = pendingAuth else { return }
         fullSyncChoice = nil
         phase = .syncing(upload ? "Uploading…" : "Downloading…")
@@ -144,13 +155,13 @@ final class SyncModel {
     }
 
     /// Periodic backup: the engine throttles by its own interval, so this is safe to call often.
-    func backupIfDue(_ backend: Backend) async {
+    func backupIfDue(_ backend: any SyncEngine) async {
         if (try? await backend.createBackup(folder: Self.backupsFolder, force: false, wait: false)) == true {
             defaults.set(Date(), forKey: Keys.lastBackup)
         }
     }
 
-    func backupNow(_ backend: Backend) async {
+    func backupNow(_ backend: any SyncEngine) async {
         phase = .syncing("Backing up…")
         do {
             try await backend.createBackup(folder: Self.backupsFolder, force: true, wait: true)
@@ -179,7 +190,7 @@ final class SyncModel {
     }
 
     /// Polls `latest_progress` while a long call occupies the backend.
-    private func startProgress(_ backend: Backend) -> Task<Void, Never> {
+    private func startProgress(_ backend: any SyncEngine) -> Task<Void, Never> {
         Task { [weak self] in
             while !Task.isCancelled {
                 if let progress = try? backend.latestProgress(), let text = Self.describe(progress) {
