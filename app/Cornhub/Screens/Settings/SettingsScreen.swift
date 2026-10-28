@@ -110,7 +110,10 @@ struct SettingsScreen: View {
                 Text("Sync")
             } footer: {
                 if sync.isSyncing {
-                    Text(sync.statusText)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(sync.statusText)
+                        if let detail = sync.detail { Text(detail).foregroundStyle(Theme.muted) }
+                    }
                 } else if sync.hasFailed {
                     Text(sync.statusText).foregroundStyle(Theme.again)
                 }

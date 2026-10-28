@@ -126,6 +126,40 @@ final class SyncModelTests: XCTestCase {
         XCTAssertEqual(SyncModel.describe(progress, transfer: "Downloading"), "Downloading 42%")
     }
 
+    private func normal(_ stage: String, added: String = "", removed: String = "") -> Anki_Collection_Progress {
+        var progress = Anki_Collection_Progress()
+        var value = Anki_Collection_Progress.NormalSync()
+        value.stage = stage
+        value.added = added
+        value.removed = removed
+        progress.normalSync = value
+        return progress
+    }
+
+    func testNormalSyncStageIsNotPrefixed() {
+        XCTAssertEqual(SyncModel.describe(normal("Syncing...")), "Syncing…")
+        XCTAssertEqual(SyncModel.describe(normal("Checking...")), "Checking…")
+        XCTAssertNil(SyncModel.describe(normal("")))
+    }
+
+    func testAddedAndRemovedLinesPassThroughUnlessZero() {
+        XCTAssertEqual(SyncModel.describeCounts(normal("Syncing...", added: "Added/modified: 3↓ 2↑", removed: "Removed: 0↓ 0↑")),
+                       "Added/modified: 3↓ 2↑")
+        XCTAssertNil(SyncModel.describeCounts(normal("Syncing...", added: "Added/modified: 0↓ 0↑", removed: "")))
+    }
+
+    func testMediaProgressTextPassesThrough() {
+        var progress = Anki_Collection_Progress()
+        var media = Anki_Sync_MediaSyncProgress()
+        media.checked = "Checked: 12"
+        media.added = "Added: 2↓ 1↑"
+        progress.mediaSync = media
+        XCTAssertEqual(SyncModel.describe(progress), "Checked: 12")
+        XCTAssertEqual(SyncModel.describeCounts(progress), "Added: 2↓ 1↑")
+        progress.mediaSync = Anki_Sync_MediaSyncProgress()
+        XCTAssertEqual(SyncModel.describe(progress), "Syncing media…")
+    }
+
     func testSignInStateNotifiesObservers() async throws {
         AccountStore().clear()
         defer { AccountStore().clear() }

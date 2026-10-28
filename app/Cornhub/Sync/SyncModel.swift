@@ -31,6 +31,8 @@ final class SyncModel {
     }
 
     private(set) var phase = Phase.idle
+    /// The engine's change counts ("Added/modified: 3↓ 2↑"), shown muted under the status while syncing.
+    private(set) var detail: String?
     private(set) var username: String?
     /// Observed copy of "an hkey is stored", so screens redraw on login and logout (the Keychain is not observable).
     private(set) var isSignedIn: Bool
@@ -107,6 +109,7 @@ final class SyncModel {
         guard !isSyncing, let hkey = store.hkey else { return }
         var auth = Anki_Sync_SyncAuth()
         auth.hkey = hkey
+        detail = nil
         phase = .syncing("Syncing…")
         let poller = startProgress(backend)
         defer { poller.cancel() }
@@ -205,12 +208,14 @@ final class SyncModel {
     // MARK: Private
 
     private func finish() {
+        detail = nil
         lastSynced = Date()
         defaults.set(lastSynced, forKey: Keys.last)
         phase = .idle
     }
 
     private func fail(_ error: Error) {
+        detail = nil
         phase = .failed(error.localizedDescription)
     }
 
@@ -220,6 +225,7 @@ final class SyncModel {
             while !Task.isCancelled {
                 if let progress = try? backend.latestProgress(), let text = Self.describe(progress, transfer: transfer) {
                     self?.updateDetail(text)
+                    self?.updateCounts(Self.describeCounts(progress))
                 }
                 try? await Task.sleep(for: .milliseconds(400))
             }
@@ -230,13 +236,38 @@ final class SyncModel {
         if case .syncing = phase { phase = .syncing(text) }
     }
 
+    private func updateCounts(_ text: String?) {
+        if case .syncing = phase { detail = text }
+    }
+
     nonisolated static func describe(_ progress: Anki_Collection_Progress, transfer: String? = nil) -> String? {
         switch progress.value {
-        case .normalSync(let value)?: return value.stage.isEmpty ? nil : "Syncing \(value.stage)…"
+        case .normalSync(let value)?: return value.stage.isEmpty ? nil : Self.tidy(value.stage)
         case .fullSync(let value)? where value.total > 0:
             return "\(transfer ?? "Transferring") \(Int(value.transferred) * 100 / Int(value.total))%"
-        case .mediaSync?: return "Syncing media…"
+        case .mediaSync(let value)?: return value.checked.isEmpty ? "Syncing media…" : Self.tidy(value.checked)
         default: return nil
         }
+    }
+
+    /// The engine's added/removed lines, or nil when there is nothing but zeros to say.
+    nonisolated static func describeCounts(_ progress: Anki_Collection_Progress) -> String? {
+        let lines: [String]
+        switch progress.value {
+        case .normalSync(let value)?: lines = [value.added, value.removed]
+        case .mediaSync(let value)?: lines = [value.added, value.removed]
+        default: return nil
+        }
+        let shown = lines.map { Self.tidy($0) }.filter { line in
+            !line.isEmpty && line.contains { $0.isNumber && $0 != "0" }
+        }
+        return shown.isEmpty ? nil : shown.joined(separator: " · ")
+    }
+
+    /// The engine ends its phrases with three dots; Ink type uses the single character.
+    nonisolated private static func tidy(_ text: String) -> String {
+        var text = text.trimmingCharacters(in: .whitespaces)
+        if text.hasSuffix("...") { text = String(text.dropLast(3)) + "…" }
+        return text
     }
 }

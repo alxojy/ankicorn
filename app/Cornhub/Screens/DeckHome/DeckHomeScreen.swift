@@ -153,9 +153,15 @@ struct DeckHomeScreen: View {
                     .fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: 6) {
                     Circle().fill(sync.hasFailed ? Theme.again : sync.isSignedIn ? Theme.synced : Theme.zero).frame(width: 6, height: 6).accessibilityHidden(true)
-                    Text(sync.statusText).font(.caption)
-                        .foregroundStyle(sync.hasFailed ? Theme.again : Theme.muted)
-                        .accessibilityIdentifier("sync-status")
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(sync.statusText).font(.caption)
+                            .foregroundStyle(sync.hasFailed ? Theme.again : Theme.muted)
+                            .accessibilityIdentifier("sync-status")
+                        if sync.isSyncing, let detail = sync.detail {
+                            Text(detail).font(.caption2).foregroundStyle(Theme.muted)
+                                .accessibilityIdentifier("sync-detail")
+                        }
+                    }
                 }
             }
             if !typeSize.isAccessibilitySize { Spacer() }
