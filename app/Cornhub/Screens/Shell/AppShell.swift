@@ -16,7 +16,7 @@ struct AppShell: View {
         ZStack(alignment: .bottom) {
             Theme.bg.ignoresSafeArea()
             screen
-                .safeAreaPadding(.bottom, 88)
+                .safeAreaPadding(.bottom, Theme.tabBarHeight + Theme.tabBarBottomInset + 8)
             FloatingTabBar(selection: $selection)
         }
         .tint(Theme.accent)
@@ -28,6 +28,9 @@ struct AppShell: View {
                 await sync.backupIfDue(backend)
                 if sync.syncOnOpen { await sync.sync(backend: backend) }
             }
+        }
+        .sheet(isPresented: Binding(get: { deckModel.importState != .idle }, set: { if !$0 { deckModel.dismissImport() } })) {
+            ImportSheet(state: deckModel.importState, dismiss: deckModel.dismissImport)
         }
         .onOpenURL { url in Task { await deckModel.importPackage(url) } }
     }
@@ -41,7 +44,7 @@ struct AppShell: View {
         case .stats:
             StatsScreen(backend: deckModel.backend)
         case .settings:
-            SettingsScreen(sync: sync, backend: deckModel.backend)
+            SettingsScreen(sync: sync, backend: deckModel.backend) { url in Task { await deckModel.importPackage(url) } }
         }
     }
 }

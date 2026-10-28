@@ -49,6 +49,20 @@ final class ScreenTourUITests: XCTestCase {
         XCTAssertTrue(
             app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'done today'")).firstMatch
                 .waitForExistence(timeout: 10), "hero line reads 'N done today'")
+        XCTAssertTrue(app.buttons["Sync"].exists && app.buttons["Add card"].exists, "header has Sync and Add card")
+        XCTAssertFalse(app.buttons["Import deck"].exists, "Import deck left the header")
+        let due = app.descendants(matching: .any)["due-total"].firstMatch
+        let caption = app.staticTexts["cards due"].firstMatch
+        XCTAssertTrue(caption.exists, "cards due shows")
+        XCTAssertLessThan(abs(due.frame.maxY - caption.frame.maxY), 30, "cards due sits on the due count's row")
+        XCTAssertGreaterThan(caption.frame.minX, due.frame.minX + 60, "cards due is to the right of the count")
+        XCTAssertTrue(
+            app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'streak'")).firstMatch.exists,
+            "hero line shows the streak")
+        XCTAssertTrue(
+            app.descendants(matching: .any).matching(NSPredicate(format: "label MATCHES %@", "\\d+ new, \\d+ learning, \\d+ review"))
+                .firstMatch.exists, "due bar legend is always present")
+        XCTAssertGreaterThanOrEqual(app.buttons["start-review"].firstMatch.frame.height, 60, "Start review is 60 pt")
         shot("01-home")
         app.swipeUp()
         shot("02-home-scrolled")
@@ -195,6 +209,11 @@ final class ScreenTourUITests: XCTestCase {
         let tabTop = app.descendants(matching: .any)["tab-settings"].frame.minY
         XCTAssertLessThanOrEqual(
             app.descendants(matching: .any)["settings-tools"].frame.maxY, tabTop, "last Settings row clears the tab bar")
+        let importer = app.descendants(matching: .any)["settings-import-export"]
+        scrollTo(importer)
+        importer.tap()
+        XCTAssertTrue(app.buttons["import-deck"].waitForExistence(timeout: 5), "Settings › Import and export has Import deck")
+        app.navigationBars.buttons.element(boundBy: 0).tap()
         for (id, name) in [("settings-manage", "52-manage"), ("settings-tools", "53-tools"),
                            ("settings-import-export", "54-import-export")] {
             let item = app.descendants(matching: .any)[id]

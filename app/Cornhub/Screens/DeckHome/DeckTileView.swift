@@ -7,12 +7,12 @@ struct CountsLine: View {
     let review: Int
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 12) {
             count(new, Theme.new)
             count(learning, Theme.learning)
             count(review, Theme.accent)
         }
-        .font(.display(17, relativeTo: .subheadline))
+        .font(.display(DisplaySize.tileCount, relativeTo: .subheadline))
         .monospacedDigit()
     }
 
@@ -23,27 +23,47 @@ struct CountsLine: View {
 
 struct DeckTileView: View {
     let deck: DeckTile
+    /// Position in the grid; the glyph colour cycles new, learning, synced, again.
+    var index = 0
+
+    private var glyphColor: Color { [Theme.new, Theme.learning, Theme.synced, Theme.again][index % 4] }
+
+    private var glyphFont: Font {
+        let isLatin = deck.glyph.unicodeScalars.allSatisfy { $0.isASCII }
+        return isLatin
+            ? .system(.title, design: .default, weight: .bold)
+            : .custom("PingFangSC-Semibold", size: DisplaySize.tileGlyph, relativeTo: .title)
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
             Text(deck.glyph)
-                .font(.display(DisplaySize.hanziField, relativeTo: .largeTitle))
-                .foregroundStyle(Theme.accent)
+                .font(glyphFont)
+                .foregroundStyle(glyphColor)
                 .minimumScaleFactor(0.5)
-            Text(deck.name)
-                .font(.headline)
-                .foregroundStyle(Theme.text)
-                .lineLimit(2)
-            Text("\(deck.totalCards) cards")
-                .font(.caption)
-                .foregroundStyle(Theme.muted)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(deck.name)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Theme.text)
+                    .lineLimit(2)
+                Text("\(deck.totalCards) cards")
+                    .font(.caption)
+                    .foregroundStyle(Theme.muted)
+            }
             CountsLine(new: deck.newCount, learning: deck.learningCount, review: deck.reviewCount)
-            ProgressView(value: deck.progress)
-                .tint(Theme.accent)
+            GeometryReader { proxy in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Theme.raised)
+                    Capsule().fill(Theme.accent).frame(width: proxy.size.width * deck.progress)
+                }
+            }
+            .frame(height: Theme.Radius.bar)
+            .accessibilityHidden(true)
         }
         .padding(16)
-        .frame(maxWidth: .infinity, minHeight: Theme.minTarget, alignment: .leading)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.Radius.tile))
+        .frame(maxWidth: .infinity, minHeight: 132, alignment: .topLeading)
+        .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.tile))
+        .overlay(RoundedRectangle(cornerRadius: Theme.Radius.tile).strokeBorder(Theme.hairline, lineWidth: 1))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(deck.accessibilityLabel)
         .accessibilityIdentifier("deck-tile")
@@ -56,8 +76,8 @@ struct DeckGrid: View {
 
     var body: some View {
         LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
-            ForEach(decks) { deck in
-                NavigationLink(value: deck) { DeckTileView(deck: deck) }
+            ForEach(Array(decks.enumerated()), id: \.element.id) { index, deck in
+                NavigationLink(value: deck) { DeckTileView(deck: deck, index: index) }
                     .buttonStyle(.plain)
             }
         }

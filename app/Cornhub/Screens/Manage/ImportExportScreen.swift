@@ -4,12 +4,22 @@ import UniformTypeIdentifiers
 /// CSV import and exports (`.apkg`, `.colpkg`, note and card CSV) with the share sheet.
 struct ImportExportScreen: View {
     let backend: Backend?
+    let importDeck: (URL) -> Void
+    @State private var pickingDeck = false
     @State private var model = ImportExportModel()
     @State private var pickingCsv = false
 
     var body: some View {
         List {
             Section {
+                Button {
+                    pickingDeck = true
+                } label: {
+                    Label("Import deck", systemImage: "square.and.arrow.down")
+                }
+                .disabled(backend == nil || model.isWorking)
+                .frame(minHeight: Theme.minTarget).listRowBackground(Theme.surface)
+                .accessibilityIdentifier("import-deck")
                 Button {
                     pickingCsv = true
                 } label: {
@@ -21,7 +31,7 @@ struct ImportExportScreen: View {
             } header: {
                 Text("Import")
             } footer: {
-                Text("The engine detects the delimiter, columns, note type and deck. Use Import deck on the Decks tab for .apkg files.")
+                Text("The engine detects the delimiter, columns, note type and deck. Import deck reads .apkg and .colpkg packages; a .colpkg replaces your collection.")
             }
             exportSection
             if model.isWorking {
@@ -44,6 +54,11 @@ struct ImportExportScreen: View {
         .navigationTitle("Import and export")
         .navigationBarTitleDisplayMode(.inline)
         .task(id: backend == nil) { if let backend { await model.loadDecks(backend) } }
+        .background {
+            Color.clear.fileImporter(isPresented: $pickingDeck, allowedContentTypes: UTType.ankiPackages) { result in
+                if case .success(let url) = result { importDeck(url) }
+            }
+        }
         .fileImporter(isPresented: $pickingCsv, allowedContentTypes: [.commaSeparatedText, .tabSeparatedText, .plainText]) {
             result in
             if let backend, case .success(let url) = result { Task { await model.importCsv(url, backend: backend) } }

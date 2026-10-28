@@ -23,6 +23,7 @@ final class DeckHomeModel {
     private(set) var state = State.loading
     private(set) var decks: [DeckTile] = []
     private(set) var doneToday = 0
+    private(set) var streak = 0
     private(set) var importState = ImportState.idle
 
     private let launch: LaunchOptions
@@ -141,6 +142,9 @@ final class DeckHomeModel {
         let tree = try await backend.deckTree(now: Int64(Date().timeIntervalSince1970))
         decks = DeckTile.tiles(from: tree)
         doneToday = Int((try? await backend.graphs(search: "rated:1", days: 1).today.answerCount) ?? 0)
+        if let graphs = try? await backend.graphs(search: "", days: 365) {
+            streak = StudyStreak.days(StudyStreak.dailyCounts(graphs.reviews.count, days: 112))
+        }
     }
 
     private func seedSampleDecks(_ backend: Backend) async throws {

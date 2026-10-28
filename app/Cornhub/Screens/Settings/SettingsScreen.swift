@@ -4,6 +4,7 @@ import SwiftUI
 struct SettingsScreen: View {
     let sync: SyncModel
     let backend: Backend?
+    var importDeck: (URL) -> Void = { _ in }
     @State private var prefs = PreferencesModel()
     @State private var showLogin = false
     @State private var confirmLogout = false
@@ -30,7 +31,7 @@ struct SettingsScreen: View {
                 }
                 Section {
                     NavigationLink {
-                        ImportExportScreen(backend: backend)
+                        ImportExportScreen(backend: backend, importDeck: importDeck)
                     } label: {
                         Label("Import and export", systemImage: "square.and.arrow.up.on.square")
                     }

@@ -48,11 +48,7 @@ final class StatsModel {
 
     /// Reviews per day for the last 16 weeks, oldest first (112 values, last is today).
     var heatmap: [Int] {
-        let counts = response?.reviews.count ?? [:]
-        return (-111...0).map { offset in
-            guard let day = counts[Int32(offset)] else { return 0 }
-            return Int(day.learn + day.relearn + day.young + day.mature + day.filtered)
-        }
+        StudyStreak.dailyCounts(response?.reviews.count ?? [:], days: 112)
     }
 
     /// Cards due today and on each of the next six days.
@@ -63,15 +59,7 @@ final class StatsModel {
 
     /// Consecutive days with reviews, counting back from today (or yesterday if today has none yet).
     var streak: Int {
-        let counts = heatmap
-        var index = counts.count - 1
-        if counts[index] == 0 { index -= 1 }
-        var days = 0
-        while index >= 0, counts[index] > 0 {
-            days += 1
-            index -= 1
-        }
-        return days
+        StudyStreak.days(heatmap)
     }
 
     var todayCount: Int { Int(response?.today.answerCount ?? 0) }
@@ -97,5 +85,29 @@ final class StatsModel {
             let full = prefix.isEmpty ? node.name : "\(prefix)::\(node.name)"
             return [StatsDeck(id: node.deckID, name: full)] + flatten(node.children, prefix: full)
         }
+    }
+}
+
+/// The study streak, shared by the Stats tab and the Decks home so both show the same engine-backed value.
+enum StudyStreak {
+    /// Reviews per day from the engine's `graphs` review counts (keyed by day offset, 0 = today), oldest first.
+    static func dailyCounts(_ counts: [Int32: Anki_Stats_GraphsResponse.ReviewCountsAndTimes.Reviews], days: Int) -> [Int] {
+        (-(days - 1)...0).map { offset in
+            guard let day = counts[Int32(offset)] else { return 0 }
+            return Int(day.learn + day.relearn + day.young + day.mature + day.filtered)
+        }
+    }
+
+    /// Consecutive days with reviews, counting back from the last entry (today), or from yesterday when
+    /// today has none yet. `counts` is oldest first.
+    static func days(_ counts: [Int]) -> Int {
+        guard var index = counts.indices.last else { return 0 }
+        if counts[index] == 0 { index -= 1 }
+        var days = 0
+        while index >= 0, counts[index] > 0 {
+            days += 1
+            index -= 1
+        }
+        return days
     }
 }

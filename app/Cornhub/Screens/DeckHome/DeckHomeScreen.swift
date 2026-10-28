@@ -28,9 +28,6 @@ struct DeckHomeScreen: View {
         .fileImporter(isPresented: $pickingFile, allowedContentTypes: UTType.ankiPackages) { result in
             if case .success(let url) = result { Task { await model.importPackage(url) } }
         }
-        .sheet(isPresented: Binding(get: { model.importState != .idle }, set: { if !$0 { model.dismissImport() } })) {
-            ImportSheet(state: model.importState, dismiss: model.dismissImport)
-        }
         .sheet(isPresented: $showLogin) { LoginSheet(sync: sync, backend: model.backend) }
         .confirmationDialog(
             "Your collection and AnkiWeb differ", isPresented: Binding(
@@ -75,24 +72,29 @@ struct DeckHomeScreen: View {
             }
         case .loaded:
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: Theme.margin) {
                     header
                     hero
                     StackedBar(new: model.newTotal, learning: model.learningTotal, review: model.reviewTotal)
                     Button {
                         reviewTarget = ReviewTarget(deckID: nil)
                     } label: {
-                        Text("Start review").font(.headline).frame(maxWidth: .infinity, minHeight: Theme.minTarget)
+                        HStack(spacing: 10) {
+                            Text("Start review").font(.headline.weight(.bold))
+                            Image(systemName: "arrow.right").font(.headline.weight(.heavy)).accessibilityHidden(true)
+                        }
+                        .foregroundStyle(Theme.onAccent)
+                        .frame(maxWidth: .infinity, minHeight: Theme.startReviewHeight)
+                        .background(Theme.accent, in: Capsule())
+                        .contentShape(Capsule())
                     }
-                    .buttonStyle(.borderedProminent)
-                    .buttonBorderShape(.capsule)
-                    .tint(Theme.accent)
-                    .foregroundStyle(Theme.onAccent)
+                    .buttonStyle(.plain)
                     .accessibilityIdentifier("start-review")
-                    Text("Decks").font(.inkAnswer).foregroundStyle(Theme.text)
+                    Text("Decks").font(.display(DisplaySize.sectionHeading, relativeTo: .title2)).foregroundStyle(Theme.text)
+                        .accessibilityAddTraits(.isHeader)
                     DeckGrid(decks: model.decks)
                 }
-                .padding(.horizontal, 16)
+                .padding(.horizontal, Theme.margin)
             }
             .refreshable { await runSync() }
         }
@@ -103,22 +105,21 @@ struct DeckHomeScreen: View {
             ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
             : AnyLayout(HStackLayout(spacing: 8))
         return layout {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide)))
-                    .font(.headline).foregroundStyle(Theme.text)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(Date.now.formatted(.dateTime.weekday(.wide).day().month(.abbreviated)))
+                    .font(.subheadline.weight(.medium)).foregroundStyle(Theme.text2)
                     .fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: 6) {
-                    Circle().fill(sync.hasFailed ? Theme.again : sync.isSignedIn ? Theme.synced : Theme.muted).frame(width: 8, height: 8).accessibilityHidden(true)
-                    Text(sync.statusText).font(.footnote)
+                    Circle().fill(sync.hasFailed ? Theme.again : sync.isSignedIn ? Theme.synced : Theme.zero).frame(width: 6, height: 6).accessibilityHidden(true)
+                    Text(sync.statusText).font(.caption)
                         .foregroundStyle(sync.hasFailed ? Theme.again : Theme.muted)
                         .accessibilityIdentifier("sync-status")
                 }
             }
             if !typeSize.isAccessibilitySize { Spacer() }
-            HStack(spacing: 8) {
+            HStack(spacing: 10) {
                 roundButton("arrow.triangle.2.circlepath", "Sync") { Task { await runSync() } }
-                roundButton("square.and.arrow.down", "Import deck") { pickingFile = true }
-                roundButton("plus", "Add") { addingCard = true }
+                roundButton("plus", "Add card") { addingCard = true }
             }
         }
     }
@@ -144,6 +145,7 @@ struct DeckHomeScreen: View {
                 .foregroundStyle(Theme.text)
                 .frame(width: Theme.minTarget, height: Theme.minTarget)
                 .background(Theme.control, in: Circle())
+                .overlay(Circle().strokeBorder(Theme.hairline, lineWidth: 1))
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
@@ -152,20 +154,28 @@ struct DeckHomeScreen: View {
     }
 
     private var hero: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("\(model.dueTotal)")
-                .font(.display(DisplaySize.dueCount))
-                .foregroundStyle(Theme.text)
-                .minimumScaleFactor(0.5)
-                .accessibilityIdentifier("due-total")
-            Text("cards due").font(.display(20, relativeTo: .title3)).foregroundStyle(Theme.text2)
-            Text(heroLine).font(.footnote).foregroundStyle(Theme.muted)
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                Text("\(model.dueTotal)")
+                    .font(.display(DisplaySize.dueCount))
+                    .tracking(-4)
+                    .foregroundStyle(Theme.text)
+                    .minimumScaleFactor(0.5)
+                    .lineLimit(1)
+                    .accessibilityIdentifier("due-total")
+                Text("cards due")
+                    .font(.display(DisplaySize.heroCaption, relativeTo: .title3).weight(.medium))
+                    .foregroundStyle(Theme.muted)
+                    .lineLimit(1)
+            }
+            Text(heroLine).font(.subheadline).foregroundStyle(Theme.muted)
         }
         .accessibilityElement(children: .combine)
     }
 
     private var heroLine: String {
-        "≈ \(model.estimatedMinutes) min · \(model.doneToday) done today · streak —"
+        let streak = model.streak > 0 ? "\(model.streak)-day streak" : "No streak yet"
+        return "About \(model.estimatedMinutes) min · \(model.doneToday) done today · \(streak)"
     }
 }
 
@@ -178,34 +188,36 @@ struct StackedBar: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             GeometryReader { proxy in
-                let total = max(new + learning + review, 1)
-                HStack(spacing: 2) {
-                    segment(new, total, Theme.new, proxy.size.width)
-                    segment(learning, total, Theme.learning, proxy.size.width)
-                    segment(review, total, Theme.accent, proxy.size.width)
+                let total = new + learning + review
+                if total == 0 {
+                    Theme.raised.clipShape(Capsule())
+                } else {
+                    let segments = [(new, Theme.new), (learning, Theme.learning), (review, Theme.accent)].filter { $0.0 > 0 }
+                    let usable = proxy.size.width - 4 * CGFloat(segments.count - 1)
+                    HStack(spacing: 4) {
+                        ForEach(segments.indices, id: \.self) { index in
+                            segments[index].1
+                                .frame(width: usable * CGFloat(segments[index].0) / CGFloat(total))
+                                .clipShape(Capsule())
+                        }
+                    }
                 }
-                .background(Theme.control, in: Capsule())
-                .clipShape(Capsule())
             }
-            .frame(height: 10)
+            .frame(height: 8)
             FlowLayout(spacing: 16) {
-                legend("New", new, Theme.new)
-                legend("Learning", learning, Theme.learning)
-                legend("Review", review, Theme.accent)
+                legend("new", new, Theme.new)
+                legend("learning", learning, Theme.learning)
+                legend("review", review, Theme.accent)
             }
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(new) new, \(learning) learning, \(review) review")
     }
 
-    @ViewBuilder private func segment(_ value: Int, _ total: Int, _ color: Color, _ width: CGFloat) -> some View {
-        if value > 0 { color.frame(width: width * CGFloat(value) / CGFloat(total)) }
-    }
-
     private func legend(_ label: String, _ value: Int, _ color: Color) -> some View {
         HStack(spacing: 6) {
             Circle().fill(color).frame(width: 8, height: 8)
-            Text("\(label) \(value)").font(.caption).foregroundStyle(Theme.text2).fixedSize(horizontal: true, vertical: false)
+            Text("\(value) \(label)").font(.footnote.weight(.medium)).foregroundStyle(Theme.text2).fixedSize(horizontal: true, vertical: false)
         }
     }
 }

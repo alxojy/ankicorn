@@ -28,12 +28,18 @@ enum Theme {
         static let panel: CGFloat = 24
         static let tile: CGFloat = 22
         static let photo: CGFloat = 20
+        static let bar: CGFloat = 4
     }
 
     /// Minimum touch target.
     static let minTarget: CGFloat = 44
     /// Bottom scroll margin that keeps the last row clear of the floating tab bar.
     static let tabBarClearance: CGFloat = 96
+    /// Home screen side margin and gap between sections.
+    static let margin: CGFloat = 20
+    static let startReviewHeight: CGFloat = 60
+    static let tabBarHeight: CGFloat = 64
+    static let tabBarBottomInset: CGFloat = 28
 }
 
 /// Pt sizes at default Dynamic Type from PLAN.md. They are base sizes that scale; never used as fixed sizes.
@@ -44,6 +50,10 @@ enum DisplaySize {
     static let hanziField: CGFloat = 44
     static let title: CGFloat = 34
     static let answer: CGFloat = 28
+    static let sectionHeading: CGFloat = 22
+    static let tileGlyph: CGFloat = 28
+    static let tileCount: CGFloat = 15
+    static let heroCaption: CGFloat = 24
 }
 
 extension Font {
