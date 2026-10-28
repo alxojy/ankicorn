@@ -1,5 +1,7 @@
 # <img src="docs/images/cornhub-icon.png" width="44" height="44" align="top" alt="Cornhub app icon: a smiling corn cob holding a stack of flashcards"> Cornhub
 
+![iOS 26](https://img.shields.io/badge/iOS-26-black?logo=apple) ![Apple Intelligence](https://img.shields.io/badge/Apple%20Intelligence-on--device-orange?logo=apple) ![Anki engine](https://img.shields.io/badge/engine-Anki%20rslib%2026.09.3-blue?logo=rust) ![License](https://img.shields.io/badge/license-AGPL--3.0-green)
+
 <img width="528" height="276" alt="Screenshot 2026-10-27 at 9 25 34 PM" src="https://github.com/user-attachments/assets/16930bdf-6a1e-4943-a81e-92020cbbf6d4" />
 
 A personal iOS flashcards app: a modern SwiftUI frontend on top of [Anki](https://github.com/ankitects/anki)'s open-source Rust engine (`rslib`). It opens the same collection as desktop Anki and syncs with it through AnkiWeb, so desktop stays as it is and only the iPhone app is built here.
@@ -11,7 +13,8 @@ The repo is called `ankicorn`; the app is called **Cornhub**.
 - **Same engine as Anki.** Scheduling, storage, sync, search and card rendering all come from `rslib`, pinned to git tag `26.09.3` to match desktop. Nothing is re-implemented in Swift, so scheduling and deck/note compatibility match desktop.
 - **Native iOS 26 app.** SwiftUI with Liquid Glass, a dark "Ink" look with an orange accent, Dynamic Type, VoiceOver and haptics.
 - **Feature parity with desktop Anki** for daily use: decks, review, add/edit, browser, stats, sync, import/export. Rarely used screens (deck options, image occlusion, CSV import) reuse Anki's own web pages inside the app.
-- **Extras:** swipe to grade, text-to-speech, on-device translation and AI explanations, stroke order for hanzi, and a bundled Chinese vocab note type.
+- **Apple Intelligence.** AI explanations of a card run on-device through Apple's Foundation Models, so nothing leaves the phone. Needs an Apple Intelligence-capable iPhone.
+- **Extras:** swipe to grade, text-to-speech, on-device translation, stroke order for hanzi, and a bundled Chinese vocab note type.
 
 Personal use only: installed on my own iPhone from Xcode. No App Store or TestFlight.
 
