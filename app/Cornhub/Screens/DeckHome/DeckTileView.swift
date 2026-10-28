@@ -70,25 +70,22 @@ struct DeckTileView: View {
     }
 }
 
-/// 2-column grid of deck tiles; each links to the deck's overview.
+/// 2-column grid of deck tiles; each links to the deck's overview. Long press for Rename, Options and Delete.
 struct DeckGrid: View {
     let decks: [DeckTile]
+    let model: DeckHomeModel
+    @Binding var actions: DeckActionState
 
     var body: some View {
         LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
             ForEach(Array(decks.enumerated()), id: \.element.id) { index, deck in
                 NavigationLink(value: deck) { DeckTileView(deck: deck, index: index) }
                     .buttonStyle(.plain)
+                    .contextMenu { DeckActionItems(model: model, deck: deck, state: $actions) }
+                    .accessibilityAction(named: "Rename") { actions.startRename(deck) }
+                    .accessibilityAction(named: "Options") { actions.optionsPage = .deckOptions(deckID: deck.id) }
+                    .accessibilityAction(named: "Delete") { if model.canDelete(deck) { actions.deleting = deck } }
             }
         }
     }
-}
-
-#Preview {
-    DeckGrid(decks: [
-        DeckTile(id: 1, name: "HSK 1", newCount: 12, learningCount: 0, reviewCount: 30, totalCards: 150, collapsed: false, children: []),
-        DeckTile(id: 2, name: "Travel", newCount: 0, learningCount: 3, reviewCount: 0, totalCards: 40, collapsed: false, children: []),
-    ])
-    .padding()
-    .background(Theme.bg)
 }

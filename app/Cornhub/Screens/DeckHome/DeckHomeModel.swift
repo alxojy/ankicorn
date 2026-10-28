@@ -25,6 +25,9 @@ final class DeckHomeModel {
     private(set) var doneToday = 0
     private(set) var streak = 0
     private(set) var importState = ImportState.idle
+    /// Set after a delete so the screen can show the Undo toast.
+    private(set) var deletedNotice: String?
+    var actionError: String?
 
     private let launch: LaunchOptions
     private let collectionURL: URL
@@ -132,6 +135,37 @@ final class DeckHomeModel {
         try? await backend.setDeckCollapsed(deckID: deckID, collapsed: collapsed)
         await refresh()
     }
+
+    /// Deleting the Default deck is refused by the engine, so it is not offered.
+    func canDelete(_ deck: DeckTile) -> Bool { deck.id != 1 }
+
+    func rename(_ deck: DeckTile, to name: String) async {
+        guard let backend else { return }
+        do {
+            try await backend.renameDeck(id: deck.id, name: name.trimmingCharacters(in: .whitespaces))
+            await refresh()
+        } catch { actionError = error.localizedDescription }
+    }
+
+    func delete(_ deck: DeckTile) async {
+        guard let backend, canDelete(deck) else { return }
+        do {
+            try await backend.removeDecks(ids: [deck.id])
+            deletedNotice = "Deleted \(deck.name)"
+            await refresh()
+        } catch { actionError = error.localizedDescription }
+    }
+
+    func undoDelete() async {
+        deletedNotice = nil
+        guard let backend else { return }
+        do {
+            try await backend.undo()
+            await refresh()
+        } catch { actionError = error.localizedDescription }
+    }
+
+    func dismissDeletedNotice() { deletedNotice = nil }
 
     private func fetch(_ backend: Backend) async throws {
         let tree = try await backend.deckTree(now: Int64(Date().timeIntervalSince1970))

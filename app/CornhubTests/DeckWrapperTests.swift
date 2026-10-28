@@ -20,7 +20,7 @@ final class DeckWrapperTests: XCTestCase {
         XCTAssertNotEqual(first, 0)
         XCTAssertNotEqual(first, second)
 
-        let tree = try await backend.deckTree()
+        let tree = try await backend.deckTree(now: Int64(Date().timeIntervalSince1970))
         let names = tree.children.map(\.name)
         XCTAssertTrue(names.contains("HSK 1"))
         XCTAssertTrue(names.contains("HSK 2"))
@@ -31,7 +31,7 @@ final class DeckWrapperTests: XCTestCase {
         let backend = try Backend()
         try await backend.openCollection(path: directory.appending(path: "collection.anki2"))
         try await backend.addDeck(name: "HSK 2::Verbs")
-        let rows = DeckRow.rows(from: try await backend.deckTree())
+        let rows = DeckRow.rows(from: try await backend.deckTree(now: Int64(Date().timeIntervalSince1970)))
         let verbs = try XCTUnwrap(rows.first { $0.fullName == "HSK 2::Verbs" })
         XCTAssertEqual(verbs.name, "Verbs")
         XCTAssertEqual(verbs.level, 2)
@@ -50,6 +50,52 @@ final class DeckWrapperTests: XCTestCase {
         XCTAssertNotEqual(deck.normal.configID, 0)
         let config = try await backend.getDeckConfig(id: deck.normal.configID)
         XCTAssertEqual(config.id, deck.normal.configID)
+        try await backend.closeCollection()
+    }
+
+    func testRenameDeckShowsNewNameInTree() async throws {
+        let backend = try Backend()
+        try await backend.openCollection(path: directory.appending(path: "collection.anki2"))
+        let id = try await backend.addDeck(name: "HSK 2")
+        try await backend.renameDeck(id: id, name: "HSK 2b")
+        let names = try await backend.deckTree(now: Int64(Date().timeIntervalSince1970)).children.map(\.name)
+        XCTAssertTrue(names.contains("HSK 2b"))
+        XCTAssertFalse(names.contains("HSK 2"))
+        try await backend.closeCollection()
+    }
+
+    func testRenameWithSeparatorMakesSubdeck() async throws {
+        let backend = try Backend()
+        try await backend.openCollection(path: directory.appending(path: "collection.anki2"))
+        try await backend.addDeck(name: "HSK 1")
+        let id = try await backend.addDeck(name: "Verbs")
+        try await backend.renameDeck(id: id, name: "HSK 1::Verbs")
+        let tree = try await backend.deckTree(now: Int64(Date().timeIntervalSince1970))
+        XCTAssertEqual(tree.children.map(\.name), ["HSK 1"])
+        XCTAssertEqual(tree.children.first?.children.map(\.name), ["Verbs"])
+        XCTAssertEqual(DeckTile.tiles(from: tree).first?.children.first?.fullName, "HSK 1::Verbs")
+        try await backend.closeCollection()
+    }
+
+    func testRemoveDeckReturnsCardCountAndUndoRestoresIt() async throws {
+        let backend = try Backend()
+        try await backend.openCollection(path: directory.appending(path: "collection.anki2"))
+        let id = try await backend.addDeck(name: "HSK 2")
+        try await backend.seedSampleNotes(deckNames: ["HSK 2"])
+        let tree = try await backend.deckTree(now: Int64(Date().timeIntervalSince1970))
+        let node = try XCTUnwrap(tree.children.first { $0.deckID == id })
+        let cards = Int(node.totalIncludingChildren)
+        XCTAssertGreaterThan(cards, 0)
+
+        let removed = try await backend.removeDecks(ids: [id])
+        XCTAssertEqual(removed, cards)
+        let afterDelete = try await backend.deckTree(now: Int64(Date().timeIntervalSince1970))
+        XCTAssertFalse(afterDelete.children.contains { $0.deckID == id })
+
+        try await backend.undo()
+        let afterUndo = try await backend.deckTree(now: Int64(Date().timeIntervalSince1970))
+        let restored = try XCTUnwrap(afterUndo.children.first { $0.deckID == id })
+        XCTAssertEqual(Int(restored.totalIncludingChildren), cards)
         try await backend.closeCollection()
     }
 }

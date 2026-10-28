@@ -54,3 +54,24 @@ extension Backend {
             service: ServiceIndex.Decks.service, method: ServiceIndex.Decks.setCurrentDeck, request)
     }
 }
+
+extension Backend {
+    /// `remove_decks`: deletes the decks, their subdecks and their cards (undoable). Returns the removed card count.
+    @discardableResult
+    func removeDecks(ids: [Int64]) throws -> Int {
+        var request = Anki_Decks_DeckIds()
+        request.dids = ids
+        let result: Anki_Collection_OpChangesWithCount = try call(
+            service: ServiceIndex.Decks.service, method: ServiceIndex.Decks.removeDecks, request)
+        return Int(result.count)
+    }
+
+    /// `rename_deck`: `name` is the full name; "Parent::Child" makes a subdeck. The engine validates it.
+    func renameDeck(id: Int64, name: String) throws {
+        var request = Anki_Decks_RenameDeckRequest()
+        request.deckID = id
+        request.newName = name
+        let _: Anki_Collection_OpChanges = try call(
+            service: ServiceIndex.Decks.service, method: ServiceIndex.Decks.renameDeck, request)
+    }
+}

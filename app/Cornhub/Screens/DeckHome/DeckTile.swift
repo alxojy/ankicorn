@@ -10,6 +10,8 @@ struct DeckTile: Identifiable, Hashable {
     let totalCards: Int
     var collapsed: Bool
     let children: [DeckTile]
+    /// The deck's full name with `::` separators, as the engine stores it.
+    var fullName = ""
 
     var dueCount: Int { newCount + learningCount + reviewCount }
 
@@ -33,13 +35,14 @@ struct DeckTile: Identifiable, Hashable {
         "\(name): \(newCount) new, \(learningCount) learning, \(reviewCount) review"
     }
 
-    static func tiles(from node: Anki_Decks_DeckTreeNode) -> [DeckTile] {
+    static func tiles(from node: Anki_Decks_DeckTreeNode, parent: String = "") -> [DeckTile] {
         node.children.map { child in
+            let full = parent.isEmpty ? child.name : "\(parent)::\(child.name)"
             let short = child.name.split(separator: ":").last.map(String.init) ?? child.name
             return DeckTile(
                 id: child.deckID, name: short, newCount: Int(child.newCount), learningCount: Int(child.learnCount),
                 reviewCount: Int(child.reviewCount), totalCards: Int(child.totalIncludingChildren),
-                collapsed: child.collapsed, children: tiles(from: child))
+                collapsed: child.collapsed, children: tiles(from: child, parent: full), fullName: full)
         }
     }
 }
