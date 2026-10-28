@@ -24,3 +24,14 @@ Translate SHALL detect the source language from the card's text and translate in
 #### Scenario: Language pack not available
 - **WHEN** the language pair isn't available on the device
 - **THEN** a short message explains how to get it, in the app's style
+
+### Requirement: Explain works on Chinese cards
+Explain SHALL send the on-device model a compact prompt built from the card's headword, pinyin, meaning and one example, with instructions in the device language, and SHALL NOT show the raw model error when the language isn't supported.
+
+#### Scenario: Imported Chinese card
+- **WHEN** the user taps Explain on an imported Chinese card
+- **THEN** an explanation appears in the device language
+
+#### Scenario: Model rejects the language
+- **WHEN** the model reports an unsupported language even after a romanised retry
+- **THEN** a short message in the app's style says Explain isn't available in this language on this device
