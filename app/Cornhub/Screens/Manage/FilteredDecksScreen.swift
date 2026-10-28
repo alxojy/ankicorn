@@ -42,6 +42,7 @@ struct FilteredDecksScreen: View {
         }
         .scrollContentBackground(.hidden)
         .background(Theme.bg)
+        .tabBarScroll()
         .navigationTitle("Filtered decks")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

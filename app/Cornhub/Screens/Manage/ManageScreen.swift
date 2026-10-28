@@ -34,6 +34,7 @@ struct ManageScreen: View {
         }
         .scrollContentBackground(.hidden)
         .background(Theme.bg)
+        .tabBarScroll()
         .navigationTitle("Manage")
         .navigationBarTitleDisplayMode(.inline)
     }

@@ -85,6 +85,7 @@ struct DeckOverviewScreen: View {
             }
             .padding(.horizontal, 16)
         }
+        .tabBarScroll()
         .background(Theme.bg)
         .task { buriedCount = await model.buriedCount(for: current) }
         .navigationTitle(current.name)

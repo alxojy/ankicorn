@@ -51,6 +51,7 @@ struct ImportExportScreen: View {
         }
         .scrollContentBackground(.hidden)
         .background(Theme.bg)
+        .tabBarScroll()
         .navigationTitle("Import and export")
         .navigationBarTitleDisplayMode(.inline)
         .task(id: backend == nil) { if let backend { await model.loadDecks(backend) } }

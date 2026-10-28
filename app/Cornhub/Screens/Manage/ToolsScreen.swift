@@ -27,6 +27,7 @@ struct ToolsScreen: View {
         }
         .scrollContentBackground(.hidden)
         .background(Theme.bg)
+        .tabBarScroll()
         .navigationTitle("Tools")
         .navigationBarTitleDisplayMode(.inline)
     }

@@ -31,6 +31,7 @@ struct NotetypesScreen: View {
         }
         .scrollContentBackground(.hidden)
         .background(Theme.bg)
+        .tabBarScroll()
         .navigationTitle("Note types")
         .navigationBarTitleDisplayMode(.inline)
         .task { await reload() }
@@ -117,6 +118,7 @@ struct NotetypeEditorScreen: View {
         }
         .scrollContentBackground(.hidden)
         .background(Theme.bg)
+        .tabBarScroll()
         .navigationTitle(notetype?.name ?? "Note type")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

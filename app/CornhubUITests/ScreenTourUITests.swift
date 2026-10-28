@@ -99,6 +99,33 @@ final class ScreenTourUITests: XCTestCase {
         }
     }
 
+    /// The tab bar slides away while scrolling down a deck overview and the last row clears it at the end.
+    func testTabBarMinimizesOnScroll() {
+        app.launch()
+        let tile = app.descendants(matching: .any).matching(identifier: "deck-tile").firstMatch
+        XCTAssertTrue(tile.waitForExistence(timeout: 30), "deck tiles show")
+        tile.tap()
+        let tabBar = app.descendants(matching: .any)["tab-settings"]
+        let study = app.buttons["study-button"]
+        XCTAssertTrue(study.waitForExistence(timeout: 10), "overview shows")
+        XCTAssertTrue(tabBar.isHittable, "tab bar shows before scrolling")
+        shot("tabbar-01-before")
+        app.swipeUp()
+        sleep(1)
+        XCTAssertFalse(tabBar.isHittable, "tab bar is not hittable while scrolled down")
+        shot("tabbar-02-minimized")
+        app.swipeDown()
+        sleep(1)
+        XCTAssertTrue(tabBar.isHittable, "tab bar is hittable again after scrolling up")
+        for _ in 0..<4 { app.swipeUp(velocity: .fast) }
+        sleep(1)
+        XCTAssertTrue(tabBar.isHittable, "tab bar is back at the end of the content")
+        let lastTile = app.descendants(matching: .any).matching(identifier: "deck-tile").allElementsBoundByIndex.last
+        let last = lastTile?.exists == true ? lastTile! : app.buttons["browse-cards-button"]
+        XCTAssertLessThanOrEqual(last.frame.maxY, tabBar.frame.minY, "the last row sits above the tab bar")
+        shot("tabbar-03-end")
+    }
+
     /// Cards of invented shared-deck note types: a light deck background with no text colour, and a dark one.
     private func reviewImportedCards(arguments: [String], prefix: String, imageMissing: Bool) {
         app.launchArguments = ["--seed-imported", "--reset-collection"] + arguments

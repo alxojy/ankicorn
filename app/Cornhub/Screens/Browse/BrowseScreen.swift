@@ -230,7 +230,7 @@ private struct BrowseContent: View {
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
-            .contentMargins(.bottom, Theme.tabBarClearance, for: .scrollContent)
+            .tabBarScroll()
         }
     }
 

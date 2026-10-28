@@ -1,9 +1,9 @@
 ## 1. Behaviour
-- [ ] 1.1 Scrolling down (more than ~12 pt) on any tab-shell scrolling screen minimizes the tab bar; scrolling up, reaching the top or reaching the end shows it again
-- [ ] 1.2 Tab bar visibility combines its reasons (selection mode, keyboard if present, scroll-minimized) in one place; switching tabs or navigating shows it again
-- [ ] 1.3 A bottom scrim (Theme.bg to clear) sits behind the bar so content fades under it
-- [ ] 1.4 The last row of every tab screen and pushed screen, including the deck overview's subdeck grid, can scroll fully above the visible bar
-- [ ] 1.5 Reduce Motion fades instead of sliding; with VoiceOver running the bar never minimizes
+- [x] 1.1 Scrolling down (more than ~12 pt) on any tab-shell scrolling screen minimizes the tab bar; scrolling up, reaching the top or reaching the end shows it again
+- [x] 1.2 Tab bar visibility combines its reasons (selection mode, keyboard if present, scroll-minimized) in one place; switching tabs or navigating shows it again
+- [x] 1.3 A bottom scrim (Theme.bg to clear) sits behind the bar so content fades under it
+- [x] 1.4 The last row of every tab screen and pushed screen, including the deck overview's subdeck grid, can scroll fully above the visible bar
+- [x] 1.5 Reduce Motion fades instead of sliding; with VoiceOver running the bar never minimizes
 
 ## 2. Proof
 - [ ] 2.1 A unit test of the visibility logic: each reason alone hides the bar, scroll-up/top/end clears scroll-minimized, small jitters don't toggle, VoiceOver keeps it shown

@@ -7,7 +7,12 @@ final class AppState {
     var selection: AppTab = .decks
     /// Deck id Browse should scope to; Browse consumes it and keeps its own scope afterwards.
     var browseDeckID: Int64?
-    var hideTabBar = false
+    var visibility = TabBarVisibility(voiceOverRunning: UIAccessibility.isVoiceOverRunning)
+    /// Browse selection mode and toasts hide the bar.
+    var hideTabBar: Bool {
+        get { visibility.selectionMode }
+        set { visibility.selectionMode = newValue }
+    }
     /// The deck name Browse was last scoped to, kept while the app runs.
     var lastBrowseDeck: String?
 
@@ -23,7 +28,7 @@ struct AppShell: View {
     @State private var appState = AppState()
     @State private var deckModel: DeckHomeModel
     @State private var sync: SyncModel
-    @State private var keyboardUp = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     init(launch: LaunchOptions) {
         self.launch = launch
@@ -35,15 +40,26 @@ struct AppShell: View {
         ZStack(alignment: .bottom) {
             Theme.bg.ignoresSafeArea()
             screen
-                .safeAreaPadding(.bottom, Theme.tabBarHeight + Theme.tabBarBottomInset + 8)
+            LinearGradient(colors: [Theme.bg.opacity(0), Theme.bg], startPoint: .top, endPoint: .bottom)
+                .frame(height: Theme.tabBarHeight + Theme.tabBarBottomInset + 24)
+                .ignoresSafeArea(edges: .bottom)
+                .opacity(tabBarHidden ? 0 : 1)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+                .animation(.easeInOut(duration: 0.25), value: tabBarHidden)
             FloatingTabBar(selection: $appState.selection)
-                .offset(y: tabBarHidden ? Theme.tabBarHeight + Theme.tabBarBottomInset + 40 : 0)
+                .offset(y: tabBarHidden && !reduceMotion ? Theme.tabBarHeight + Theme.tabBarBottomInset + 40 : 0)
                 .opacity(tabBarHidden ? 0 : 1)
                 .allowsHitTesting(!tabBarHidden)
                 .animation(.spring(duration: 0.3), value: tabBarHidden)
         }
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in keyboardUp = true }
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in keyboardUp = false }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in appState.visibility.keyboardUp = true }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in appState.visibility.keyboardUp = false }
+        .onReceive(NotificationCenter.default.publisher(for: UIAccessibility.voiceOverStatusDidChangeNotification)) { _ in
+            appState.visibility.voiceOverRunning = UIAccessibility.isVoiceOverRunning
+            if UIAccessibility.isVoiceOverRunning { appState.visibility.reset() }
+        }
+        .onChange(of: appState.selection) { appState.visibility.reset() }
         .tint(Theme.accent)
         .environment(appState)
         .task {
@@ -64,8 +80,8 @@ struct AppShell: View {
         .onOpenURL { url in Task { await deckModel.importPackage(url) } }
     }
 
-    /// Hidden while selecting in Browse (`hideTabBar`) and while the software keyboard is up.
-    private var tabBarHidden: Bool { appState.hideTabBar || keyboardUp }
+    /// Hidden by Browse selection mode, the software keyboard or scrolling down (see `TabBarVisibility`).
+    private var tabBarHidden: Bool { appState.visibility.hidden }
 
     @ViewBuilder private var screen: some View {
         switch appState.selection {

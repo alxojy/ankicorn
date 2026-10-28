@@ -120,6 +120,7 @@ struct DeckHomeScreen: View {
                 }
                 .padding(.horizontal, Theme.margin)
             }
+            .tabBarScroll()
             .refreshable { await runSync() }
         }
     }

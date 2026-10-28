@@ -54,6 +54,7 @@ private struct StatsContent: View {
                 .padding(.bottom, 120)
             }
             .background(Theme.bg.ignoresSafeArea())
+            .tabBarScroll()
             .navigationTitle("Stats")
             .navigationBarTitleDisplayMode(.inline)
         }

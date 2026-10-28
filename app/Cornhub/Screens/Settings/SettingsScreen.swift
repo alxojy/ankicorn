@@ -49,7 +49,7 @@ struct SettingsScreen: View {
                 }
             }
             .scrollContentBackground(.hidden)
-            .contentMargins(.bottom, Theme.tabBarClearance, for: .scrollContent)
+            .tabBarScroll()
             .background(Theme.bg)
             .navigationTitle("Settings")
             .toolbarTitleDisplayMode(.large)

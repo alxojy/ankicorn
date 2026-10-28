@@ -31,6 +31,7 @@ struct TagsScreen: View {
         }
         .scrollContentBackground(.hidden)
         .background(Theme.bg)
+        .tabBarScroll()
         .navigationTitle("Tags")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
