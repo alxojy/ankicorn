@@ -2514,6 +2514,7 @@ dependencies = [
  "anki_proto",
  "prost",
  "reqwest",
+ "tempfile",
  "tokio",
 ]
 

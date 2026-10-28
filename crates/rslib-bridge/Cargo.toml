@@ -19,3 +19,5 @@ prost = "0.13"
 [dev-dependencies]
 # Same version as Anki's lock file; no features of its own, so it only sees the TLS backend anki enables.
 reqwest = { version = "0.12.20", default-features = false }
+tempfile = "3.20.0"
+tokio = { version = "1", features = ["rt-multi-thread", "net", "macros"] }
