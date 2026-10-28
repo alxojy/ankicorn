@@ -259,6 +259,29 @@ final class ScreenTourUITests: XCTestCase {
         XCTAssertTrue(app.textFields.firstMatch.waitForExistence(timeout: 5) || app.secureTextFields.firstMatch.exists, "login sheet shows fields")
     }
 
+    func testLoginRefreshesSettings() {
+        app.launchArguments += ["--stub-login"]
+        app.launch()
+        tab("Settings")
+        let login = app.descendants(matching: .any)["settings-login"]
+        scrollTo(login)
+        XCTAssertTrue(login.exists, "signed out: login row")
+        shot("56-signed-out")
+        login.tap()
+        let username = app.textFields["login-username"]
+        XCTAssertTrue(username.waitForExistence(timeout: 5))
+        username.tap()
+        username.typeText("testuser")
+        let password = app.secureTextFields["login-password"]
+        password.tap()
+        password.typeText("secret")
+        app.buttons["login-submit"].tap()
+        XCTAssertTrue(app.buttons["settings-logout"].waitForExistence(timeout: 5), "Log out appears without leaving Settings")
+        XCTAssertTrue(app.staticTexts["testuser"].exists, "Signed in as testuser")
+        XCTAssertFalse(login.exists, "login row is gone")
+        shot("57-signed-in")
+    }
+
     func testLargestTextSize() {
         app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
         app.launch()
