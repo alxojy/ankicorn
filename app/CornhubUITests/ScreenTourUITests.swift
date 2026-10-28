@@ -108,6 +108,8 @@ final class ScreenTourUITests: XCTestCase {
         XCTAssertTrue(card.waitForExistence(timeout: 15), "review card shows")
         sleep(2)
         shot("10-review-question")
+        XCTAssertTrue(app.buttons["Show answer"].firstMatch.exists, "question side has a Show answer button")
+        XCTAssertFalse(app.buttons["grade-good"].exists, "no grade buttons before reveal")
         card.tap()
         sleep(2)
         shot("11-review-answer")
@@ -251,6 +253,8 @@ final class ScreenTourUITests: XCTestCase {
         XCTAssertTrue(web.staticTexts.firstMatch.waitForExistence(timeout: 20), "question text is rendered")
         sleep(1)
         shot("61-review-xxxl")
+        XCTAssertTrue(app.buttons["Show answer"].firstMatch.exists, "Show answer capsule at XXXL")
+        XCTAssertFalse(app.buttons["grade-good"].exists, "no grade buttons before reveal")
         card.tap()
         XCTAssertTrue(app.buttons["grade-again"].waitForExistence(timeout: 10))
         for name in ["again", "hard", "good", "easy"] {

@@ -5,6 +5,7 @@ struct ReviewScreen: View {
     @State private var model: ReviewModel
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AppStorage("swipeGradeCount") private var swipeCount = 0
     @State private var drag: CGFloat = 0
     @State private var pastThreshold = false
@@ -56,7 +57,7 @@ struct ReviewScreen: View {
                         .accessibilityIdentifier("review-type-answer")
                 }
                 if model.revealed { ExtrasChips(extras: extras).dynamicTypeSize(...DynamicTypeSize.xxxLarge) }
-                gradeBar
+                bottomBar
             }
         }
         .padding(.horizontal, 16)
@@ -69,6 +70,14 @@ struct ReviewScreen: View {
             extras.deckID = card.deckID
             extras.questionText = CardText.plain(model.questionHTML)
             extras.answerText = CardText.plain(model.answerHTML)
+            extras.playFile = { model.audio.play([.file($0)]) }
+            Task {
+                guard let note = await model.loadNote(),
+                    let names = try? await model.backend.fieldNames(notetypeID: note.notetypeID)
+                else { return }
+                extras.speech = SpeechTarget.pick(
+                    names: names, fields: note.fields, question: model.questionHTML, language: extras.language)
+            }
         }
         .sensoryFeedback(.impact, trigger: pastThreshold)
         .fullScreenCover(item: Binding(get: { editingNote.map(IdentifiedNote.init) }, set: { editingNote = $0?.note })) { item in
@@ -223,6 +232,35 @@ struct ReviewScreen: View {
             }
     }
 
+    private var bottomBar: some View {
+        ZStack {
+            if model.revealed {
+                gradeBar.transition(reduceMotion ? .opacity : .scale(scale: 0.9).combined(with: .opacity))
+            } else {
+                showAnswerCapsule.transition(.opacity)
+            }
+        }
+        .animation(reduceMotion ? .easeInOut(duration: 0.2) : .spring(duration: 0.35, bounce: 0.25), value: model.revealed)
+        .sensoryFeedback(.impact(weight: .light), trigger: model.revealed)
+    }
+
+    private var showAnswerCapsule: some View {
+        Button { model.reveal() } label: {
+            Text("Show answer").font(.headline)
+                .frame(maxWidth: .infinity, minHeight: 56)
+                .foregroundStyle(Theme.text)
+        }
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+        .padding(8)
+        .background(.ultraThinMaterial, in: Capsule())
+        .background(Theme.bg.opacity(0.6), in: Capsule())
+        .overlay(Capsule().strokeBorder(Theme.hairline, lineWidth: 1))
+        .shadow(color: .black.opacity(0.5), radius: 20, y: 10)
+        .padding(.bottom, 8)
+        .accessibilityLabel("Show answer")
+        .accessibilityIdentifier("show-answer")
+    }
+
     private var gradeBar: some View {
         HStack(spacing: 8) {
             grade("Again", .again, Theme.again, filled: false)
@@ -237,8 +275,6 @@ struct ReviewScreen: View {
         .overlay(Capsule().strokeBorder(Theme.hairline, lineWidth: 1))
         .shadow(color: .black.opacity(0.5), radius: 20, y: 10)
         .padding(.bottom, 8)
-        .opacity(model.revealed ? 1 : 0.35)
-        .allowsHitTesting(model.revealed)
     }
 
     private func grade(
