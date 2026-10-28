@@ -31,9 +31,9 @@ Details, the desktop parity table, the design standard and the phases are in [`P
 
 ## Status
 
-Phases 0 to 4 are built and the app is in daily use on my iPhone. That covers review with the Ink theme, AnkiWeb sync (including the full-sync choice), adding and editing cards, the browser, deck options, stats, filtered decks, tags, note types, import/export, speech, translation, AI explanations and stroke order. The full gate (Rust, unit and UI tests with a screenshot tour) passes on `main`.
+Phases 0 to 4 are built. That covers review with the Ink theme, AnkiWeb sync (including the full-sync choice), adding and editing cards, the browser, deck options, stats, filtered decks, tags, note types, import/export, speech, translation, AI explanations and stroke order. The full gate (Rust, unit and UI tests with a screenshot tour) passed after Phase 4.
 
-Now: fixing what comes up in daily use, one OpenSpec change at a time (see `openspec/changes/`).
+Now: fixing what comes up in use, one OpenSpec change at a time (see `openspec/changes/`).
 
 Not done yet:
 - the home-screen widget
